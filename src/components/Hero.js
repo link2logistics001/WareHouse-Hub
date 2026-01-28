@@ -1,167 +1,133 @@
 ﻿'use client'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useState } from 'react'
+import { ArrowRight, Star, ShieldCheck, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Hero() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const { scrollY } = useScroll()
-  const y1 = useTransform(scrollY, [0, 500], [0, 150])
-  const y2 = useTransform(scrollY, [0, 500], [0, -100])
-  const opacity = useTransform(scrollY, [0, 500], [1, 0.3])
-
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-orange-50/50 via-white to-slate-50 min-h-[90vh] flex items-center pt-20">
-      {/* Optimized background blobs - fewer animations, CSS only */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl opacity-50" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl opacity-50" />
+    <div className="relative bg-white overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative w-full">
-        <motion.div
-          className="text-center max-w-5xl mx-auto"
-          style={{ y: y2, opacity }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          {/* Enhanced Badge */}
-          <motion.span
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-orange-50 to-primary-50 text-primary-600 text-sm font-semibold mb-8 border border-orange-200 shadow-xl shadow-orange-100/50 backdrop-blur-sm"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-          >
-            <svg 
-              className="w-4 h-4" 
-              fill="currentColor" 
-              viewBox="0 0 20 20"
-            >
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            India's #1 B2B Warehouse Marketplace
-          </motion.span>
-
-          {/* Enhanced Main Headline with better animations */}
-          <motion.h1
-            className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 tracking-tight leading-tight mb-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-          >
-            <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="inline-block"
-            >
-              Find the Perfect{' '}
-            </motion.span>
-            <motion.span
-              className="relative inline-block"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, type: "spring", stiffness: 150 }}
-            >
-              <span className="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-primary-600 via-primary-500 to-orange-500">
-                Warehouse Space
-              </span>
-            </motion.span>
-            <motion.span
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7, duration: 0.6 }}
-              className="inline-block"
-            >
-              {' '}for Your Business
-            </motion.span>
-          </motion.h1>
-
-          {/* Enhanced Subtitle */}
-          <motion.p 
-            className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.8 }}
-          >
-            Connect with verified warehouse owners across India. Post your requirements
-            or list your warehouse in minutes with our intelligent platform.
-          </motion.p>
-
-          {/* Enhanced Search Bar */}
-          <motion.div 
-            className="mt-12 max-w-3xl mx-auto" 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1, duration: 0.6 }}
-          >
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-3 items-center bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 p-2 hover:shadow-3xl transition-shadow duration-500"
-              whileHover={{ scale: 1.01, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
-            >
-              <div className="flex-1 flex items-center gap-3 px-4 w-full sm:w-auto">
-                <svg 
-                  className="w-5 h-5 text-slate-400" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search by city, area, or warehouse type..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 py-3 outline-none text-slate-700 placeholder:text-slate-400 w-full bg-transparent"
-                />
-              </div>
-              <motion.button 
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary-600 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-500/30"
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Search Warehouses
-                <svg 
-                  className="w-5 h-5" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </motion.button>
-            </motion.div>
-          </motion.div>
-
-          {/* Enhanced Stats with better animations */}
-          <motion.div 
-            className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-4" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.3 }}
-          >
-            {[
-              { label: '500+ Warehouses', color: 'emerald', icon: '🏭' },
-              { label: '20+ Cities', color: 'blue', icon: '🌆' },
-              { label: '1000+ Merchants', color: 'orange', icon: '🤝' }
-            ].map((stat, i) => (
-              <motion.div 
-                key={stat.label}
-                className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm shadow-lg border border-slate-200/50"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 + i * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.05, y: -3 }}
-              >
-                <span className="text-2xl">
-                  {stat.icon}
-                </span>
-                <span className="text-slate-700 font-semibold">{stat.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
+      {/* BACKGROUND: Clean Engineering Grid (Subtle & Professional) */}
+      <div className="absolute inset-0 z-0 opacity-[0.03]">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       </div>
-    </section>
-  )
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          
+          {/* LEFT COLUMN: Authority & Trust */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold mb-8 shadow-sm">
+              <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              New: AI-Powered Price Matching
+            </div>
+
+            <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
+              Modern Logistics <br />
+              <span className="text-orange-600">Simplified.</span>
+            </h1>
+
+            <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-lg">
+              The #1 marketplace for commercial storage. We connect verified merchants with premium warehouse space in 24 hours or less.
+            </p>
+
+            {/* ACTION BUTTONS */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              <button className="inline-flex justify-center items-center px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all hover:-translate-y-1 shadow-xl shadow-slate-200">
+                Find Warehouses
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+              <button className="inline-flex justify-center items-center px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                List Your Space
+              </button>
+            </div>
+
+            {/* SOCIAL PROOF: Clean & Tidy */}
+            <div className="flex items-center gap-6 pt-6 border-t border-slate-100">
+              <div className="flex -space-x-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <img 
+                    key={i}
+                    className="w-12 h-12 rounded-full border-4 border-white shadow-sm"
+                    src={`https://randomuser.me/api/portraits/thumb/men/${i + 30}.jpg`}
+                    alt="User"
+                  />
+                ))}
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-orange-500 mb-1">
+                  <Star className="w-4 h-4 fill-current" />
+                  <Star className="w-4 h-4 fill-current" />
+                  <Star className="w-4 h-4 fill-current" />
+                  <Star className="w-4 h-4 fill-current" />
+                  <Star className="w-4 h-4 fill-current" />
+                </div>
+                <p className="text-sm font-bold text-slate-900">Trusted by 500+ Companies</p>
+              </div>
+            </div>
+
+          </motion.div>
+
+          {/* RIGHT COLUMN: Professional Image Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative"
+          >
+            {/* The Main Visual */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-100 bg-white">
+              <img 
+                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80" 
+                alt="Logistics Hub" 
+                className="w-full h-full object-cover opacity-90"
+              />
+              
+              {/* Overlay Gradient for readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+
+              {/* Floating 'Success' Card - Bottom Left */}
+              <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">Verified Partner</p>
+                      <p className="text-xs text-slate-500">Tech Storage Bangalore</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-900">₹60,000</p>
+                    <p className="text-xs text-green-600 font-medium">+12% Demand</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating 'Stats' Card - Top Right */}
+              <div className="absolute top-6 right-6 bg-white p-3 rounded-xl shadow-lg border border-slate-100 flex items-center gap-3 animate-bounce-slow">
+                 <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
+                    <TrendingUp className="w-5 h-5" />
+                 </div>
+                 <div>
+                    <p className="text-xs text-slate-500 font-bold uppercase">Growth</p>
+                    <p className="text-sm font-bold text-slate-900">+24% This Month</p>
+                 </div>
+              </div>
+
+            </div>
+            
+            {/* Subtle shadow glow behind the image */}
+            <div className="absolute -inset-4 bg-orange-500/20 rounded-[2rem] -z-10 blur-3xl opacity-50"></div>
+          </motion.div>
+
+        </div>
+      </div>
+    </div>
+  );
 }

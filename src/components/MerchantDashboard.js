@@ -1,4 +1,8 @@
 'use client'
+import SearchFilters from './SearchFilters';
+import DashboardStats from './DashboardStats';
+import DashboardNavbar from './DashboardNavbar';
+import WarehouseCard from './WarehouseCard';
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { warehouses, conversations } from '@/data/warehouseData'
@@ -28,35 +32,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold">
-                WH
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">Merchant Dashboard</h1>
-                <p className="text-sm text-slate-600">{user.company || user.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                <p className="text-xs text-slate-500">{user.email}</p>
-              </div>
-              <motion.button
-                onClick={onLogout}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Logout
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardNavbar user={user} onLogout={onLogout} />
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-slate-200">
@@ -93,113 +69,28 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'browse' && (
           <div>
+            {/* NEW STATS ROW  */}
+    <DashboardStats />
             {/* Filters */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">🔍 Search Filters</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input
-                  type="text"
-                  placeholder="City (e.g., Delhi)"
-                  value={filters.city}
-                  onChange={(e) => setFilters({...filters, city: e.target.value})}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-                <select
-                  value={filters.category}
-                  onChange={(e) => setFilters({...filters, category: e.target.value})}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                >
-                  <option value="">All Categories</option>
-                  <option value="General Storage">General Storage</option>
-                  <option value="Cold Storage">Cold Storage</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Pharmaceutical">Pharmaceutical</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="Min Area (sq ft)"
-                  value={filters.minArea}
-                  onChange={(e) => setFilters({...filters, minArea: e.target.value})}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Max Budget (₹/month)"
-                  value={filters.maxBudget}
-                  onChange={(e) => setFilters({...filters, maxBudget: e.target.value})}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-              </div>
-            </div>
+    <SearchFilters filters={filters} setFilters={setFilters} />
 
             {/* Warehouse Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredWarehouses.map((warehouse) => (
-                <motion.div
-                  key={warehouse.id}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
-                  whileHover={{ y: -5 }}
-                  onClick={() => setSelectedWarehouse(warehouse)}
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={warehouse.images[0]}
-                      alt={warehouse.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-3 right-3 px-3 py-1 bg-white rounded-full text-xs font-semibold text-slate-700 shadow-lg">
-                      {warehouse.category}
-                    </div>
-                    {warehouse.verified && (
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-green-500 text-white rounded-full text-xs font-semibold shadow-lg">
-                        ✓ Verified
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{warehouse.name}</h3>
-                    <p className="text-sm text-slate-600 mb-3">
-                      📍 {warehouse.location.area}, {warehouse.location.city}
-                    </p>
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-2xl font-bold text-primary-600">
-                          ₹{warehouse.pricing.amount.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-slate-500">per {warehouse.pricing.period}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-semibold text-slate-900">
-                          {warehouse.size.area.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-slate-500">{warehouse.size.unit}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {warehouse.facilities.slice(0, 3).map((facility, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">
-                          {facility}
-                        </span>
-                      ))}
-                      {warehouse.facilities.length > 3 && (
-                        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded">
-                          +{warehouse.facilities.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                    <motion.button
-                      className="w-full py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onOpenChat(warehouse, user)
-                      }}
-                    >
-                      Contact Owner
-                    </motion.button>
-                  </div>
-                </motion.div>
+                <div 
+  key={warehouse.id} 
+  onClick={() => setSelectedWarehouse(warehouse)}
+  className="h-full"
+>
+  <WarehouseCard
+    title={warehouse.name}
+    location={`${warehouse.location.area}, ${warehouse.location.city}`}
+    price={warehouse.pricing.amount.toLocaleString()}
+    area={warehouse.size.area.toLocaleString()}
+    type={warehouse.category}
+    imageUrl={warehouse.images[0]}
+  />
+</div>
               ))}
             </div>
           </div>
