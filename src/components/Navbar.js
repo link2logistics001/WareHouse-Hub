@@ -23,7 +23,7 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Why WarehouseHub', href: '#why-warehousehub' },
-    { label: 'How it Works', href: '#how-it-works' },
+    { label: 'How WarehouseHub Works', href: '#how-warehousehub-works' },
     { label: 'Login', href: '#login' },
     { label: 'Get Started', href: '#get-started' },
   ]

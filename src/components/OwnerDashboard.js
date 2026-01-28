@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { warehouses, conversations, merchantRequirements } from '@/data/warehouseData'
+import DashboardNavbar from './DashboardNavbar'
 
 export default function OwnerDashboard({ user, onLogout, onOpenChat }) {
   const [activeTab, setActiveTab] = useState('warehouses') // 'warehouses', 'inquiries', 'chats'
@@ -19,36 +20,8 @@ export default function OwnerDashboard({ user, onLogout, onOpenChat }) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center text-white font-bold">
-                WH
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">Owner Dashboard</h1>
-                <p className="text-sm text-slate-600">{user.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">{user.name}</p>
-                <p className="text-xs text-slate-500">{user.email}</p>
-              </div>
-              <motion.button
-                onClick={onLogout}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Logout
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Dashboard Navbar with dropdown */}
+      <DashboardNavbar user={user} onLogout={onLogout} />
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-slate-200">
