@@ -33,16 +33,11 @@ export default function OwnerDashboard({ user, onLogout }) {
 
         {/* Dynamic Content */}
         <div className="p-8">
-          {/* 👇 FIXED: Added 'user={user}' so DashboardHome knows the real name */}
           {activeTab === 'dashboard' && <DashboardHome setActiveTab={setActiveTab} user={user} />}
-          
           {activeTab === 'my-warehouses' && <MyWarehouses />}
-          
           {activeTab === 'add-warehouse' && <AddWarehouse setActiveTab={setActiveTab} />}
-          
           {activeTab === 'inquiries' && <Inquiries />}
           {activeTab === 'calendar' && <Availability />}
-
         </div>
       </main>
 

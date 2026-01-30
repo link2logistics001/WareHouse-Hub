@@ -21,10 +21,10 @@ export default function Hero() {
             transition={{ duration: 0.6 }}
           >
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold mb-8 shadow-sm">
+            {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold mb-8 shadow-sm">
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
               New: AI-Powered Price Matching
-            </div>
+            </div> */}
 
             <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
               Modern Logistics <br />
