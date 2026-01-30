@@ -12,7 +12,7 @@ export default function DashboardNavbar({ user, onLogout }) {
         <div className="flex justify-between h-16">
           
           {/* LEFT SIDE: Logo & Brand */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.reload()}>
             <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white font-bold shadow-md">
               WH
             </div>

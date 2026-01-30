@@ -1,5 +1,7 @@
+
 'use client'
 import { Building2, MessageSquare, Users, Eye, Plus, TrendingUp, Calendar, ArrowRight, Activity, DollarSign, MoreHorizontal } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // 👇 1. UPDATE THIS LINE: Add 'user' inside the curly braces
 export default function DashboardHome({ setActiveTab, user }) {
@@ -25,8 +27,21 @@ export default function DashboardHome({ setActiveTab, user }) {
   // Helper to get first name
   const firstName = user?.name ? user.name.split(' ')[0] : 'Partner';
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15 }
+    }
+  };
+  const boxVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80, damping: 14 } }
+  };
+
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
+    <div className="space-y-8 pb-12">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -47,9 +62,18 @@ export default function DashboardHome({ setActiveTab, user }) {
       </div>
 
       {/* Rest of your dashboard grid... */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {stats.map((stat, index) => (
-          <div key={index} className={`bg-white p-6 rounded-2xl border ${stat.border} shadow-sm hover:shadow-md transition-all`}>
+          <motion.div
+            key={index}
+            variants={boxVariants}
+            className={`bg-white p-6 rounded-2xl border ${stat.border} shadow-sm hover:shadow-md transition-all`}
+          >
             <div className="flex justify-between items-start mb-4">
               <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
                 <stat.icon className="w-6 h-6" />
@@ -60,14 +84,21 @@ export default function DashboardHome({ setActiveTab, user }) {
             </div>
             <h3 className="text-3xl font-bold text-slate-900 mb-1 tracking-tight">{stat.value}</h3>
             <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+      <motion.div
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Graph Section */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <motion.div
+          className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm"
+          variants={boxVariants}
+        >
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -102,10 +133,12 @@ export default function DashboardHome({ setActiveTab, user }) {
               ))}
             </div>
           </div>
-        </div>
-
+        </motion.div>
         {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full">
+        <motion.div
+          className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full"
+          variants={boxVariants}
+        >
           <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
             <Activity className="w-5 h-5 text-slate-400" /> Recent Activity
           </h3>
@@ -138,9 +171,8 @@ export default function DashboardHome({ setActiveTab, user }) {
               <p className="text-xs text-slate-500 mt-1">"Prime Hub" photos updated.</p>
             </div>
           </div>
-        </div>
-
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

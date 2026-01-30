@@ -1,248 +1,210 @@
-// Moved from components/MerchantDashboard.js
 'use client'
 import SearchFilters from '../SearchFilters';
-import DashboardStats from '../DashboardStats';
-import DashboardNavbar from '../DashboardNavbar';
 import WarehouseCard from '../WarehouseCard';
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { warehouses, conversations } from '@/data/warehouseData'
+import DashboardNavbar from '../DashboardNavbar'; // Ensure this is imported
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { warehouses, conversations } from '@/data/warehouseData';
+import MerchantSidebar from './MerchantSidebar';
 
 export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
-  const [activeTab, setActiveTab] = useState('browse') // 'browse', 'saved', 'chats', 'requirements'
-  const [selectedWarehouse, setSelectedWarehouse] = useState(null)
-  const [filters, setFilters] = useState({
-    city: '',
-    category: '',
-    minArea: '',
-    maxBudget: ''
-  })
+    const [activeTab, setActiveTab] = useState('browse');
+    const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+    const [filters, setFilters] = useState({
+        city: '',
+        category: '',
+        minArea: '',
+        maxBudget: ''
+    });
 
-  // Get merchant's active chats
-  const merchantChats = conversations.filter(conv => conv.merchantId === user.id)
+    // Get merchant's active chats
+    const merchantChats = conversations.filter(conv => conv.merchantId === user.id);
 
-  // Filter warehouses
-  const filteredWarehouses = warehouses.filter(wh => {
-    if (filters.city && !wh.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false
-    if (filters.category && wh.category !== filters.category) return false
-    if (filters.minArea && wh.size.area < parseInt(filters.minArea)) return false
-    if (filters.maxBudget && wh.pricing.amount > parseInt(filters.maxBudget)) return false
-    return true
-  })
+    // Filter warehouses logic
+    const filteredWarehouses = warehouses.filter(wh => {
+        if (filters.city && !wh.location.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+        if (filters.category && wh.category !== filters.category) return false;
+        if (filters.minArea && wh.size.area < parseInt(filters.minArea)) return false;
+        if (filters.maxBudget && wh.pricing.amount > parseInt(filters.maxBudget)) return false;
+        return true;
+    });
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <DashboardNavbar user={user} onLogout={onLogout} />
-
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-8">
-            {[
-              { id: 'browse', label: '🏭 Browse Warehouses', count: warehouses.length },
-              { id: 'chats', label: '💬 Active Chats', count: merchantChats.length },
-              { id: 'saved', label: '⭐ Saved', count: 0 },
-              { id: 'requirements', label: '📝 My Requirements', count: 0 }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-2 font-medium border-b-2 transition-colors relative ${
-                  activeTab === tab.id
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'browse' && (
-          <div>
-            {/* NEW STATS ROW  */}
-    <DashboardStats />
-            {/* Filters */}
-    <SearchFilters filters={filters} setFilters={setFilters} />
-
-            {/* Warehouse Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredWarehouses.map((warehouse) => (
-                <div 
-  key={warehouse.id} 
-  onClick={() => setSelectedWarehouse(warehouse)}
-  className="h-full"
->
-  <WarehouseCard
-    title={warehouse.name}
-    location={`${warehouse.location.area}, ${warehouse.location.city}`}
-    price={warehouse.pricing.amount.toLocaleString()}
-    area={warehouse.size.area.toLocaleString()}
-    type={warehouse.category}
-    imageUrl={warehouse.images[0]}
-  />
-</div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'chats' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">💬 Your Active Conversations</h3>
-            {merchantChats.length > 0 ? (
-              <div className="space-y-4">
-                {merchantChats.map((chat) => {
-                  const warehouse = warehouses.find(w => w.id === chat.warehouseId)
-                  const lastMsg = chat.messages[chat.messages.length - 1]
-                  return (
-                    <motion.div
-                      key={chat.id}
-                      className="p-4 border border-slate-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all cursor-pointer"
-                      whileHover={{ x: 5 }}
-                      onClick={() => onOpenChat(warehouse, user)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-semibold text-slate-900">{warehouse?.name}</h4>
-                          <p className="text-sm text-slate-600">{warehouse?.ownerName}</p>
-                          <p className="text-sm text-slate-500 mt-2">{lastMsg.message}</p>
-                        </div>
-                        <span className="text-xs text-slate-400">
-                          {new Date(lastMsg.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="text-slate-600 text-center py-12">No active conversations yet. Start browsing warehouses!</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'saved' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-            <p className="text-slate-600 text-lg">⭐ No saved warehouses yet</p>
-            <p className="text-slate-500 text-sm mt-2">Save your favorite warehouses for quick access</p>
-          </div>
-        )}
-
-        {activeTab === 'requirements' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-            <p className="text-slate-600 text-lg">📝 Post your requirements</p>
-            <p className="text-slate-500 text-sm mt-2">Let warehouse owners find you</p>
-            <motion.button
-              className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold"
-              whileHover={{ scale: 1.05 }}
-            >
-              Create Requirement
-            </motion.button>
-          </div>
-        )}
-      </div>
-
-      {/* Warehouse Detail Modal */}
-      {selectedWarehouse && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedWarehouse(null)}
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }, []);
+    return (
+        <motion.div 
+            className="min-h-screen bg-slate-50 flex"
+            initial={{ y: -100, opacity: 0, x: -100 }}
+            animate={{ y: 0, opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 70, damping: 18 }}
         >
-          <motion.div
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative h-96">
-              <img
-                src={selectedWarehouse.images[0]}
-                alt={selectedWarehouse.name}
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => setSelectedWarehouse(null)}
-                className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-8">
-              <h2 className="text-3xl font-bold text-slate-900 mb-2">{selectedWarehouse.name}</h2>
-              <p className="text-slate-600 mb-6">
-                📍 {selectedWarehouse.location.address}, {selectedWarehouse.location.area}, {selectedWarehouse.location.city}
-              </p>
-              
-              <div className="grid grid-cols-3 gap-6 mb-6 p-6 bg-slate-50 rounded-xl">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Monthly Rent</p>
-                  <p className="text-2xl font-bold text-primary-600">₹{selectedWarehouse.pricing.amount.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Area</p>
-                  <p className="text-2xl font-bold text-slate-900">{selectedWarehouse.size.area.toLocaleString()} {selectedWarehouse.size.unit}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Category</p>
-                  <p className="text-lg font-semibold text-slate-900">{selectedWarehouse.category}</p>
-                </div>
-              </div>
+            {/* Sidebar - Fixed width 64 (16rem) */}
+            <MerchantSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Description</h3>
-                <p className="text-slate-600 leading-relaxed">{selectedWarehouse.description}</p>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Facilities</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedWarehouse.facilities.map((facility, idx) => (
-                    <span key={idx} className="px-3 py-2 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium">
-                      ✓ {facility}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Owner Details</h3>
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    {selectedWarehouse.ownerName[0]}
+            {/* Main Content Area */}
+            <div className="flex-1 ml-64 flex flex-col">
+                {/* Dynamic Header */}
+                <header className="bg-white h-16 border-b border-slate-200 sticky top-0 z-10 px-8 flex items-center justify-between">
+                  <AnimatePresence mode="wait">
+                    <motion.h2
+                      key={activeTab}
+                      className="font-semibold text-slate-700 capitalize"
+                      initial={{ x: -30, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: 30, opacity: 0 }}
+                      transition={{ duration: 0.25, type: 'tween' }}
+                    >
+                      {activeTab.replace('-', ' ')}
+                    </motion.h2>
+                  </AnimatePresence>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-slate-500">Welcome, {user?.name || 'Merchant'}</span>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                      {user?.name ? user.name[0] : 'M'}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">{selectedWarehouse.ownerName}</p>
-                    <p className="text-sm text-slate-600">{selectedWarehouse.ownerPhone}</p>
-                  </div>
-                </div>
-              </div>
+                </header>
 
-              <motion.button
-                className="w-full py-4 bg-primary-600 text-white rounded-xl font-semibold text-lg"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedWarehouse(null)
-                  onOpenChat(selectedWarehouse, user)
-                }}
-              >
-                Contact Owner & Start Chat
-              </motion.button>
+                <main className="p-8">
+                    <div className="max-w-7xl mx-auto">
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'browse' && (
+                                <motion.div
+                                    key="browse"
+                                    initial={{ x: -60, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    exit={{ x: 60, opacity: 0 }}
+                                    transition={{ duration: 0.3, type: 'tween' }}
+                                    className="space-y-8"
+                                >
+                                    {/* Stats Row */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        <StatCard icon="🏭" label="Warehouses" value={warehouses.length} color="blue" />
+                                        <StatCard icon="💬" label="Active Chats" value={merchantChats.length} color="violet" />
+                                        <StatCard icon="⭐" label="Saved" value="0" color="emerald" />
+                                        <StatCard icon="📝" label="Requirements" value="0" color="amber" />
+                                    </div>
+
+                                    {/* Filters Section */}
+                                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                        <SearchFilters filters={filters} setFilters={setFilters} />
+                                    </div>
+
+                                    {/* Warehouse Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {filteredWarehouses.map((warehouse) => (
+                                            <div 
+                                                key={warehouse.id} 
+                                                onClick={() => setSelectedWarehouse(warehouse)}
+                                                className="cursor-pointer transition-transform hover:scale-[1.02]"
+                                            >
+                                                <WarehouseCard
+                                                    title={warehouse.name}
+                                                    location={`${warehouse.location.area}, ${warehouse.location.city}`}
+                                                    price={warehouse.pricing.amount.toLocaleString()}
+                                                    area={warehouse.size.area.toLocaleString()}
+                                                    type={warehouse.category}
+                                                    imageUrl={warehouse.images[0]}
+                                                    facilities={warehouse.facilities}
+                                                    amenities={warehouse.amenities}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                            {activeTab !== 'browse' && (
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ x: 60, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    exit={{ x: -60, opacity: 0 }}
+                                    transition={{ duration: 0.3, type: 'tween' }}
+                                    className="flex items-center justify-center h-64 text-slate-400"
+                                >
+                                    Content for {activeTab} coming soon...
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </main>
             </div>
-          </motion.div>
+
+            {/* Warehouse Detail Modal */}
+            <AnimatePresence>
+                {selectedWarehouse && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                        <motion.div 
+                            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        >
+                            <div className="relative h-80">
+                                <img src={selectedWarehouse.images[0]} alt={selectedWarehouse.name} className="w-full h-full object-cover" />
+                                <button 
+                                    onClick={() => setSelectedWarehouse(null)}
+                                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:bg-white"
+                                >✕</button>
+                            </div>
+                            
+                            <div className="p-8">
+                                <h2 className="text-3xl font-bold text-slate-900 mb-2">{selectedWarehouse.name}</h2>
+                                <p className="text-slate-500 mb-8">📍 {selectedWarehouse.location.address}</p>
+
+                                <div className="grid grid-cols-3 gap-6 mb-8 p-6 bg-slate-50 rounded-2xl">
+                                    <DetailBox label="Monthly Rent" value={`₹${selectedWarehouse.pricing.amount.toLocaleString()}`} isPrice />
+                                    <DetailBox label="Size" value={`${selectedWarehouse.size.area} ${selectedWarehouse.size.unit}`} />
+                                    <DetailBox label="Type" value={selectedWarehouse.category} />
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-lg font-bold mb-2">Description</h3>
+                                        <p className="text-slate-600 leading-relaxed">{selectedWarehouse.description}</p>
+                                    </div>
+                                    
+                                    <button 
+                                        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all"
+                                        onClick={() => onOpenChat(selectedWarehouse, user)}
+                                    >
+                                        Message Warehouse Owner
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+}
+
+// Helper Components for cleaner code
+function StatCard({ icon, label, value, color }) {
+    const colors = {
+        blue: "bg-blue-50 text-blue-600 border-blue-100",
+        violet: "bg-violet-50 text-violet-600 border-violet-100",
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100"
+    };
+    return (
+        <div className={`bg-white p-6 rounded-2xl border ${colors[color]} shadow-sm`}>
+            <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl">{icon}</span>
+                <span className="font-semibold text-slate-600">{label}</span>
+            </div>
+            <div className="text-3xl font-bold text-slate-900">{value}</div>
         </div>
-      )}
-    </div>
-  )
+    );
+}
+
+function DetailBox({ label, value, isPrice }) {
+    return (
+        <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+            <p className={`text-xl font-bold ${isPrice ? 'text-blue-600' : 'text-slate-800'}`}>{value}</p>
+        </div>
+    );
 }
