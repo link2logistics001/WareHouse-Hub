@@ -129,16 +129,16 @@ export default function WhyWarehouseHub() {
               key={index}
               variants={cardVariants}
               whileHover={{ 
-                y: -10, 
-                scale: 1.03,
-                transition: { duration: 0.3 }
+                y: -6, 
+                scale: 1.01,
+                transition: { duration: 0.18 }
               }}
-              className="group relative"
+              className="group relative will-change-transform"
             >
               <div className="relative h-full bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-200/50 overflow-hidden">
                 {/* Gradient overlay on hover */}
                 <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${benefit.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-gradient-to-br ${benefit.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
                 />
 
                 {/* Icon with animated background */}
@@ -152,10 +152,10 @@ export default function WhyWarehouseHub() {
                 {/* Stats badge */}
                 <motion.div
                   className={`absolute top-6 right-6 px-3 py-1 rounded-full bg-gradient-to-r ${benefit.color} text-white text-xs font-bold shadow-lg`}
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 + 0.3 }}
+                  transition={{ delay: index * 0.1 + 0.2 }}
                 >
                   {benefit.stats}
                 </motion.div>
@@ -175,7 +175,7 @@ export default function WhyWarehouseHub() {
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 + 0.5, duration: 0.6 }}
+                  transition={{ delay: index * 0.1 + 0.3, duration: 0.35 }}
                 />
               </div>
 
