@@ -16,6 +16,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         minArea: '',
         maxBudget: ''
     });
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // Get merchant's active chats
     const merchantChats = conversations.filter(conv => conv.merchantId === user.id);
@@ -39,34 +40,67 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             animate={{ y: 0, opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 70, damping: 18 }}
         >
-            {/* Sidebar - Fixed width 64 (16rem) */}
-            <MerchantSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+            {/* Sidebar for desktop */}
+            <div className="hidden md:block">
+                <MerchantSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+            </div>
+            {/* Sidebar overlay for mobile/tablet */}
+            <AnimatePresence>
+                {sidebarOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-50 bg-black/40 md:hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <motion.div
+                            className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl border-r border-slate-200 flex flex-col"
+                            initial={{ x: -260 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -260 }}
+                            transition={{ type: 'tween', duration: 0.25 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <MerchantSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Main Content Area */}
-            <div className="flex-1 ml-64 flex flex-col">
+            <div className="flex-1 md:ml-64 flex flex-col">
                 {/* Dynamic Header */}
-                <header className="bg-white h-16 border-b border-slate-200 sticky top-0 z-10 px-8 flex items-center justify-between">
-                  <AnimatePresence mode="wait">
-                    <motion.h2
-                      key={activeTab}
-                      className="font-semibold text-slate-700 capitalize"
-                      initial={{ x: -30, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: 30, opacity: 0 }}
-                      transition={{ duration: 0.25, type: 'tween' }}
-                    >
-                      {activeTab.replace('-', ' ')}
-                    </motion.h2>
-                  </AnimatePresence>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-slate-500">Welcome, {user?.name || 'Merchant'}</span>
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                      {user?.name ? user.name[0] : 'M'}
+                <header className="bg-white h-auto min-h-16 border-b border-slate-200 sticky top-0 z-10 px-4 sm:px-8 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 py-2">
+                    <div className="flex items-center gap-3 w-full xs:w-auto">
+                        {/* Hamburger for mobile/tablet */}
+                        <button className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none" onClick={() => setSidebarOpen(true)}>
+                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <AnimatePresence mode="wait">
+                            <motion.h2
+                                key={activeTab}
+                                className="font-semibold text-slate-700 capitalize text-lg xs:text-xl"
+                                initial={{ x: -30, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: 30, opacity: 0 }}
+                                transition={{ duration: 0.25, type: 'tween' }}
+                            >
+                                {activeTab.replace('-', ' ')}
+                            </motion.h2>
+                        </AnimatePresence>
                     </div>
-                  </div>
+                    <div className="flex items-center gap-2 xs:gap-4 w-full xs:w-auto justify-between xs:justify-end">
+                        <span className="text-sm text-slate-500 truncate max-w-[120px] xs:max-w-none">Welcome, {user?.name || 'Merchant'}</span>
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                            {user?.name ? user.name[0] : 'M'}
+                        </div>
+                    </div>
                 </header>
 
-                <main className="p-8">
+                <main className="p-2 sm:p-4">
                     <div className="max-w-7xl mx-auto">
                         <AnimatePresence mode="wait">
                             {activeTab === 'browse' && (
@@ -92,7 +126,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                     </div>
 
                                     {/* Warehouse Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                         {filteredWarehouses.map((warehouse) => (
                                             <div 
                                                 key={warehouse.id} 
@@ -149,28 +183,29 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                 >✕</button>
                             </div>
                             
-                            <div className="p-8">
-                                <h2 className="text-3xl font-bold text-slate-900 mb-2">{selectedWarehouse.name}</h2>
-                                <p className="text-slate-500 mb-8">📍 {selectedWarehouse.location.address}</p>
+                            <div className="p-4 sm:p-8">
+                                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">{selectedWarehouse.name}</h2>
+                                <p className="text-slate-500 mb-6 sm:mb-8">📍 {selectedWarehouse.location.address}</p>
 
-                                <div className="grid grid-cols-3 gap-6 mb-8 p-6 bg-slate-50 rounded-2xl">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 p-4 sm:p-6 bg-slate-50 rounded-2xl">
                                     <DetailBox label="Monthly Rent" value={`₹${selectedWarehouse.pricing.amount.toLocaleString()}`} isPrice />
                                     <DetailBox label="Size" value={`${selectedWarehouse.size.area} ${selectedWarehouse.size.unit}`} />
                                     <DetailBox label="Type" value={selectedWarehouse.category} />
                                 </div>
 
-                                <div className="space-y-6">
+                                <div className="space-y-4 sm:space-y-6">
                                     <div>
-                                        <h3 className="text-lg font-bold mb-2">Description</h3>
+                                        <h3 className="text-base sm:text-lg font-bold mb-2">Description</h3>
                                         <p className="text-slate-600 leading-relaxed">{selectedWarehouse.description}</p>
                                     </div>
-                                    
-                                    <button 
-                                        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all"
-                                        onClick={() => onOpenChat(selectedWarehouse, user)}
-                                    >
-                                        Message Warehouse Owner
-                                    </button>
+                                    <div className="flex w-full">
+                                      <button 
+                                          className="mx-auto w-full sm:w-auto py-3 sm:py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-blue-200 transition-all"
+                                          onClick={() => onOpenChat(selectedWarehouse, user)}
+                                      >
+                                          Message Warehouse Owner
+                                      </button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>

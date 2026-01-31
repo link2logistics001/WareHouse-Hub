@@ -114,23 +114,25 @@ export default function DashboardHome({ setActiveTab, user }) {
             </div>
           </div>
 
-          <div className="relative h-64 w-full bg-slate-50 rounded-xl p-6 border border-slate-100">
-            <div className="absolute inset-0 flex items-end justify-between gap-4 px-6 pb-6 pt-16">
-              {chartData.map((data, i) => (
-                <div key={i} className="flex flex-col items-center gap-3 w-full h-full justify-end group cursor-pointer relative">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all absolute -top-10 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xl mb-2 transform translate-y-2 group-hover:translate-y-0">
-                    {data.value}
-                  </div>
-                  <div className="w-12 h-full bg-slate-200/50 rounded-t-xl relative overflow-hidden">
-                    <div 
-                      className={`absolute bottom-0 left-0 w-full ${data.height} bg-gradient-to-t from-orange-600 via-orange-500 to-amber-400 rounded-t-xl transition-all duration-500 group-hover:brightness-110`}
-                    >
-                      <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
+          <div className="w-full overflow-x-auto">
+            <div className="relative h-64 min-w-[420px] w-full bg-slate-50 rounded-xl p-6 border border-slate-100">
+              <div className="absolute inset-0 flex items-end justify-between gap-4 px-6 pb-6 pt-16">
+                {chartData.map((data, i) => (
+                  <div key={i} className="flex flex-col items-center gap-3 w-full h-full justify-end group cursor-pointer relative">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all absolute -top-10 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xl mb-2 transform translate-y-2 group-hover:translate-y-0">
+                      {data.value}
                     </div>
+                    <div className="w-12 h-full bg-slate-200/50 rounded-t-xl relative overflow-hidden">
+                      <div 
+                        className={`absolute bottom-0 left-0 w-full ${data.height} bg-gradient-to-t from-orange-600 via-orange-500 to-amber-400 rounded-t-xl transition-all duration-500 group-hover:brightness-110`}
+                      >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 group-hover:text-orange-600 transition-colors">{data.month}</span>
                   </div>
-                  <span className="text-xs font-bold text-slate-400 group-hover:text-orange-600 transition-colors">{data.month}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>

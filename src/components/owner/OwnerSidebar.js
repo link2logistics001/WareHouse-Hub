@@ -11,7 +11,7 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout }) {
   ];
 
   return (
-    <div className="w-64 bg-white h-screen border-r border-slate-200 flex flex-col fixed left-0 top-0">
+    <div className="w-64 bg-white h-screen border-r border-slate-200 flex flex-col fixed left-0 top-0 z-50">
       {/* Brand Logo Area */}
       <div className="p-6 border-b border-slate-100 flex items-center gap-3 cursor-pointer" onClick={() => window.location.reload()}>
         <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold">
