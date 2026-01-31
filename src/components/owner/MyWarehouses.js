@@ -36,7 +36,7 @@ export default function MyWarehouses() {
       revenue: '₹0',
       views: 120,
       status: 'Draft', 
-      image: 'https://images.unsplash.com/photo-1565610261709-5c569e63d6b5?auto=format&fit=crop&w=800&q=80'
+      image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80' // Updated image
     }
   ]);
 
