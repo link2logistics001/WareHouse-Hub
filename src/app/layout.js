@@ -1,5 +1,6 @@
 import { Outfit, Space_Grotesk } from 'next/font/google'
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -19,7 +20,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${spaceGrotesk.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }
