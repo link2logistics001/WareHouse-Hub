@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Inquiries from './Inquiries';
 import OwnerSidebar from './OwnerSidebar';
 import DashboardHome from './DashboardHome';
-import AddWarehouse from './AddWarehouse'; 
-import MyWarehouses from './MyWarehouses'; 
+import AddWarehouse from './AddWarehouse';
+import MyWarehouses from './MyWarehouses';
 import Availability from './Availability';
 import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
 
@@ -49,13 +49,13 @@ export default function OwnerDashboard({ user, onLogout }) {
 
     setUploading(true);
     setMessage({ type: '', text: '' });
-    
+
     // Add timeout protection (30 seconds)
     const uploadTimeout = setTimeout(() => {
       setUploading(false);
-      setMessage({ 
-        type: 'error', 
-        text: 'Upload timeout. Please check your internet connection and Firebase Storage configuration.' 
+      setMessage({
+        type: 'error',
+        text: 'Upload timeout. Please check your internet connection and Firebase Storage configuration.'
       });
     }, 30000);
 
@@ -69,7 +69,7 @@ export default function OwnerDashboard({ user, onLogout }) {
     } catch (error) {
       clearTimeout(uploadTimeout);
       console.error('❌ Image upload failed:', error);
-      
+
       // Show user-friendly error messages
       let errorMessage = error.message;
       if (error.message.includes('Permission denied') || error.message.includes('storage/unauthorized')) {
@@ -77,7 +77,7 @@ export default function OwnerDashboard({ user, onLogout }) {
       } else if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
         errorMessage = 'Upload failed: Network error. Please check your internet connection.';
       }
-      
+
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setUploading(false);
@@ -194,18 +194,18 @@ export default function OwnerDashboard({ user, onLogout }) {
             </h2>
           </div>
           <div className="flex items-center gap-2 xs:gap-4 w-full xs:w-auto justify-between xs:justify-end">
-             <span className="text-sm text-slate-500 truncate max-w-[120px] xs:max-w-none">Welcome, {localUser?.name || 'Owner'}</span>
-             {localUser?.photoURL ? (
-               <img 
-                 src={localUser.photoURL} 
-                 alt="Profile" 
-                 className="w-8 h-8 rounded-full object-cover"
-               />
-             ) : (
-               <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
-                  {localUser?.name ? localUser.name[0] : 'O'}
-               </div>
-             )}
+            <span className="text-sm text-slate-500 truncate max-w-[120px] xs:max-w-none">Welcome, {localUser?.name || 'Owner'}</span>
+            {localUser?.photoURL ? (
+              <img
+                src={localUser.photoURL}
+                alt="Profile"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                {localUser?.name ? localUser.name[0] : 'O'}
+              </div>
+            )}
           </div>
         </header>
 
@@ -231,7 +231,7 @@ export default function OwnerDashboard({ user, onLogout }) {
                 exit={{ x: -60, opacity: 0 }}
                 transition={{ duration: 0.3, type: 'tween' }}
               >
-                <MyWarehouses />
+                <MyWarehouses setActiveTab={setActiveTab} />
               </motion.div>
             )}
             {activeTab === 'add-warehouse' && (
@@ -281,7 +281,7 @@ export default function OwnerDashboard({ user, onLogout }) {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-slate-900">Profile Information</h2>
                     {!editMode && (
-                      <button 
+                      <button
                         onClick={() => {
                           setEditMode(true);
                           setProfileData({
@@ -298,14 +298,13 @@ export default function OwnerDashboard({ user, onLogout }) {
                   </div>
 
                   {message.text && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`mb-4 p-3 rounded-lg text-sm ${
-                        message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-                        message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-                        'bg-blue-50 text-blue-700 border border-blue-200'
-                      }`}
+                      className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+                          message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+                            'bg-blue-50 text-blue-700 border border-blue-200'
+                        }`}
                     >
                       {message.text}
                     </motion.div>
@@ -315,9 +314,9 @@ export default function OwnerDashboard({ user, onLogout }) {
                     <div className="flex items-start gap-4 mb-6">
                       <div className="relative">
                         {localUser?.photoURL ? (
-                          <img 
-                            src={localUser.photoURL} 
-                            alt="Profile" 
+                          <img
+                            src={localUser.photoURL}
+                            alt="Profile"
                             className="w-20 h-20 rounded-full object-cover shadow-lg"
                           />
                         ) : (
@@ -325,8 +324,8 @@ export default function OwnerDashboard({ user, onLogout }) {
                             {localUser?.name?.charAt(0)?.toUpperCase() || 'O'}
                           </div>
                         )}
-                        <label 
-                          htmlFor="profile-image" 
+                        <label
+                          htmlFor="profile-image"
                           className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg border-2 border-orange-500 hover:bg-orange-50 transition-colors"
                         >
                           <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,9 +333,9 @@ export default function OwnerDashboard({ user, onLogout }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
                         </label>
-                        <input 
+                        <input
                           id="profile-image"
-                          type="file" 
+                          type="file"
                           accept="image/*"
                           onChange={handleImageUpload}
                           className="hidden"
@@ -357,12 +356,12 @@ export default function OwnerDashboard({ user, onLogout }) {
                       <div className="space-y-4 border-t pt-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Full Name 
+                            Full Name
                             {localUser?.nameChanged && (
                               <span className="text-xs text-amber-600 ml-2">(Cannot be changed again)</span>
                             )}
                           </label>
-                          <input 
+                          <input
                             type="text"
                             value={profileData.name}
                             onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
@@ -376,7 +375,7 @@ export default function OwnerDashboard({ user, onLogout }) {
 
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Company Name</label>
-                          <input 
+                          <input
                             type="text"
                             value={profileData.company}
                             onChange={(e) => setProfileData({ ...profileData, company: e.target.value })}
@@ -385,14 +384,14 @@ export default function OwnerDashboard({ user, onLogout }) {
                         </div>
 
                         <div className="flex gap-3 pt-2">
-                          <button 
+                          <button
                             onClick={handleProfileUpdate}
                             disabled={saving}
                             className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:bg-orange-400"
                           >
                             {saving ? 'Saving...' : 'Save Changes'}
                           </button>
-                          <button 
+                          <button
                             onClick={() => {
                               setEditMode(false);
                               setMessage({ type: '', text: '' });
@@ -409,27 +408,27 @@ export default function OwnerDashboard({ user, onLogout }) {
                         <InfoField label="Full Name" value={localUser?.name || 'N/A'} />
                         <InfoField label="Email" value={localUser?.email || 'N/A'} />
                         {localUser?.company ? (
-                            <InfoField label="Company" value={localUser.company} />
+                          <InfoField label="Company" value={localUser.company} />
                         ) : (
-                            <div className="p-4 bg-slate-50 rounded-xl">
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Company</p>
-                                <button
-                                    onClick={() => {
-                                        setEditMode(true);
-                                        setProfileData({
-                                            name: localUser?.name || '',
-                                            company: ''
-                                        });
-                                        setMessage({ type: '', text: '' });
-                                    }}
-                                    className="text-sm px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Add Company
-                                </button>
-                            </div>
+                          <div className="p-4 bg-slate-50 rounded-xl">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Company</p>
+                            <button
+                              onClick={() => {
+                                setEditMode(true);
+                                setProfileData({
+                                  name: localUser?.name || '',
+                                  company: ''
+                                });
+                                setMessage({ type: '', text: '' });
+                              }}
+                              className="text-sm px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                              Add Company
+                            </button>
+                          </div>
                         )}
                         <InfoField label="Account Type" value="Owner" />
                         <div className="p-4 bg-slate-50 rounded-xl">
@@ -439,13 +438,13 @@ export default function OwnerDashboard({ user, onLogout }) {
                           </p>
                           {!localUser?.emailVerified && (
                             <div className="flex gap-2">
-                              <button 
+                              <button
                                 onClick={handleSendVerification}
                                 className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
                               >
                                 Send Email
                               </button>
-                              <button 
+                              <button
                                 onClick={handleRefreshVerification}
                                 className="text-xs px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors"
                               >
@@ -479,7 +478,7 @@ export default function OwnerDashboard({ user, onLogout }) {
                 <div className="bg-white p-6 sm:p-8 rounded-2xl border border-red-200 shadow-sm">
                   <h2 className="text-2xl font-bold text-red-600 mb-4">Danger Zone</h2>
                   <p className="text-slate-600 mb-6">Once you log out, you'll need to sign in again to access your account.</p>
-                  <motion.button 
+                  <motion.button
                     onClick={async () => {
                       try {
                         await logoutUser();
