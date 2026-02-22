@@ -703,14 +703,29 @@ function ErrMsg({ msg }) {
 
 /** Plain text / number / email / tel input */
 function Field({ label, id, type = 'text', placeholder, value, onChange, mandatory = false, errors = {} }) {
+  // For numeric fields, use text input with numeric inputMode to avoid
+  // browser scroll-wheel / arrow-key accidentally changing the value
+  const isNumeric = type === 'number';
+  const inputType = isNumeric ? 'text' : type;
+
   return (
     <div className="space-y-1">
       <label htmlFor={id} className="text-sm font-bold text-slate-700">
         {label} {mandatory && <span className="text-orange-500">*</span>}
       </label>
       <input
-        id={id} type={type} placeholder={placeholder} value={value}
-        onChange={e => onChange(e.target.value)}
+        id={id}
+        type={inputType}
+        inputMode={isNumeric ? 'numeric' : undefined}
+        pattern={isNumeric ? '[0-9]*' : undefined}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => {
+          const val = e.target.value;
+          // For numeric fields, only allow digits (no letters, no leading spaces)
+          if (isNumeric && val !== '' && !/^\d*\.?\d*$/.test(val)) return;
+          onChange(val);
+        }}
         className={`w-full p-3 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all ${errors[id] ? 'border-red-400 bg-red-50' : 'border-slate-200'
           }`}
       />
