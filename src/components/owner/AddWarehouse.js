@@ -68,6 +68,10 @@ export default function AddWarehouse({ setActiveTab }) {
     storageTypes: [],
     warehouseAge: '',
     warehouseGstPan: '',
+    state: '',
+    city: '',
+    addressWithZip: '',
+    googleMapPin: '',
   });
 
   // ── Step 2: Operations & Services ────────────────────────
@@ -106,10 +110,6 @@ export default function AddWarehouse({ setActiveTab }) {
     contactPerson: '',
     mobile: '',
     email: '',
-    state: '',
-    city: '',
-    addressWithZip: '',
-    googleMapPin: '',
     ownerGstPan: '',
   });
 
@@ -181,6 +181,10 @@ export default function AddWarehouse({ setActiveTab }) {
     if (!warehouseDetails.numberOfDockDoors) e.numberOfDockDoors = 'Number of dock doors is required';
     if (!warehouseDetails.containerHandling) e.containerHandling = 'Please select Yes or No';
     if (warehouseDetails.storageTypes.length === 0) e.storageTypes = 'Select at least one storage type';
+    if (!warehouseDetails.state.trim()) e.state = 'State is required';
+    if (!warehouseDetails.city.trim()) e.city = 'City is required';
+    if (!warehouseDetails.addressWithZip.trim()) e.addressWithZip = 'Address with zip code is required';
+    if (!warehouseDetails.googleMapPin.trim()) e.googleMapPin = 'Google Map pin (lat, long) is required';
     return e;
   };
 
@@ -210,10 +214,6 @@ export default function AddWarehouse({ setActiveTab }) {
     if (!ownerDetails.contactPerson.trim()) e.contactPerson = 'Contact person is required';
     if (!ownerDetails.mobile.trim()) e.mobile = 'Mobile number is required';
     if (!ownerDetails.email.trim()) e.email = 'Email is required';
-    if (!ownerDetails.state.trim()) e.state = 'State is required';
-    if (!ownerDetails.city.trim()) e.city = 'City is required';
-    if (!ownerDetails.addressWithZip.trim()) e.addressWithZip = 'Address with zip code is required';
-    if (!ownerDetails.googleMapPin.trim()) e.googleMapPin = 'Google Map pin (lat, long) is required';
     return e;
   };
 
@@ -279,6 +279,10 @@ export default function AddWarehouse({ setActiveTab }) {
         storageTypes: warehouseDetails.storageTypes,
         warehouseAge: warehouseDetails.warehouseAge || null,
         warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null,
+        state: warehouseDetails.state.trim(),
+        city: warehouseDetails.city.trim(),
+        addressWithZip: warehouseDetails.addressWithZip.trim(),
+        googleMapPin: warehouseDetails.googleMapPin.trim(),
 
         // ── Step 2: Operations & Services ─────────────────
         inboundHandling: operationsDetails.inboundHandling || null,
@@ -309,10 +313,6 @@ export default function AddWarehouse({ setActiveTab }) {
         contactPerson: ownerDetails.contactPerson.trim(),
         mobile: ownerDetails.mobile.trim(),
         email: ownerDetails.email.trim(),
-        state: ownerDetails.state.trim(),
-        city: ownerDetails.city.trim(),
-        addressWithZip: ownerDetails.addressWithZip.trim(),
-        googleMapPin: ownerDetails.googleMapPin.trim(),
         ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
 
         // ── Metadata ───────────────────────────────────────
@@ -454,6 +454,22 @@ export default function AddWarehouse({ setActiveTab }) {
 
               <Field label="GST / PAN (Optional)" id="warehouseGstPan" placeholder="e.g. 27AABC1234..."
                 value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
+
+              <Field label="State" id="state" placeholder="e.g. Maharashtra"
+                value={warehouseDetails.state} onChange={v => handleWarehouseChange('state', v)} mandatory errors={errors} />
+
+              <Field label="City" id="city" placeholder="e.g. Mumbai"
+                value={warehouseDetails.city} onChange={v => handleWarehouseChange('city', v)} mandatory errors={errors} />
+
+              <div className="md:col-span-2">
+                <Field label="Address with Zip Code" id="addressWithZip"
+                  placeholder="Plot No, Street, Landmark, City - 400001"
+                  value={warehouseDetails.addressWithZip} onChange={v => handleWarehouseChange('addressWithZip', v)} mandatory errors={errors} />
+              </div>
+
+              <Field label="Google Map Pin (Lat, Long)" id="googleMapPin"
+                placeholder="e.g. 19.0760, 72.8777"
+                value={warehouseDetails.googleMapPin} onChange={v => handleWarehouseChange('googleMapPin', v)} mandatory errors={errors} />
             </div>
 
             {/* Storage Type — full-width multi-select */}
@@ -617,22 +633,6 @@ export default function AddWarehouse({ setActiveTab }) {
 
               <Field label="Email" id="email" type="email" placeholder="contact@company.com"
                 value={ownerDetails.email} onChange={v => handleOwnerChange('email', v)} mandatory errors={errors} />
-
-              <Field label="State" id="state" placeholder="e.g. Maharashtra"
-                value={ownerDetails.state} onChange={v => handleOwnerChange('state', v)} mandatory errors={errors} />
-
-              <Field label="City" id="city" placeholder="e.g. Mumbai"
-                value={ownerDetails.city} onChange={v => handleOwnerChange('city', v)} mandatory errors={errors} />
-
-              <div className="md:col-span-2">
-                <Field label="Address with Zip Code" id="addressWithZip"
-                  placeholder="Plot No, Street, Landmark, City - 400001"
-                  value={ownerDetails.addressWithZip} onChange={v => handleOwnerChange('addressWithZip', v)} mandatory errors={errors} />
-              </div>
-
-              <Field label="Google Map Pin (Lat, Long)" id="googleMapPin"
-                placeholder="e.g. 19.0760, 72.8777"
-                value={ownerDetails.googleMapPin} onChange={v => handleOwnerChange('googleMapPin', v)} mandatory errors={errors} />
 
               <Field label="GST / PAN (Optional)" id="ownerGstPan" placeholder="e.g. ABCDE1234F"
                 value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
