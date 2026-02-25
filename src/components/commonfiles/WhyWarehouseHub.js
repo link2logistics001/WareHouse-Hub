@@ -91,9 +91,9 @@ export default function WhyChooseUs() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="w-full max-w-7xl mx-auto px-6 py-32 md:py-48 bg-white">
+    <section id="why-warehousehub" ref={sectionRef} className="w-full max-w-7xl mx-auto px-6 py-32 md:py-48 bg-white">
       <div className="mb-24 text-left">
-        
+
         {/* FIX: Vertical line is now unbold (1px width) and taller for a sleeker look */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-[1px] h-6 bg-[#E65100]"></div>
@@ -101,7 +101,7 @@ export default function WhyChooseUs() {
             Why WarehouseHub
           </span>
         </div>
-        
+
         <h2 className="text-5xl md:text-7xl font-bold leading-[1.2] text-slate-900 tracking-tight max-w-4xl">
           {/* FIX: Increased padding-bottom (pb-4) so the 'g' descender is not cut off */}
           <span className="block overflow-hidden pb-4">
@@ -110,10 +110,9 @@ export default function WhyChooseUs() {
             </span>
           </span>
           <span className="block overflow-hidden">
-            <span 
-              className={`block text-[#E65100] transition-all duration-1000 delay-300 ease-out transform ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-              }`}
+            <span
+              className={`block text-[#E65100] transition-all duration-1000 delay-300 ease-out transform ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                }`}
             >
               built for the modern era.
             </span>
