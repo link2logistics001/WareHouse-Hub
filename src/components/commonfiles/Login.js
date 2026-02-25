@@ -24,9 +24,9 @@ function RoleStep({ onSelect }) {
     },
     {
       id: 'owner',
-      label: 'Admin',
-      icon: '🏛️',
-      desc: 'Managing warehouse operations',
+      label: 'Owner',
+      icon: '�',
+      desc: 'Have warehouse space to offer',
       border: 'border-slate-400',
       bg: 'bg-slate-50',
       text: 'text-slate-700'
@@ -92,7 +92,7 @@ function RoleStep({ onSelect }) {
 
 // ─── Step 2: Auth Form ────────────────────────────────────────────────────────
 function AuthFormStep({ userType, onBack, onLoginSuccess }) {
-  const displayRole = userType === 'owner' ? 'Admin' : 'Merchant'
+  const displayRole = userType === 'owner' ? 'Owner' : 'Merchant'
   const roleColor = userType === 'owner' ? 'text-slate-700 bg-slate-100' : 'text-orange-600 bg-orange-50'
 
   const [isLogin, setIsLogin] = useState(true)
