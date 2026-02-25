@@ -31,3 +31,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# GSD personal session state
+.gsd/STATE.md
+.gsd/TODO.md
