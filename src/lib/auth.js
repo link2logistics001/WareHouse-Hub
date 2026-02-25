@@ -21,6 +21,14 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 
 /**
+ * Flag set to true while loginUser / loginWithGoogle is executing.
+ * AuthContext checks this to avoid reacting to intermediate auth-state
+ * events (sign-in → mismatch detected → sign-out) that happen inside
+ * the login flow, which would otherwise cause the wrong dashboard to render.
+ */
+export let loginFlowActive = false;
+
+/**
  * Validate email format
  * @param {string} email - Email address to validate
  * @returns {boolean} True if email is valid
@@ -163,6 +171,7 @@ export const registerUser = async (email, password, name, userType, company = ''
  * @returns {Promise<Object>} User data with userType
  */
 export const loginUser = async (email, password, userType) => {
+  loginFlowActive = true;
   try {
     // Validate email format
     if (!isValidEmail(email)) {
@@ -183,14 +192,14 @@ export const loginUser = async (email, password, userType) => {
     if (userDoc.exists()) {
       const userData = userDoc.data();
 
-      // Validate userType matches selected type
-      // IMPORTANT: sign out FIRST before throwing, otherwise Firebase auth state
-      // is already set and AuthContext will redirect to the wrong portal.
+      // Validate userType matches selected type — sign out first so Firebase
+      // auth state is clean before we throw, preventing AuthContext from
+      // seeing a briefly-signed-in user of the wrong type.
       if (userData.userType !== userType) {
-        const errMsg = 'User already registered';
-        if (typeof window !== 'undefined') sessionStorage.setItem('authMismatchError', errMsg);
         await signOut(auth);
-        throw new Error(errMsg);
+        const err = new Error('This email is already registered.');
+        err.code = 'auth/wrong-user-type';
+        throw err;
       }
 
       return {
@@ -205,11 +214,20 @@ export const loginUser = async (email, password, userType) => {
         nameChanged: userData.nameChanged || false
       };
     } else {
-      throw new Error('User data not found');
+      // Firebase auth succeeded but no Firestore doc — treat as unregistered
+      await signOut(auth);
+      if (typeof window !== 'undefined') sessionStorage.setItem('signUpPromptNeeded', 'true');
+      const err = new Error('No account found. Please sign up first.');
+      err.code = 'auth/user-not-registered';
+      throw err;
     }
   } catch (error) {
-    console.error('Error logging in:', error);
+    if (!error.code || !['auth/user-not-registered', 'auth/wrong-user-type'].includes(error.code)) {
+      console.error('Error logging in:', error);
+    }
     throw handleAuthError(error);
+  } finally {
+    loginFlowActive = false;
   }
 };
 
@@ -218,17 +236,27 @@ export const loginUser = async (email, password, userType) => {
  * @param {string} userType - 'merchant' or 'owner'
  * @returns {Promise<Object>} User data
  */
-export const loginWithGoogle = async (userType) => {
+export const loginWithGoogle = async (userType, isSignIn = false) => {
+  loginFlowActive = true;
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Check if user document exists
+    // Check if user document exists in Firestore
     const userDoc = await getDoc(doc(db, 'users', user.uid));
 
     if (!userDoc.exists()) {
-      // First time Google sign-in, create user document
+      if (isSignIn) {
+        // User tried to SIGN IN but has no account — reject and prompt sign up
+        await signOut(auth);
+        if (typeof window !== 'undefined') sessionStorage.setItem('signUpPromptNeeded', 'true');
+        const err = new Error('No account found with this Google account. Please sign up first.');
+        err.code = 'auth/user-not-registered';
+        throw err;
+      }
+
+      // Sign-UP flow: create user document with selected userType
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         email: user.email,
@@ -242,45 +270,47 @@ export const loginWithGoogle = async (userType) => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-    } else {
-      // User exists - validate userType matches
-      // IMPORTANT: sign out FIRST before throwing, otherwise Firebase auth state
-      // is already set and AuthContext will redirect to the wrong portal.
-      const existingUserData = userDoc.data();
-      if (existingUserData.userType !== userType) {
-        const errMsg = 'User already registered';
-        if (typeof window !== 'undefined') sessionStorage.setItem('authMismatchError', errMsg);
-        await signOut(auth);
-        throw new Error(errMsg);
-      }
+
+      return {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        company: '',
+        userType: userType,
+        verified: user.emailVerified,
+        emailVerified: user.emailVerified,
+        photoURL: user.photoURL || null,
+        nameChanged: false
+      };
     }
 
-    const userData = userDoc.exists() ? userDoc.data() : {
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName,
-      company: '',
-      userType: userType,
-      verified: user.emailVerified,
-      emailVerified: user.emailVerified,
-      photoURL: user.photoURL || null,
-      nameChanged: false
-    };
+    // User exists — validate userType matches
+    const existingUserData = userDoc.data();
+    if (existingUserData.userType !== userType) {
+      await signOut(auth);
+      const err = new Error('This email is already registered.');
+      err.code = 'auth/wrong-user-type';
+      throw err;
+    }
 
     return {
       uid: user.uid,
       email: user.email,
-      name: userData.name,
-      company: userData.company || '',
-      userType: userData.userType,
-      verified: userData.verified,
-      emailVerified: userData.emailVerified || user.emailVerified || false,
-      photoURL: userData.photoURL || user.photoURL || null,
-      nameChanged: userData.nameChanged || false
+      name: existingUserData.name,
+      company: existingUserData.company || '',
+      userType: existingUserData.userType,
+      verified: existingUserData.verified,
+      emailVerified: existingUserData.emailVerified || user.emailVerified || false,
+      photoURL: existingUserData.photoURL || user.photoURL || null,
+      nameChanged: existingUserData.nameChanged || false
     };
   } catch (error) {
-    console.error('Error with Google sign-in:', error);
+    if (!error.code || !['auth/user-not-registered', 'auth/popup-closed-by-user', 'auth/wrong-user-type'].includes(error.code)) {
+      console.error('Error with Google sign-in:', error);
+    }
     throw handleAuthError(error);
+  } finally {
+    loginFlowActive = false;
   }
 };
 
@@ -382,13 +412,6 @@ export const updateUserProfile = async (uid, updates) => {
  */
 export const uploadProfileImage = async (uid, file) => {
   try {
-    console.log('📤 Starting image upload for user:', uid);
-    console.log('📁 File details:', {
-      name: file.name,
-      type: file.type,
-      size: `${(file.size / 1024).toFixed(2)} KB`
-    });
-
     // Validate file type
     if (!file.type.startsWith('image/')) {
       throw new Error('Please upload an image file (JPG, PNG, etc.)');
@@ -399,15 +422,10 @@ export const uploadProfileImage = async (uid, file) => {
       throw new Error('Image size must be less than 5MB');
     }
 
-    // Create a reference to the storage location
     const fileName = `${Date.now()}_${file.name}`;
     const storagePath = `profile-images/${uid}/${fileName}`;
     const storageRef = ref(storage, storagePath);
 
-    console.log('📍 Storage path:', storagePath);
-
-    // Upload the file with metadata
-    console.log('⬆️ Uploading to Firebase Storage...');
     const metadata = {
       contentType: file.type,
       customMetadata: {
@@ -416,39 +434,22 @@ export const uploadProfileImage = async (uid, file) => {
       }
     };
 
-    const uploadResult = await uploadBytes(storageRef, file, metadata);
-    console.log('✅ Upload complete:', uploadResult.metadata.fullPath);
-
-    // Get the download URL
-    console.log('🔗 Getting download URL...');
+    await uploadBytes(storageRef, file, metadata);
     const downloadURL = await getDownloadURL(storageRef);
-    console.log('✅ Download URL obtained:', downloadURL);
 
-    // Update user document with photo URL
-    console.log('💾 Updating Firestore...');
     await updateDoc(doc(db, 'users', uid), {
       photoURL: downloadURL,
       updatedAt: serverTimestamp()
     });
-    console.log('✅ Firestore updated');
 
-    // Update Firebase Auth profile
     if (auth.currentUser) {
-      console.log('👤 Updating Auth profile...');
       await updateProfile(auth.currentUser, {
         photoURL: downloadURL
       });
-      console.log('✅ Auth profile updated');
     }
 
-    console.log('🎉 Image upload completed successfully!');
     return downloadURL;
   } catch (error) {
-    console.error('❌ Error uploading profile image:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-
-    // Provide more helpful error messages
     if (error.code === 'storage/unauthorized') {
       throw new Error('Permission denied. Please check Firebase Storage rules.');
     } else if (error.code === 'storage/canceled') {
@@ -487,13 +488,7 @@ export const sendVerificationEmail = async () => {
     };
 
     await sendEmailVerification(user, actionCodeSettings);
-
-    // Log success for debugging
-    console.log('✅ Verification email sent to:', user.email);
   } catch (error) {
-    console.error('❌ Error sending verification email:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
     throw handleAuthError(error);
   }
 };
@@ -557,14 +552,20 @@ const handleAuthError = (error) => {
       message = 'This account has been disabled. Please contact support for assistance.';
       break;
     case 'auth/user-not-found':
-      message = 'No account found with this email. Please check your email or sign up for a new account.';
+      message = 'No account found with this email. Please sign up first.';
       break;
     case 'auth/wrong-password':
       message = 'Incorrect password. Please try again or use "Forgot password" to reset it.';
       break;
     case 'auth/invalid-credential':
-      message = 'Invalid email or password. Please check your credentials and try again.';
+      message = 'No account found with these credentials. Please sign up first.';
       break;
+    case 'auth/user-not-registered':
+      // Custom code — thrown when sign-in attempted for non-existent account
+      return error; // already has the right message, pass through
+    case 'auth/wrong-user-type':
+      // Custom code — thrown when email exists under a different role
+      return error; // already has the right message, pass through
     case 'auth/too-many-requests':
       message = 'Too many failed login attempts. Please wait a few minutes before trying again.';
       break;

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Inquiries from './Inquiries';
 import OwnerSidebar from './OwnerSidebar';
@@ -8,8 +8,6 @@ import AddWarehouse from './AddWarehouse';
 import MyWarehouses from './MyWarehouses';
 import Availability from './Availability';
 import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
-
-import { useEffect } from 'react';
 export default function OwnerDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,15 +58,12 @@ export default function OwnerDashboard({ user, onLogout }) {
     }, 30000);
 
     try {
-      console.log('🖼️ Starting image upload...');
       const photoURL = await uploadProfileImage(localUser.uid, file);
       clearTimeout(uploadTimeout);
       setLocalUser({ ...localUser, photoURL });
       setMessage({ type: 'success', text: 'Profile image updated successfully!' });
-      console.log('✅ Image upload successful');
     } catch (error) {
       clearTimeout(uploadTimeout);
-      console.error('❌ Image upload failed:', error);
 
       // Show user-friendly error messages
       let errorMessage = error.message;
@@ -302,8 +297,8 @@ export default function OwnerDashboard({ user, onLogout }) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-                          message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-                            'bg-blue-50 text-blue-700 border border-blue-200'
+                        message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+                          'bg-blue-50 text-blue-700 border border-blue-200'
                         }`}
                     >
                       {message.text}
@@ -483,8 +478,7 @@ export default function OwnerDashboard({ user, onLogout }) {
                       try {
                         await logoutUser();
                         onLogout();
-                      } catch (error) {
-                        console.error('Logout error:', error);
+                      } catch {
                         alert('Failed to log out. Please try again.');
                       }
                     }}
