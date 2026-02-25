@@ -1,7 +1,29 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function HeroSection() {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Only start loading + playing once the hero is in the viewport
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.src = '/warehouse-bg.mp4';
+          video.load();
+          video.play().catch(() => { }); // autoplay may be blocked silently
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section style={{
       position: 'relative',
@@ -25,12 +47,13 @@ export default function HeroSection() {
         ::placeholder { color: #9ca3af; }
       `}</style>
 
-      {/* Background Video — let it breathe */}
+      {/* Background Video — lazy-loaded via IntersectionObserver */}
       <video
-        autoPlay
+        ref={videoRef}
         loop
         muted
         playsInline
+        preload="none"
         style={{
           position: 'absolute',
           inset: 0,
@@ -41,9 +64,8 @@ export default function HeroSection() {
           opacity: 0.7,
           filter: 'grayscale(20%) brightness(0.75)',
         }}
-      >
-        <source src="/warehouse-bg.mp4" type="video/mp4" />
-      </video>
+      />
+
 
       {/* Single clean overlay — dark at edges, open in the middle */}
       <div style={{
