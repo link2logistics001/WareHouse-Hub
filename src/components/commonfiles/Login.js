@@ -14,6 +14,7 @@ export default function Login({ onLoginSuccess }) {
   })
   const [focused, setFocused] = useState({})
   const [error, setError] = useState('')
+  const [wrongTypeError, setWrongTypeError] = useState('')
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -56,6 +57,7 @@ export default function Login({ onLoginSuccess }) {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
     setError('')
+    setWrongTypeError('')
     setSuccessMessage('')
 
     // Real-time email validation
@@ -69,6 +71,13 @@ export default function Login({ onLoginSuccess }) {
     }
   }
 
+  // Auto-clear wrong-type error after 4 seconds
+  useEffect(() => {
+    if (!wrongTypeError) return
+    const timer = setTimeout(() => setWrongTypeError(''), 4000)
+    return () => clearTimeout(timer)
+  }, [wrongTypeError])
+
   // Reset password strength when switching between login/signup
   useEffect(() => {
     if (isLogin) {
@@ -78,18 +87,6 @@ export default function Login({ onLoginSuccess }) {
     }
   }, [isLogin])
 
-  // On mount: pick up any mismatch error persisted in sessionStorage before a signOut-triggered remount
-  useEffect(() => {
-    const storedError = sessionStorage.getItem('authMismatchError')
-    if (storedError) {
-      setError(storedError)
-      sessionStorage.removeItem('authMismatchError')
-      // Page remounts at top after signOut re-render cycle — scroll to login so error is visible
-      setTimeout(() => {
-        document.getElementById('login')?.scrollIntoView({ behavior: 'smooth' })
-      }, 150)
-    }
-  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -120,7 +117,11 @@ export default function Login({ onLoginSuccess }) {
         onLoginSuccess(user)
       }
     } catch (err) {
-      setError(err.message)
+      if (err.code === 'auth/wrong-user-type') {
+        setWrongTypeError(err.message)
+      } else {
+        setError(err.message || '')
+      }
     } finally {
       setLoading(false)
     }
@@ -128,14 +129,19 @@ export default function Login({ onLoginSuccess }) {
 
   const handleGoogleSignIn = async () => {
     setError('')
+    setWrongTypeError('')
     setSuccessMessage('')
     setLoading(true)
 
     try {
-      const user = await loginWithGoogle(userType)
+      const user = await loginWithGoogle(userType, isLogin)
       onLoginSuccess(user)
     } catch (err) {
-      setError(err.message)
+      if (err.code === 'auth/wrong-user-type') {
+        setWrongTypeError(err.message)
+      } else {
+        setError(err.message || '')
+      }
     } finally {
       setLoading(false)
     }
@@ -311,7 +317,7 @@ export default function Login({ onLoginSuccess }) {
               <div className="flex gap-2 mb-6 p-1 bg-slate-100 rounded-xl">
                 <button
                   type="button"
-                  onClick={() => setIsLogin(true)}
+                  onClick={() => { setIsLogin(true); setError(''); setWrongTypeError('') }}
                   className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${isLogin
                     ? 'bg-white text-primary-600 shadow-md'
                     : 'text-slate-600 hover:text-slate-900'
@@ -321,7 +327,7 @@ export default function Login({ onLoginSuccess }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsLogin(false)}
+                  onClick={() => { setIsLogin(false); setError(''); setWrongTypeError('') }}
                   className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${!isLogin
                     ? 'bg-white text-primary-600 shadow-md'
                     : 'text-slate-600 hover:text-slate-900'
@@ -330,6 +336,7 @@ export default function Login({ onLoginSuccess }) {
                   Sign Up
                 </button>
               </div>
+
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {!isLogin && (
@@ -492,6 +499,20 @@ export default function Login({ onLoginSuccess }) {
                   </motion.div>
                 )}
 
+
+                {wrongTypeError && (
+                  <motion.div
+                    key={wrongTypeError}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="flex items-start gap-2 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm"
+                  >
+                    <span className="mt-0.5 shrink-0">⚠️</span>
+                    <span>{wrongTypeError}</span>
+                  </motion.div>
+                )}
+
                 {successMessage && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -535,6 +556,7 @@ export default function Login({ onLoginSuccess }) {
 
               {/* Google Sign In */}
               <motion.button
+                id="google-signup-btn"
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}

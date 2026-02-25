@@ -14,15 +14,15 @@ import OwnerDashboard from '@/components/owner/OwnerDashboard'
 import ChatBox from '@/components/commonfiles/ChatBox'
 
 export default function Home() {
-  const { user, loading } = useAuth()
+  const { user, loading, setUser } = useAuth()
   const [showChat, setShowChat] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState(null)
 
   const handleLogout = async () => {
     try {
-      await logoutUser()        // Firebase signOut → AuthContext clears user → page shows landing
-    } catch (e) {
-      console.error('Logout error:', e)
+      await logoutUser()
+    } catch {
+      // signOut failure is non-critical; auth state listener will clear the user
     }
     setShowChat(false)
     setSelectedWarehouse(null)
@@ -83,7 +83,7 @@ export default function Home() {
       <HeroSection />
       <WhyWarehouseHub />
       <HowItWorks />
-      <Login onLoginSuccess={() => { }} />
+      <Login onLoginSuccess={(userData) => setUser(userData)} />
       <GetStarted />
       <Footer />
     </div>
