@@ -197,7 +197,7 @@ export const loginUser = async (email, password, userType) => {
       // seeing a briefly-signed-in user of the wrong type.
       if (userData.userType !== userType) {
         await signOut(auth);
-        const err = new Error('This email is already registered.');
+        const err = new Error('User already registered.');
         err.code = 'auth/wrong-user-type';
         throw err;
       }
@@ -288,7 +288,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
     const existingUserData = userDoc.data();
     if (existingUserData.userType !== userType) {
       await signOut(auth);
-      const err = new Error('This email is already registered.');
+      const err = new Error('User already registered.');
       err.code = 'auth/wrong-user-type';
       throw err;
     }
