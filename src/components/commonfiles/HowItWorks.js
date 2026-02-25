@@ -35,7 +35,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 bg-white w-full">
+    <section id="how-warehousehub-works" className="py-24 bg-white w-full">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Header */}
