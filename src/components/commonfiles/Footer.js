@@ -1,180 +1,62 @@
 'use client'
-import { motion } from 'framer-motion'
+import { LiquidOcean } from "@/components/ui/liquid-ocean";
 
 export default function Footer() {
-  const merchantLinks = [
-    { name: 'Find Warehouses', href: '#' },
-    { name: 'Post Requirements', href: '#' },
-    { name: 'How It Works', href: '#' }
-  ]
-
-  const ownerLinks = [
-    { name: 'List Your Warehouse', href: '#' },
-    { name: 'View Inquiries', href: '#' },
-    { name: 'Pricing', href: '#' }
-  ]
-
-  const companyLinks = [
-    { name: 'About Us', href: '#' },
-    { name: 'Contact', href: '#' },
-    { name: 'Privacy Policy', href: '#' }
-  ]
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    }
-  }
+  const links = {
+    merchants: ['Find Warehouses', 'Post Requirements', 'How It Works'],
+    owners: ['List Your Warehouse', 'View Inquiries', 'Pricing'],
+    company: ['About Us', 'Contact', 'Privacy Policy']
+  };
 
   return (
-    <footer className="bg-gradient-to-b from-slate-900 to-slate-950 text-slate-400 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Footer Content */}
-        <motion.div
-          className="grid md:grid-cols-4 gap-12 mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          {/* Logo & Description */}
-          <motion.div variants={itemVariants} className="col-span-1">
-            <motion.div
-              className="flex items-center gap-3 mb-4"
-              whileHover={{ x: 5 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <motion.div
-                className="w-10 h-10 bg-gradient-to-br from-primary-500 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                🏢
-              </motion.div>
-              <span className="font-display font-bold text-white text-xl">WarehouseHub</span>
-            </motion.div>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Connecting businesses with the perfect warehouse spaces across India.
-            </p>
-          </motion.div>
+    <footer className="relative w-full bg-[#020c1b] overflow-hidden border-t border-slate-800">
+      <LiquidOcean>
+        {/* Semi-transparent overlay for text legibility over the 3D canvas */}
+        <div className="relative z-10 py-16 bg-[#020c1b]/50 backdrop-blur-[1px]">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
-          {/* For Merchants */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-white mb-6 text-lg">For Merchants</h4>
-            <ul className="space-y-4">
-              {merchantLinks.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-slate-400 hover:text-primary-400 transition-colors duration-300 text-sm"
-                  >
-                    {link.name}
-                  </a>
-                </motion.li>
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Brand */}
+              <div className="col-span-1 space-y-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-[1px] h-6 bg-[#E65100]" />
+                  <span className="font-bold text-white text-2xl tracking-tighter uppercase">WarehouseHub</span>
+                </div>
+                <p className="text-sm text-slate-400 leading-relaxed font-light italic">
+                 
+                </p>
+              </div>
+
+              {/* Link columns */}
+              {Object.entries(links).map(([title, items], idx) => (
+                <div key={idx} className="space-y-6">
+                  <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.4em]">FOR {title}</h4>
+                  <ul className="space-y-3">
+                    {items.map((item, i) => (
+                      <li key={i}>
+                        <a href="#" className="text-sm text-slate-500 hover:text-white transition-all duration-300">
+                          {item}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </motion.div>
+            </div>
 
-          {/* For Owners */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-white mb-6 text-lg">For Owners</h4>
-            <ul className="space-y-4">
-              {ownerLinks.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-slate-400 hover:text-orange-400 transition-colors duration-300 text-sm"
-                  >
-                    {link.name}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
+            {/* Bottom row */}
+            <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-medium text-slate-600 uppercase tracking-[0.2em]">
+              <p>© {new Date().getFullYear()} WarehouseHub // Structural Logistics</p>
+              <div className="flex gap-8">
+                {['Terms', 'Privacy', 'Cookie Policy'].map((item, i) => (
+                  <a key={i} href="#" className="hover:text-white transition-colors">{item}</a>
+                ))}
+              </div>
+            </div>
 
-          {/* Company */}
-          <motion.div variants={itemVariants}>
-            <h4 className="font-semibold text-white mb-6 text-lg">Company</h4>
-            <ul className="space-y-4">
-              {companyLinks.map((link, index) => (
-                <motion.li
-                  key={index}
-                  whileHover={{ x: 5 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  <a
-                    href={link.href}
-                    className="text-slate-400 hover:text-white transition-colors duration-300 text-sm"
-                  >
-                    {link.name}
-                  </a>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        </motion.div>
-
-        {/* Divider */}
-        <motion.div
-          className="border-t border-slate-800"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        />
-
-        {/* Bottom Footer */}
-        <motion.div
-          className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} WarehouseHub. All rights reserved.
-          </p>
-
-          {/* Social Links / Additional Links */}
-          <div className="flex gap-8 text-sm">
-            {[
-              { name: 'Terms & Conditions', href: '#' },
-              { name: 'Privacy Policy', href: '#' },
-              { name: 'Cookie Policy', href: '#' }
-            ].map((link, index) => (
-              <motion.a
-                key={index}
-                href={link.href}
-                className="text-slate-500 hover:text-white transition-colors duration-300"
-                whileHover={{ y: -2 }}
-              >
-                {link.name}
-              </motion.a>
-            ))}
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </LiquidOcean>
     </footer>
-  )
+  );
 }
