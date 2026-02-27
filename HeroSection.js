@@ -38,9 +38,8 @@ export default function HeroSection() {
       fontFamily: "'Inter', sans-serif",
     }}>
 
-      {/* Google Fonts */}
+      {/* Fix 3b: @import removed — Inter is loaded via next/font in layout.js */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         .search-btn:hover { background: #e06810 !important; }
         .supplier-btn:hover { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.4) !important; }
         .phone-link:hover { color: rgba(255,255,255,0.9) !important; }
