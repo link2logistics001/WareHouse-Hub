@@ -123,17 +123,66 @@ export default function HeroSection() {
           Find, compare, and rent warehouse space that fits your exact logistics needs.
         </p>
 
-        {/* Search Bar */}
-        <div style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
+        {/* Search Bar — Desktop */}
+        <div className="hidden lg:block" style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255,255,255,0.96)',
+            borderRadius: '100px',
+            padding: '5px 22px',
+            boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+            gap: '8px',
+          }}>
+            <svg style={{ width: '16px', height: '16px', color: '#9ca3af', flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="ZIP, City, or State..."
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                color: '#111827',
+                padding: '10px 0',
+                fontFamily: "'Inter', sans-serif",
+              }}
+            />
+            <button
+              className="search-btn"
+              type="button"
+              style={{
+                background: '#f97316',
+                color: '#ffffff',
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                padding: '10px 24px',
+                borderRadius: '100px',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'background 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              Search Space
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar — Mobile/Tablet */}
+        <div className="lg:hidden" style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-          }} className="sm:flex-row sm:items-center sm:bg-white/96 sm:rounded-[100px] sm:px-[22px] sm:py-[5px] sm:shadow-[0_4px_30px_rgba(0,0,0,0.3)] sm:gap-2">
-            <svg style={{ width: '16px', height: '16px', color: '#9ca3af', flexShrink: 0, display: 'none' }} className="sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          }}>
             <input
               type="text"
               placeholder="ZIP, City, or State..."
@@ -150,7 +199,6 @@ export default function HeroSection() {
                 fontFamily: "'Inter', sans-serif",
                 boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
               }}
-              className="sm:bg-transparent sm:shadow-none sm:p-[10px_0] sm:rounded-none"
             />
             <button
               className="search-btn"
@@ -170,7 +218,6 @@ export default function HeroSection() {
                 flexShrink: 0,
                 width: '100%',
               }}
-              className="sm:w-auto search-btn"
             >
               Search Space
             </button>
