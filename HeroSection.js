@@ -28,12 +28,12 @@ export default function HeroSection() {
     <section style={{
       position: 'relative',
       width: '100%',
-      height: '100vh',
-      minHeight: '680px',
+      minHeight: '100dvh',   /* dvh accounts for browser chrome on mobile */
+      minHeight: '560px',    /* floor so landscape phones don't collapse */
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      overflow: 'hidden',
+      overflow: 'visible',   /* was hidden — was clipping heading on landscape phones */
       backgroundColor: '#0a0a0b',
       fontFamily: "'Inter', sans-serif",
     }}>
@@ -98,27 +98,24 @@ export default function HeroSection() {
         padding: '0 24px',
       }}>
 
-        {/* Headline — single line */}
         <h1 style={{
-          fontSize: 'clamp(1.6rem, 4vw, 3.2rem)',
+          fontSize: 'clamp(1.4rem, 5vw, 3.2rem)',
           fontWeight: 700,
           color: '#ffffff',
-          lineHeight: 1.18,
+          lineHeight: 1.15,
           letterSpacing: '-0.025em',
-          margin: '0 0 20px 0',
-          // whiteSpace removed — allows line-wrapping on mobile
+          margin: '0 0 12px 0',
         }}>
           The Virtual Place <span style={{ color: '#f97316' }}>for Space</span>
         </h1>
 
-        {/* Subheading */}
         <p style={{
-          fontSize: '1rem',
+          fontSize: 'clamp(0.85rem, 2.5vw, 1rem)',
           color: 'rgba(203,213,225,0.75)',
           fontWeight: 400,
-          lineHeight: 1.7,
+          lineHeight: 1.6,
           maxWidth: '460px',
-          margin: '0 0 40px 0',
+          margin: '0 0 28px 0',
         }}>
           Find, compare, and rent warehouse space that fits your exact logistics needs.
         </p>
@@ -277,6 +274,6 @@ export default function HeroSection() {
         </div>
 
       </div>
-    </section>
+    </section >
   );
 }
