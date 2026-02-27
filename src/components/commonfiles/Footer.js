@@ -12,9 +12,9 @@ export default function Footer() {
       <div className="relative z-10 py-16 bg-[#020c1b]/50 backdrop-blur-[1px]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
 
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12">
             {/* Brand */}
-            <div className="col-span-1 space-y-5">
+            <div className="col-span-2 md:col-span-1 space-y-5">
               <div className="flex items-center gap-3">
                 <div className="w-[1px] h-6 bg-[#E65100]" />
                 <span className="font-bold text-white text-2xl tracking-tighter uppercase">WarehouseHub</span>

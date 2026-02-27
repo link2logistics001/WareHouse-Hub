@@ -96,7 +96,7 @@ export default function HowItWorks() {
 
   return (
     <section ref={containerRef} className="relative bg-white min-h-[300vh]">
-      <div className="sticky top-0 h-screen flex items-center overflow-hidden px-6 md:px-24">
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden px-4 md:px-24">
 
         {/* Subtle Background Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -118,7 +118,7 @@ export default function HowItWorks() {
               </div>
 
               {/* Masked Text Reveal Animation */}
-              <h2 className="text-6xl md:text-8xl font-bold text-slate-900 tracking-tighter leading-[0.9]">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-slate-900 tracking-tighter leading-[0.9]">
                 <span className="block overflow-hidden pb-2">
                   <motion.span
                     initial={{ y: "100%" }}

@@ -100,13 +100,13 @@ export default function HeroSection() {
 
         {/* Headline — single line */}
         <h1 style={{
-          fontSize: 'clamp(1.8rem, 4vw, 3.2rem)',
+          fontSize: 'clamp(1.6rem, 4vw, 3.2rem)',
           fontWeight: 700,
           color: '#ffffff',
-          lineHeight: 1.12,
+          lineHeight: 1.18,
           letterSpacing: '-0.025em',
           margin: '0 0 20px 0',
-          whiteSpace: 'nowrap',
+          // whiteSpace removed — allows line-wrapping on mobile
         }}>
           The Virtual Place <span style={{ color: '#f97316' }}>for Space</span>
         </h1>
@@ -127,14 +127,10 @@ export default function HeroSection() {
         <div style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(255,255,255,0.96)',
-            borderRadius: '100px',
-            padding: '5px 5px 5px 22px',
-            boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+            flexDirection: 'column',
             gap: '8px',
-          }}>
-            <svg style={{ width: '16px', height: '16px', color: '#9ca3af', flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          }} className="sm:flex-row sm:items-center sm:bg-white/96 sm:rounded-[100px] sm:px-[22px] sm:py-[5px] sm:shadow-[0_4px_30px_rgba(0,0,0,0.3)] sm:gap-2">
+            <svg style={{ width: '16px', height: '16px', color: '#9ca3af', flexShrink: 0, display: 'none' }} className="sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -143,15 +139,18 @@ export default function HeroSection() {
               placeholder="ZIP, City, or State..."
               style={{
                 flex: 1,
-                background: 'transparent',
+                background: 'rgba(255,255,255,0.96)',
                 border: 'none',
                 outline: 'none',
                 fontSize: '0.9rem',
                 fontWeight: 500,
                 color: '#111827',
-                padding: '10px 0',
+                padding: '14px 18px',
+                borderRadius: '100px',
                 fontFamily: "'Inter', sans-serif",
+                boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
               }}
+              className="sm:bg-transparent sm:shadow-none sm:p-[10px_0] sm:rounded-none"
             />
             <button
               className="search-btn"
@@ -162,14 +161,16 @@ export default function HeroSection() {
                 fontFamily: "'Inter', sans-serif",
                 fontWeight: 600,
                 fontSize: '0.875rem',
-                padding: '11px 24px',
+                padding: '14px 24px',
                 borderRadius: '100px',
                 border: 'none',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 transition: 'background 0.2s',
                 flexShrink: 0,
+                width: '100%',
               }}
+              className="sm:w-auto search-btn"
             >
               Search Space
             </button>
