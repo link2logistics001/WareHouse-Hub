@@ -192,6 +192,23 @@ export const loginUser = async (email, password, userType) => {
     if (userDoc.exists()) {
       const userData = userDoc.data();
 
+      // ── Admin override: admin accounts can log in from any portal ────
+      // If this email is an admin, redirect them to the admin panel
+      // regardless of which role (merchant/owner) they selected.
+      if (userData.userType === 'admin') {
+        return {
+          uid: user.uid,
+          email: user.email,
+          name: userData.name || user.displayName || '',
+          company: userData.company || '',
+          userType: 'admin',
+          verified: userData.verified || true,
+          emailVerified: userData.emailVerified || user.emailVerified || false,
+          photoURL: userData.photoURL || user.photoURL || null,
+          nameChanged: userData.nameChanged || false
+        };
+      }
+
       // Validate userType matches selected type — sign out first so Firebase
       // auth state is clean before we throw, preventing AuthContext from
       // seeing a briefly-signed-in user of the wrong type.
@@ -284,8 +301,25 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
       };
     }
 
-    // User exists — validate userType matches
+    // User exists — check for admin override first
     const existingUserData = userDoc.data();
+
+    // ── Admin override: admin accounts can log in from any portal ────
+    if (existingUserData.userType === 'admin') {
+      return {
+        uid: user.uid,
+        email: user.email,
+        name: existingUserData.name || user.displayName || '',
+        company: existingUserData.company || '',
+        userType: 'admin',
+        verified: existingUserData.verified || true,
+        emailVerified: existingUserData.emailVerified || user.emailVerified || false,
+        photoURL: existingUserData.photoURL || user.photoURL || null,
+        nameChanged: existingUserData.nameChanged || false
+      };
+    }
+
+    // Validate userType matches selected type
     if (existingUserData.userType !== userType) {
       await signOut(auth);
       const err = new Error('User already registered.');

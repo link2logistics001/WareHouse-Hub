@@ -11,6 +11,7 @@ import GetStarted from '@/components/commonfiles/GetStarted'
 import Footer from '@/components/commonfiles/Footer'
 import MerchantDashboard from '@/components/merchant/MerchantDashboard'
 import OwnerDashboard from '@/components/owner/OwnerDashboard'
+import AdminDashboard from '@/components/admin/AdminDashboard'
 import ChatBox from '@/components/commonfiles/ChatBox'
 
 export default function Home() {
@@ -34,8 +35,6 @@ export default function Home() {
   }
 
   // ── 1. Wait for Firebase to resolve auth state ──────────────
-  // Without this, on reload the page flashes the landing page
-  // for a split second before Firebase confirms the user is logged in.
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -47,8 +46,18 @@ export default function Home() {
     )
   }
 
-  // ── 2. Logged-in → show dashboard ───────────────────────────
+  // ── 2. Logged-in → show correct dashboard ───────────────────
   if (user) {
+    // Admin gets the admin panel — full stop, no chat box
+    if (user.userType === 'admin') {
+      return (
+        <AdminDashboard
+          user={user}
+          onLogout={handleLogout}
+        />
+      )
+    }
+
     return (
       <>
         {user.userType === 'merchant' ? (

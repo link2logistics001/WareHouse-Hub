@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useEffect, useState, useRef } from 'react';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   MapPin, Building2, Layers, Package, DoorOpen,
   TrendingUp, Calendar, CheckCircle, Loader2, Plus,
-  Warehouse, ShieldCheck, Tag, Clock
+  Warehouse, ShieldCheck, Tag, Clock,
+  ChevronDown, Wifi, WifiOff, CheckCircle2, XCircle,
 } from 'lucide-react';
 
 export default function MyWarehouses({ setActiveTab }) {
@@ -131,17 +132,59 @@ export default function MyWarehouses({ setActiveTab }) {
 function WarehouseCard({ warehouse: w }) {
   const frontPhoto = w.photos?.frontView || null;
 
-  const statusColor = w.status === 'active'
-    ? 'bg-green-500/80 border-green-400 text-white'
-    : w.status === 'pending'
-      ? 'bg-amber-400/90 border-amber-300 text-white'
-      : 'bg-slate-500/80 border-slate-400 text-white';
+  // ── Approval status badge (set by admin) ──────────────────
+  const approvalBadge = {
+    approved: {
+      color: 'bg-emerald-500/85 border-emerald-400 text-white',
+      label: '✓ Approved',
+    },
+    pending: {
+      color: 'bg-amber-400/90 border-amber-300 text-white',
+      label: '⏳ Pending',
+    },
+    rejected: {
+      color: 'bg-red-500/85 border-red-400 text-white',
+      label: '✕ Rejected',
+    },
+  };
+  const adminStatus = w.status || 'pending';
+  const badge = approvalBadge[adminStatus] || approvalBadge.pending;
 
-  const statusLabel = w.status === 'active'
-    ? '● Live'
-    : w.status === 'pending'
-      ? '⏳ Pending'
-      : '○ Offline';
+  // ── Online / Offline toggle (set by owner) ─────────────────
+  // Only meaningful when the warehouse is approved.
+  // isOnline defaults to true unless explicitly set false.
+  const [isOnline, setIsOnline] = useState(w.isOnline !== false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const dropRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleAvailabilityChange = async (newValue) => {
+    if (toggling) return;
+    setDropdownOpen(false);
+    if (newValue === isOnline) return;
+    setToggling(true);
+    try {
+      await updateDoc(doc(db, 'warehouse_details', w.id), { isOnline: newValue });
+      setIsOnline(newValue);
+    } catch (err) {
+      console.error('Failed to update availability:', err);
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  const isApproved = adminStatus === 'approved';
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
@@ -158,18 +201,73 @@ function WarehouseCard({ warehouse: w }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
 
-        {/* Status badge */}
-        <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-sm ${statusColor}`}>
-          {statusLabel}
-        </div>
+        {/* ── TOP-LEFT ──────────────────────────────────────────────
+            Approved  → Online/Offline toggle (replaces the badge)
+            Pending   → ⏳ Pending badge
+            Rejected  → ✕ Rejected badge
+        ──────────────────────────────────────────────────────────── */}
+        {isApproved ? (
+          /* Online / Offline toggle — now at TOP-LEFT */
+          <div ref={dropRef} className="absolute top-3 left-3" style={{ zIndex: 10 }}>
+            <button
+              onClick={() => setDropdownOpen(prev => !prev)}
+              disabled={toggling}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-sm transition-all
+                ${isOnline
+                  ? 'bg-green-600/90 border-green-400 text-white'
+                  : 'bg-slate-600/80 border-slate-400 text-white'
+                } ${toggling ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 cursor-pointer'}`}
+            >
+              {toggling ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : isOnline ? (
+                <Wifi className="w-3 h-3" />
+              ) : (
+                <WifiOff className="w-3 h-3" />
+              )}
+              {isOnline ? 'Online' : 'Offline'}
+              <ChevronDown className={`w-3 h-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-        {/* Category badge */}
+            {/* Dropdown */}
+            {dropdownOpen && (
+              <div className="absolute left-0 mt-1.5 w-36 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden py-1">
+                <button
+                  onClick={() => handleAvailabilityChange(true)}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
+                    ${isOnline ? 'text-green-600 bg-green-50' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <Wifi className="w-3.5 h-3.5" />
+                  Set Online
+                  {isOnline && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
+                </button>
+                <button
+                  onClick={() => handleAvailabilityChange(false)}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
+                    ${!isOnline ? 'text-slate-700 bg-slate-100' : 'text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <WifiOff className="w-3.5 h-3.5" />
+                  Set Offline
+                  {!isOnline && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-slate-600" />}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Pending / Rejected badge — stays at top-left */
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-sm ${badge.color}`}>
+            {badge.label}
+          </div>
+        )}
+
+        {/* ── TOP-RIGHT — Category badge (always visible) ── */}
         {w.warehouseCategory && (
           <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-slate-700 border border-white/60">
             {w.warehouseCategory}
           </div>
         )}
       </div>
+
 
       {/* Card body */}
       <div className="p-5 flex flex-col flex-1">
@@ -257,9 +355,19 @@ function WarehouseCard({ warehouse: w }) {
               ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
               : 'Just now'}
           </div>
-          <span className="flex items-center gap-1">
-            <CheckCircle className="w-3.5 h-3.5 text-green-400" /> Published
-          </span>
+          {adminStatus === 'approved' ? (
+            <span className="flex items-center gap-1 text-emerald-500 font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+            </span>
+          ) : adminStatus === 'rejected' ? (
+            <span className="flex items-center gap-1 text-red-400 font-semibold">
+              <XCircle className="w-3.5 h-3.5" /> Rejected
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-amber-500 font-semibold">
+              <Clock className="w-3.5 h-3.5" /> Under Review
+            </span>
+          )}
         </div>
       </div>
     </div>
