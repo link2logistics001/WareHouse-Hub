@@ -215,7 +215,6 @@ function WarehouseLeftPanel() {
           fontSize: "clamp(32px, 4vw, 52px)",
           fontWeight: 800, color: WH_SLATE_DARK,
           letterSpacing: "-0.04em", lineHeight: 1.08, margin: 0,
-          fontFamily: "system-ui, -apple-system, sans-serif",
         }}>
           Join the<br /><span style={{ color: WH_ORANGE }}>Hub.</span>
         </h2>
