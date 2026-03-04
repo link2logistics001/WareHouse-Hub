@@ -15,6 +15,7 @@ import {
     Settings, Package, Building2, Tag, Loader2, Database, Globe,
 } from 'lucide-react';
 import { migrateWarehouseFields } from '@/lib/migrateFields';
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -881,7 +882,7 @@ function GeoAnalyticsView() {
         return `rgb(${Math.round(234 - t * 180)},${Math.round(179 - t * 100)},${Math.round(8 + t * 220)})`;
     };
 
-    const { ComposableMap, Geographies, Geography, ZoomableGroup } = require('react-simple-maps');
+
     const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
     return (
@@ -898,8 +899,8 @@ function GeoAnalyticsView() {
                         key={opt.key}
                         onClick={() => setDateRange(opt.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${dateRange === opt.key
-                                ? 'bg-orange-600 text-white shadow-sm'
-                                : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                            ? 'bg-orange-600 text-white shadow-sm'
+                            : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                             }`}
                     >
                         {opt.label}
