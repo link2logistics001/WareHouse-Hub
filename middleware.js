@@ -9,9 +9,22 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  // To avoid Next.js / Vercel Edge fetch absolute URL issues or infinite loops,
-  // we do a background execute instead of awaiting. 
-  // Make sure protocol is correct based on original request
+  // ── Only track real page navigations, not internal Next.js requests ──
+  // Skip RSC (React Server Component) data fetches
+  if (request.headers.get('rsc') || request.headers.get('x-nextjs-data')) {
+    return NextResponse.next();
+  }
+  // Skip prefetch requests (browser link prefetching)
+  const purpose = request.headers.get('purpose') || request.headers.get('x-purpose');
+  if (purpose === 'prefetch') {
+    return NextResponse.next();
+  }
+  // Only track top-level document requests (not XHR/fetch/script loads)
+  const fetchDest = request.headers.get('sec-fetch-dest');
+  if (fetchDest && fetchDest !== 'document') {
+    return NextResponse.next();
+  }
+
   const proto = request.headers.get('x-forwarded-proto') || 'http';
   const host = request.headers.get('host');
   const trackingUrl = `${proto}://${host}/api/track`;
@@ -35,3 +48,4 @@ export function middleware(request) {
 }
 
 export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'] };
+
