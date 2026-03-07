@@ -254,7 +254,7 @@ export default function DashboardHome({ setActiveTab, user }) {
               </div>
 
               {/* Category breakdown */}
-              {['Bonded', 'Non-Bonded', 'FTWZ'].map(cat => {
+              {['Bonded', 'General', 'FTWZ'].map(cat => {
                 const count = warehouses.filter(w => w.warehouseCategory === cat).length;
                 if (count === 0) return null;
                 return (

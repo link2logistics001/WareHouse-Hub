@@ -16,7 +16,7 @@ import {
 // ─────────────────────────────────────────────────────────────
 
 // Step 1 – Warehouse Details
-const WAREHOUSE_CATEGORIES = ['Bonded', 'Non-Bonded', 'FTWZ'];
+const WAREHOUSE_CATEGORIES = ['Bonded', 'General', 'FTWZ'];
 const CONSTRUCTION_TYPES = ['RCC', 'PEB', 'Shed', 'Other'];
 const STORAGE_TYPES = ['Hazardous', 'Non-Hazardous', 'Temperature Controlled', 'Non-Temperature'];
 const WAREHOUSE_AGES = ['0-3 years', '3-7 years', '7+ years'];
@@ -55,7 +55,17 @@ export default function AddWarehouse({ setActiveTab }) {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
 
-  // ── Step 1: Warehouse Details ─────────────────────────────
+  // ── Step 1: Owner / Business Details ─────────────────────
+  const [ownerDetails, setOwnerDetails] = useState({
+    businessType: '',
+    companyName: '',
+    contactPerson: '',
+    mobile: '',
+    email: '',
+    ownerGstPan: '',
+  });
+
+  // ── Step 2: Warehouse Details ─────────────────────────────
   const [warehouseDetails, setWarehouseDetails] = useState({
     warehouseName: '',
     warehouseCategory: '',
@@ -75,7 +85,7 @@ export default function AddWarehouse({ setActiveTab }) {
     googleMapPin: '',
   });
 
-  // ── Step 2: Operations & Services ────────────────────────
+  // ── Step 3: Operations & Services ────────────────────────
   const [operationsDetails, setOperationsDetails] = useState({
     inboundHandling: '',   // 'Yes' | 'No' | ''
     outboundHandling: '',
@@ -91,7 +101,7 @@ export default function AddWarehouse({ setActiveTab }) {
     customValueAddedService: '',
   });
 
-  // ── Step 3: Pricing & Photos ─────────────────────────────
+  // ── Step 4: Pricing & Photos ─────────────────────────────
   const [pricingDetails, setPricingDetails] = useState({
     pricingUnit: '',
     customPricingUnit: '',
@@ -109,15 +119,7 @@ export default function AddWarehouse({ setActiveTab }) {
     rateCard: null,   // Optional
   });
 
-  // ── Step 4: Owner / Business Details ─────────────────────
-  const [ownerDetails, setOwnerDetails] = useState({
-    businessType: '',
-    companyName: '',
-    contactPerson: '',
-    mobile: '',
-    email: '',
-    ownerGstPan: '',
-  });
+
 
   // OTP Verification state
   const [otpSent, setOtpSent] = useState(false);
@@ -211,19 +213,9 @@ export default function AddWarehouse({ setActiveTab }) {
     else if (available < 0) e.availableArea = 'Available area cannot be negative';
     else if (total > 0 && available > total) e.availableArea = 'Available area cannot be greater than Total area';
 
-    if (!warehouseDetails.clearHeight) e.clearHeight = 'Clear height is required';
-    if (!warehouseDetails.numberOfDockDoors) e.numberOfDockDoors = 'Number of dock doors is required';
-    if (!warehouseDetails.containerHandling) e.containerHandling = 'Please select Yes or No';
-
-    if (warehouseDetails.typeOfConstruction === 'Other' && !warehouseDetails.customTypeOfConstruction.trim()) {
-      e.customTypeOfConstruction = 'Please specify the construction type';
-    }
-
-    if (warehouseDetails.storageTypes.length === 0) e.storageTypes = 'Select at least one storage type';
     if (!warehouseDetails.state.trim()) e.state = 'State is required';
     if (!warehouseDetails.city.trim()) e.city = 'City is required';
     if (!warehouseDetails.addressWithZip.trim()) e.addressWithZip = 'Address with zip code is required';
-    if (!warehouseDetails.googleMapPin.trim()) e.googleMapPin = 'Google Map pin (lat, long) is required';
     return e;
   };
 
@@ -232,8 +224,8 @@ export default function AddWarehouse({ setActiveTab }) {
     if (!operationsDetails.daysOfOperation) e.daysOfOperation = 'Please select days of operation';
     if (!operationsDetails.operationTime) e.operationTime = 'Please select operation time';
 
-    if (operationsDetails.operationTime === 'Other' && !operationsDetails.customOperationTime.trim()) {
-      e.customOperationTime = 'Please specify the operation time';
+    if ((operationsDetails.operationTime === 'Other' || operationsDetails.operationTime === 'Fixed Hours') && !operationsDetails.customOperationTime.trim()) {
+      e.customOperationTime = 'Please specify the operation time / shifts';
     }
 
     if (operationsDetails.securityFeatures.length === 0) e.securityFeatures = 'Select at least one security feature';
@@ -637,20 +629,49 @@ export default function AddWarehouse({ setActiveTab }) {
                 placeholder="Select category" value={warehouseDetails.warehouseCategory}
                 onChange={v => handleWarehouseChange('warehouseCategory', v)} mandatory errors={errors} />
 
+              {/* Storage Type — appears only after category is selected */}
+              {warehouseDetails.warehouseCategory && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                  <MultiChips
+                    label="Storage Type" id="storageTypes" options={STORAGE_TYPES} mandatory
+                    hint="Select all that apply"
+                    selected={warehouseDetails.storageTypes}
+                    onToggle={item => toggleItem('storageTypes', item, setWarehouseDetails)}
+                    errors={errors}
+                  />
+                </div>
+              )}
+
               <Field label="Total Area (sq ft)" id="totalArea" type="number" placeholder="e.g. 25000"
-                value={warehouseDetails.totalArea} onChange={v => handleWarehouseChange('totalArea', v)} mandatory errors={errors} />
+                value={warehouseDetails.totalArea} onChange={v => {
+                  handleWarehouseChange('totalArea', v);
+                  const available = Number(warehouseDetails.availableArea);
+                  if (available && Number(v) > 0 && available > Number(v)) {
+                    setErrors(prev => ({ ...prev, availableArea: 'Available area cannot be greater than Total area' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, availableArea: '' }));
+                  }
+                }} mandatory errors={errors} />
 
               <Field label="Available Area (sq ft)" id="availableArea" type="number" placeholder="e.g. 20000"
-                value={warehouseDetails.availableArea} onChange={v => handleWarehouseChange('availableArea', v)} mandatory errors={errors} />
+                value={warehouseDetails.availableArea} onChange={v => {
+                  handleWarehouseChange('availableArea', v);
+                  const total = Number(warehouseDetails.totalArea);
+                  if (total > 0 && Number(v) > total) {
+                    setErrors(prev => ({ ...prev, availableArea: 'Available area cannot be greater than Total area' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, availableArea: '' }));
+                  }
+                }} mandatory errors={errors} />
 
               <Field label="Clear Height (ft)" id="clearHeight" type="number" placeholder="e.g. 30"
-                value={warehouseDetails.clearHeight} onChange={v => handleWarehouseChange('clearHeight', v)} mandatory errors={errors} />
+                value={warehouseDetails.clearHeight} onChange={v => handleWarehouseChange('clearHeight', v)} errors={errors} />
 
               <Field label="Number of Dock Doors" id="numberOfDockDoors" type="number" placeholder="e.g. 4"
-                value={warehouseDetails.numberOfDockDoors} onChange={v => handleWarehouseChange('numberOfDockDoors', v)} mandatory errors={errors} />
+                value={warehouseDetails.numberOfDockDoors} onChange={v => handleWarehouseChange('numberOfDockDoors', v)} errors={errors} />
 
               <YesNoField label="40 ft Container Handling" id="containerHandling"
-                value={warehouseDetails.containerHandling} onChange={v => handleWarehouseChange('containerHandling', v)} mandatory errors={errors} />
+                value={warehouseDetails.containerHandling} onChange={v => handleWarehouseChange('containerHandling', v)} errors={errors} />
 
               <div className="flex flex-col gap-4">
                 <SelectField label="Type of Construction" id="typeOfConstruction" options={CONSTRUCTION_TYPES}
@@ -690,19 +711,10 @@ export default function AddWarehouse({ setActiveTab }) {
 
               <Field label="Google Map Pin (Lat, Long)" id="googleMapPin"
                 placeholder="e.g. 19.0760, 72.8777"
-                value={warehouseDetails.googleMapPin} onChange={v => handleWarehouseChange('googleMapPin', v)} mandatory errors={errors} />
+                value={warehouseDetails.googleMapPin} onChange={v => handleWarehouseChange('googleMapPin', v)} errors={errors} />
             </div>
 
-            {/* Storage Type — full-width multi-select */}
-            <div className="mt-6">
-              <MultiChips
-                label="Storage Type" id="storageTypes" options={STORAGE_TYPES} mandatory
-                hint="Select all that apply"
-                selected={warehouseDetails.storageTypes}
-                onToggle={item => toggleItem('storageTypes', item, setWarehouseDetails)}
-                errors={errors}
-              />
-            </div>
+
           </div>
         )}
 
@@ -734,8 +746,16 @@ export default function AddWarehouse({ setActiveTab }) {
                     placeholder="Select time" value={operationsDetails.operationTime}
                     onChange={v => {
                       handleOperationsChange('operationTime', v);
-                      if (v !== 'Other') handleOperationsChange('customOperationTime', '');
+                      if (v !== 'Other' && v !== 'Fixed Hours') handleOperationsChange('customOperationTime', '');
                     }} mandatory errors={errors} />
+
+                  {operationsDetails.operationTime === 'Fixed Hours' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                      <Field label="Specify Fixed Hours / Shifts" id="customOperationTime" placeholder="e.g. 9 AM to 6 PM or Shift 1: 6AM-2PM, Shift 2: 2PM-10PM"
+                        value={operationsDetails.customOperationTime || ''}
+                        onChange={v => handleOperationsChange('customOperationTime', v)} mandatory errors={errors} />
+                    </div>
+                  )}
 
                   {operationsDetails.operationTime === 'Other' && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-200">
