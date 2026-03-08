@@ -8,10 +8,10 @@
  * Usage:
  *   import { rateLimit } from '@/lib/rateLimit';
  *
- *   const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500, limit: 10 });
+ *   const limiter = rateLimit({ interval: 60_000, limit: 10 });
  *
  *   // Inside an API route handler:
- *   const { success, remaining, limit } = limiter.check(request, 10);
+ *   const { success, remaining, limit } = limiter.check(request);
  *   if (!success) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
  */
 
@@ -20,42 +20,48 @@
  *
  * @param {Object}  opts
  * @param {number}  opts.interval              - Sliding window size in milliseconds (default: 60 000 = 1 min)
+ * @param {number}  opts.limit                 - Max requests allowed per IP within the interval (default: 10)
  * @param {number}  opts.uniqueTokenPerInterval - Max unique IPs to track before oldest entries are evicted (default: 500)
- * @returns {{ check: (request: Request, limit: number) => { success: boolean, remaining: number, limit: number } }}
+ * @returns {{ check: (request: Request) => { success: boolean, remaining: number, limit: number } }}
  */
-export function rateLimit({ interval = 60_000, uniqueTokenPerInterval = 500 } = {}) {
+export function rateLimit({ interval = 60_000, limit = 10, uniqueTokenPerInterval = 500 } = {}) {
     // Map<token, number[]>  — each value is an array of timestamps
     const tokenCache = new Map();
-
-    // Periodic cleanup to prevent memory leaks
-    const cleanupInterval = setInterval(() => {
-        const now = Date.now();
-        for (const [token, timestamps] of tokenCache) {
-            const valid = timestamps.filter((t) => now - t < interval);
-            if (valid.length === 0) {
-                tokenCache.delete(token);
-            } else {
-                tokenCache.set(token, valid);
-            }
-        }
-    }, interval);
-
-    // Allow garbage collection of the timer in serverless environments
-    if (cleanupInterval.unref) {
-        cleanupInterval.unref();
-    }
+    let lastCleanup = Date.now();
 
     return {
         /**
          * Check whether a request is within the rate limit.
          *
          * @param {Request} request - The incoming request (used to extract IP)
-         * @param {number}  limit   - Max requests allowed within the interval
          * @returns {{ success: boolean, remaining: number, limit: number }}
          */
-        check(request, limit) {
+        check(request) {
             const token = getClientIp(request);
+
+            // If we can't identify the client, skip rate limiting to avoid
+            // penalising unrelated clients sharing the 'unknown' bucket
+            // (e.g. local dev, proxies that strip IP headers).
+            if (!token) {
+                return { success: true, remaining: limit, limit };
+            }
+
             const now = Date.now();
+
+            // Opportunistic cleanup — runs at most once per interval
+            // instead of using setInterval, avoiding unnecessary timers
+            // in serverless / edge environments.
+            if (now - lastCleanup > interval) {
+                for (const [key, ts] of tokenCache) {
+                    const valid = ts.filter((t) => now - t < interval);
+                    if (valid.length === 0) {
+                        tokenCache.delete(key);
+                    } else {
+                        tokenCache.set(key, valid);
+                    }
+                }
+                lastCleanup = now;
+            }
 
             // Get existing timestamps or create new entry
             const timestamps = tokenCache.get(token) || [];
@@ -94,13 +100,14 @@ export function rateLimit({ interval = 60_000, uniqueTokenPerInterval = 500 } = 
 
 /**
  * Extract the client IP from a Next.js Request object.
- * Checks standard proxy headers first, then falls back to 'unknown'.
+ * Checks proxy headers first, then the NextRequest.ip property,
+ * and returns null if the client cannot be identified.
  *
  * @param {Request} request
- * @returns {string}
+ * @returns {string | null}  IP string, or null when unidentifiable
  */
 function getClientIp(request) {
-    // Vercel / proxy headers
+    // 1. Standard proxy / CDN headers
     const forwarded = request.headers.get('x-forwarded-for');
     if (forwarded) {
         return forwarded.split(',')[0].trim();
@@ -111,7 +118,14 @@ function getClientIp(request) {
         return realIp.trim();
     }
 
-    return 'unknown';
+    // 2. NextRequest.ip — available in Next.js middleware & edge runtime
+    if (request.ip) {
+        return request.ip;
+    }
+
+    // 3. Cannot determine client — return null so the caller can decide
+    //    whether to skip rate limiting rather than sharing one bucket.
+    return null;
 }
 
 // ─── Pre-configured limiters for common use cases ──────────────────────────
@@ -122,6 +136,7 @@ function getClientIp(request) {
  */
 export const apiLimiter = rateLimit({
     interval: 60_000,           // 1 minute
+    limit: 10,                  // 10 requests per window
     uniqueTokenPerInterval: 500,
 });
 
@@ -131,37 +146,32 @@ export const apiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
     interval: 60_000,           // 1 minute
+    limit: 5,                   // 5 requests per window
     uniqueTokenPerInterval: 500,
 });
 
-/**
- * Tracking limiter — 10 requests per minute per IP.
- * For the visitor tracking endpoint.
- */
-export const trackingLimiter = rateLimit({
-    interval: 60_000,           // 1 minute
-    uniqueTokenPerInterval: 500,
-});
 
 /**
  * Helper to create a 429 Too Many Requests response with Retry-After header.
  *
- * @param {number} retryAfterSeconds - Seconds the client should wait (default: 60)
+ * @param {Object}  opts
+ * @param {number}  opts.retryAfter - Seconds the client should wait (default: 60)
+ * @param {number}  opts.limit      - The configured rate limit (for the X-RateLimit-Limit header, default: 0)
  * @returns {Response}
  */
-export function rateLimitResponse(retryAfterSeconds = 60) {
+export function rateLimitResponse({ retryAfter = 60, limit = 0 } = {}) {
     return new Response(
         JSON.stringify({
             error: 'Too many requests',
             message: 'You have exceeded the rate limit. Please try again later.',
-            retryAfter: retryAfterSeconds,
+            retryAfter,
         }),
         {
             status: 429,
             headers: {
                 'Content-Type': 'application/json',
-                'Retry-After': String(retryAfterSeconds),
-                'X-RateLimit-Limit': '0',
+                'Retry-After': String(retryAfter),
+                'X-RateLimit-Limit': String(limit),
                 'X-RateLimit-Remaining': '0',
             },
         }

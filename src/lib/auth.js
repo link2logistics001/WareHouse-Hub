@@ -21,8 +21,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 
 // ─── Client-side auth rate limiting ─────────────────────────────────────────
-// Prevents brute-force attacks by limiting attempts per time window.
-// Uses a simple sliding-window counter stored in memory.
+// Client-side backoff helper to discourage rapid retries in the UI.
+// NOTE: This runs only in memory on the client and can be bypassed.
+//       It does NOT provide real brute-force protection; enforce limits on the server.
 const AUTH_RATE_LIMIT_WINDOW = 60_000; // 1 minute
 const AUTH_RATE_LIMIT_MAX = 5;      // max attempts per window
 const RESET_RATE_LIMIT_MAX = 3;      // max password resets per window
