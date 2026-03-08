@@ -100,14 +100,24 @@ export function rateLimit({ interval = 60_000, limit = 10, uniqueTokenPerInterva
 
 /**
  * Extract the client IP from a Next.js Request object.
- * Checks proxy headers first, then the NextRequest.ip property,
- * and returns null if the client cannot be identified.
+ * Checks NextRequest.ip first (most trustworthy on platforms like Vercel
+ * where it is set at the edge), then falls back to proxy headers, and
+ * returns null if the client cannot be identified.
  *
  * @param {Request} request
  * @returns {string | null}  IP string, or null when unidentifiable
  */
 function getClientIp(request) {
-    // 1. Standard proxy / CDN headers
+    // 1. NextRequest.ip — set by the platform at the edge (e.g. Vercel).
+    //    This is the most trustworthy source because it cannot be spoofed
+    //    by the client, unlike x-forwarded-for.
+    if (request.ip) {
+        return request.ip;
+    }
+
+    // 2. Standard proxy / CDN headers (fallback for non-Vercel deployments).
+    //    NOTE: These assume a trusted reverse proxy upstream that sanitises
+    //    the headers. On untrusted proxies an attacker could spoof these.
     const forwarded = request.headers.get('x-forwarded-for');
     if (forwarded) {
         return forwarded.split(',')[0].trim();
@@ -118,13 +128,9 @@ function getClientIp(request) {
         return realIp.trim();
     }
 
-    // 2. NextRequest.ip — available in Next.js middleware & edge runtime
-    if (request.ip) {
-        return request.ip;
-    }
-
-    // 3. Cannot determine client — return null so the caller can decide
-    //    whether to skip rate limiting rather than sharing one bucket.
+    // 3. Cannot determine client — log a warning so operators can detect
+    //    potential bypasses, then return null (check() will skip rate limiting).
+    console.warn('[rateLimit] Could not determine client IP — rate limiting skipped for this request.');
     return null;
 }
 
