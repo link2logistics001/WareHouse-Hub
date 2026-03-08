@@ -8,11 +8,14 @@ export function middleware(request) {
 
   // ── Rate limit all /api/ routes at the middleware level ──
   if (pathname.startsWith('/api/')) {
-    const { success } = apiLimiter.check(request, 10);
+    const { success, remaining, limit } = apiLimiter.check(request);
     if (!success) {
-      return rateLimitResponse(60);
+      return rateLimitResponse({ retryAfter: 60, limit });
     }
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('X-RateLimit-Limit', String(limit));
+    response.headers.set('X-RateLimit-Remaining', String(remaining));
+    return response;
   }
 
   if (SKIP.some(p => pathname.startsWith(p))) {
