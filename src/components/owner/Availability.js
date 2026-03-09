@@ -109,19 +109,25 @@ export default function Availability() {
   }, [user?.uid, monthKey]);
 
   // ----------------------------------------------------------
-  //  Initial + month-change load
+  //  Fetch warehouses once on mount (they don't change per month)
+  // ----------------------------------------------------------
+  useEffect(() => {
+    fetchWarehouses();
+  }, [fetchWarehouses]);
+
+  // ----------------------------------------------------------
+  //  Fetch availability when month changes
   // ----------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      await fetchWarehouses();
       await fetchAvailability();
       if (!cancelled) setLoading(false);
     };
     load();
     return () => { cancelled = true; };
-  }, [fetchWarehouses, fetchAvailability]);
+  }, [fetchAvailability]);
 
   // ----------------------------------------------------------
   //  Stats – computed from availability data
@@ -167,27 +173,37 @@ export default function Availability() {
       const ownerName = user.name || user.email || 'Unknown Owner';
       const existingDay = availability[modalDate] || {};
 
-      // Only save warehouses that the user explicitly touched in the modal
-      const changed = warehouses.filter(w => {
-        if (!touchedIds.has(w.id)) return false;  // user didn't touch this one
-        const newStatus = modalStatuses[w.id];
-        const oldStatus = existingDay[w.id];
-        return newStatus && newStatus !== oldStatus; // actually changed
-      });
+      // Split touched warehouses into: status updates vs. cleared ("Not Set")
+      const updated = [];   // warehouses whose status changed to a new value
+      const cleared = [];   // warehouses reverted to "Not Set" (need Firestore delete)
 
-      if (changed.length === 0) {
+      for (const w of warehouses) {
+        if (!touchedIds.has(w.id)) continue;         // user didn't touch this one
+        const newStatus = modalStatuses[w.id] || '';  // "" when "— Not Set —"
+        const oldStatus = existingDay[w.id] || '';
+
+        if (newStatus === oldStatus) continue;        // no actual change
+
+        if (newStatus) {
+          updated.push(w);   // status changed to a real value
+        } else if (oldStatus) {
+          cleared.push(w);   // had a status, now reverted to empty → delete
+        }
+      }
+
+      if (updated.length === 0 && cleared.length === 0) {
         showToast('No changes to save.', 'success');
         closeModal();
         setSaving(false);
         return;
       }
 
-      // Save only the changed warehouses
       // Path: warehouse_availability/{YYYY-MM}/entries/{warehouseId_date}
       const saveMonth = modalDate.substring(0, 7); // e.g. "2026-03"
 
-      for (const w of changed) {
-        const status = modalStatuses[w.id] || 'available';
+      // ── Upsert warehouses with a new status ──
+      for (const w of updated) {
+        const status = modalStatuses[w.id];
         const warehouseName = w.warehouseName || w.name || 'Warehouse';
         const docId = availDocId(w.id, modalDate);
         const ref = doc(db, 'warehouse_availability', saveMonth, 'entries', docId);
@@ -208,16 +224,31 @@ export default function Availability() {
         console.log(`[Availability] ✓ Saved ${warehouseName}`);
       }
 
-      // Update local state — merge only changed statuses into existing day
+      // ── Delete warehouses reverted to "Not Set" ──
+      for (const w of cleared) {
+        const warehouseName = w.warehouseName || w.name || 'Warehouse';
+        const docId = availDocId(w.id, modalDate);
+        const ref = doc(db, 'warehouse_availability', saveMonth, 'entries', docId);
+
+        console.log(`[Availability] Clearing → ${warehouseName} | date=${modalDate}`);
+        await deleteDoc(ref);
+        console.log(`[Availability] ✓ Cleared ${warehouseName}`);
+      }
+
+      // Update local state
       setAvailability(prev => {
         const updatedDay = { ...(prev[modalDate] || {}) };
-        changed.forEach(w => {
-          updatedDay[w.id] = modalStatuses[w.id] || 'available';
+        updated.forEach(w => {
+          updatedDay[w.id] = modalStatuses[w.id];
+        });
+        cleared.forEach(w => {
+          delete updatedDay[w.id];
         });
         return { ...prev, [modalDate]: updatedDay };
       });
 
-      showToast(`${changed.length} warehouse${changed.length > 1 ? 's' : ''} updated!`, 'success');
+      const totalChanges = updated.length + cleared.length;
+      showToast(`${totalChanges} warehouse${totalChanges > 1 ? 's' : ''} updated!`, 'success');
       closeModal();
     } catch (err) {
       console.error('Error saving availability:', err);

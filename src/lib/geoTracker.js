@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
 
 async function hashIp(ip) {
   const msgBuffer = new TextEncoder().encode(ip + (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || ''));
@@ -29,20 +29,17 @@ export async function trackVisitor(geoData) {
   const docId = `${hashedIp}_${today}`;
   const ref = doc(collection(db, 'visitors'), docId);
   try {
-    const existing = await getDoc(ref);
-    if (existing.exists()) {
-      await setDoc(ref, { pageviews: (existing.data().pageviews || 1) + 1 }, { merge: true });
-      return { status: 'existing', docId };
-    }
+    // Single write — creates doc if new, or atomically increments pageviews.
+    // No getDoc needed, saving 1 read per page load.
     await setDoc(ref, {
       hashedIp, country,
       countryCode: countryCode.toUpperCase(),
       city, region,
       date: today,
-      pageviews: 1,
-      timestamp: serverTimestamp(),
-    });
-    return { status: 'new', docId };
+      pageviews: increment(1),
+      lastSeen: serverTimestamp(),
+    }, { merge: true });
+    return { status: 'tracked', docId };
   } catch (err) {
     console.error('[geoTracker] Firestore write failed:', err);
     throw err;
