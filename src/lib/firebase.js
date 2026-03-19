@@ -4,6 +4,18 @@
  * Persistence is set to browserSessionPersistence so that each browser
  * tab has its own independent auth session — logging in as admin in one
  * tab will NOT affect any other tab open in the same browser.
+ *
+ * ── Local development (phone auth) ─────────────────────────────────────────
+ * Firebase explicitly blocks localhost as an authorized domain for phone auth.
+ * In development we connect to the Firebase Auth Emulator (port 9099), which:
+ *  • Needs no reCAPTCHA
+ *  • Works with any phone number
+ *  • Shows a generated OTP in the Emulator UI at http://localhost:4000
+ *
+ * Run the emulator before starting the dev server:
+ *   npx firebase emulators:start --only auth
+ *
+ * In production the emulator is never used — real Firebase runs as normal.
  */
 
 import { initializeApp, getApps } from 'firebase/app';
@@ -11,6 +23,7 @@ import {
   getAuth,
   setPersistence,
   browserSessionPersistence,
+  connectAuthEmulator,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -29,6 +42,24 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 // Auth — session-scoped so each tab is independent
 export const auth = getAuth(app);
+
+// Connect to the local Auth Emulator in development.
+// Firebase phone auth is blocked on localhost by Google's servers — the
+// emulator is the only code-level way to test it without deploying.
+// Guard with a session-storage flag so we only call connectAuthEmulator once
+// per browser session (calling it twice throws an error).
+if (
+  typeof window !== 'undefined' &&
+  process.env.NODE_ENV === 'development' &&
+  !sessionStorage.getItem('__emulator_connected__')
+) {
+  try {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    sessionStorage.setItem('__emulator_connected__', '1');
+  } catch {
+    // Already connected (hot-reload) — safe to ignore
+  }
+}
 
 // Set persistence to sessionStorage (runs once per tab on module load).
 // We export the promise so that AuthContext can await it BEFORE subscribing

@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { db, storage, auth } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Building2, User, ArrowLeft, ArrowRight, CheckCircle,
@@ -128,7 +128,9 @@ export default function AddWarehouse({ setActiveTab }) {
   const [otpError, setOtpError] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  // Countdown timer for Resend OTP (60 seconds)
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const countdownRef = useRef(null);
 
   // ── UI state ─────────────────────────────────────────────
   const [errors, setErrors] = useState({});
@@ -136,7 +138,6 @@ export default function AddWarehouse({ setActiveTab }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // File input refs for the hidden <input type="file">
   const frontViewRef = useRef(null);
   const insideViewRef = useRef(null);
   const dockAreaRef = useRef(null);
@@ -248,61 +249,79 @@ export default function AddWarehouse({ setActiveTab }) {
   // Navigation
   // ─────────────────────────────────────────────────────────
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
+  // ───────────────────────────────────────────────────────────
+  // Countdown timer — ticks down after an OTP is dispatched.
+  // Ensures the Resend button stays disabled for 60 seconds.
+  // ───────────────────────────────────────────────────────────
+
+  const startCountdown = () => {
+    // Clear any running countdown before starting fresh
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setResendCountdown(60);
+    countdownRef.current = setInterval(() => {
+      setResendCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
       });
-    }
+    }, 1000);
   };
 
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
+  // ───────────────────────────────────────────────────────────
+  // OTP handlers — delegate to phoneAuth module
+  // ───────────────────────────────────────────────────────────
+
   const handleSendOtp = async () => {
-    if (!ownerDetails.mobile || ownerDetails.mobile.length < 10) {
-      setOtpError("Please enter a valid mobile number.");
+    const mobile = ownerDetails.mobile.trim();
+    if (!mobile || mobile.length < 10) {
+      setOtpError('Please enter a valid mobile number before sending OTP.');
       return;
     }
     setOtpError('');
     setSendingOtp(true);
     try {
-      setupRecaptcha();
-      const appVerifier = window.recaptchaVerifier;
-      // Format number to string, assuming +91 for India if no country code provided
-      let formattedNumber = ownerDetails.mobile.trim();
-      if (!formattedNumber.startsWith('+')) {
-        formattedNumber = '+91' + formattedNumber;
-      }
-
-      const confResult = await signInWithPhoneNumber(auth, formattedNumber, appVerifier);
-      setConfirmationResult(confResult);
+      // Prepend +91 if no country code is present
+      const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile;
+      await sendPhoneOtp(formatted);
       setOtpSent(true);
+      setOtp('');
+      startCountdown();
     } catch (error) {
-      console.error("Error sending OTP:", error);
-      // Surface the actual error message to the UI
-      const errorMsg = error.message || error.code || "Please try again.";
-      setOtpError(`Failed to send OTP: ${errorMsg}`);
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear()
-        window.recaptchaVerifier = null;
-      }
+      console.error('Send OTP error:', error);
+      setOtpError(error.message);
     } finally {
       setSendingOtp(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 6) {
-      setOtpError("Please enter a valid 6-digit OTP.");
+    if (!otp || otp.trim().length < 6) {
+      setOtpError('Please enter the 6-digit OTP you received.');
       return;
     }
     setOtpError('');
     setVerifyingOtp(true);
     try {
-      await confirmationResult.confirm(otp);
+      await verifyPhoneOtp(otp.trim());
       setOtpVerified(true);
-      setOtpSent(false); // Hide OTP field
+      setOtpSent(false);
+      setOtp('');
+      // Clear the countdown since we no longer need to resend
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setResendCountdown(0);
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-      setOtpError("Invalid OTP. Please try again.");
+      console.error('Verify OTP error:', error);
+      setOtpError(error.message);
     } finally {
       setVerifyingOtp(false);
     }
@@ -539,64 +558,81 @@ export default function AddWarehouse({ setActiveTab }) {
                   value={ownerDetails.mobile} onChange={v => {
                     handleOwnerChange('mobile', v);
                     if (otpVerified) setOtpVerified(false);
-                    if (otpSent) setOtpSent(false);
+                    if (otpSent) { setOtpSent(false); setResendCountdown(0); }
                   }} mandatory errors={errors} />
 
-                {/* OTP Minimalistic Section */}
+                {/* OTP Section */}
                 <div className="text-sm mt-1 mb-2">
                   {otpVerified ? (
-                    <span className="flex items-center gap-1 font-bold text-green-600">
-                      <CheckCircle className="w-4 h-4" /> Verified
+                    <span className="flex items-center gap-1.5 font-bold text-green-600">
+                      <CheckCircle className="w-4 h-4" /> Phone Verified
                     </span>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {!otpSent ? (
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 text-xs">Phone not verified</span>
-                          <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            disabled={sendingOtp || !ownerDetails.mobile || ownerDetails.mobile.length < 10}
-                            className="bg-slate-900 border border-transparent shadow hover:bg-slate-800 text-white rounded-lg px-4 py-1.5 text-xs font-semibold disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                          >
-                            {sendingOtp && <Loader2 className="w-3 h-3 animate-spin" />}
-                            Send OTP
-                          </button>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 text-xs">Phone not verified</span>
+                            <button
+                              type="button"
+                              onClick={handleSendOtp}
+                              disabled={sendingOtp || !ownerDetails.mobile || ownerDetails.mobile.replace(/\D/g, '').length < 10}
+                              className="bg-slate-900 border border-transparent shadow hover:bg-slate-800 text-white rounded-lg px-4 py-1.5 text-xs font-semibold disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                              {sendingOtp && <Loader2 className="w-3 h-3 animate-spin" />}
+                              {sendingOtp ? 'Sending...' : 'Send OTP'}
+                            </button>
+                          </div>
+                          {/* Anchor for invisible reCAPTCHA in production */}
+                          <div id="recaptcha-container" style={{ display: 'none' }} />
                         </div>
                       ) : (
-                        <div className="flex items-end gap-2 mt-1">
-                          <div className="flex-1">
-                            <Field
-                              label="Enter OTP"
-                              id="otpCode"
-                              type="text"
-                              placeholder="123456"
-                              value={otp}
-                              onChange={setOtp}
-                            />
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-end gap-2 mt-1">
+                            <div className="flex-1">
+                              <div className="space-y-1">
+                                <label htmlFor="otpCode" className="text-sm font-bold text-slate-700">Enter OTP</label>
+                                <input
+                                  id="otpCode"
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={6}
+                                  autoComplete="one-time-code"
+                                  placeholder="123456"
+                                  value={otp}
+                                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all tracking-widest text-center font-mono text-lg"
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleVerifyOtp}
+                              disabled={verifyingOtp || otp.length < 6}
+                              className="px-4 py-[14px] bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 mb-1"
+                            >
+                              {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={handleVerifyOtp}
-                            disabled={verifyingOtp || otp.length < 6}
-                            className="px-4 py-[14px] bg-orange-600 text-white text-sm font-semibold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 mb-1"
-                          >
-                            {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
-                          </button>
+
+                          {/* Resend OTP — gated by 60s countdown */}
+                          {!verifyingOtp && (
+                            resendCountdown > 0 ? (
+                              <span className="text-xs text-slate-400">
+                                Resend OTP in {resendCountdown}s
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={handleSendOtp}
+                                disabled={sendingOtp}
+                                className="text-xs text-orange-600 hover:text-orange-700 self-start underline font-medium"
+                              >
+                                {sendingOtp ? 'Sending...' : 'Resend OTP'}
+                              </button>
+                            )
+                          )}
                         </div>
-                      )}
-
-                      <div id="recaptcha-container"></div>
-
-                      {otpSent && !verifyingOtp && (
-                        <button
-                          type="button"
-                          onClick={handleSendOtp}
-                          disabled={sendingOtp}
-                          className="text-xs text-orange-600 hover:text-orange-700 self-start underline font-medium"
-                        >
-                          {sendingOtp ? 'Sending...' : 'Resend OTP'}
-                        </button>
                       )}
 
                       {otpError && <ErrMsg msg={otpError} />}

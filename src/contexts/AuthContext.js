@@ -11,6 +11,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, persistenceReady } from '@/lib/firebase';
 import { getUserData, loginFlowActive } from '@/lib/auth';
+import { phoneVerificationFlowActive } from '@/lib/phoneAuth';
 
 const AuthContext = createContext({});
 
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         // If loginUser / loginWithGoogle is actively running, ignore all intermediate
         // auth-state events — the Login component will call onLoginSuccess directly.
-        if (loginFlowActive) return;
+        if (loginFlowActive || phoneVerificationFlowActive) return;
         if (firebaseUser) {
           let pendingRetry = false;
           try {
