@@ -23,34 +23,10 @@ export async function generateBrochure(warehouse) {
   const lightBg  = [248, 250, 252];
   const emerald  = [16, 185, 129];
 
-  // ── Helper: load image as base64 ──
-  // Strategy 1: Load via <img> + canvas (works for CORS-enabled origins like Firebase Storage)
-  // Strategy 2: Fall back to server-side proxy if direct load fails
-  const loadImageViaCanvas = (url) => {
+  // ── Helper: load image as base64 via server proxy (bypasses CORS) ──
+  const loadImageAsBase64 = (url) => {
     return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-      // Timeout after 15 seconds
-      setTimeout(() => { img.src = ''; resolve(null); }, 15000);
-      img.src = url;
-    });
-  };
-
-  const loadImageViaProxy = (url) => {
-    return new Promise((resolve) => {
+      if (!url) { resolve(null); return; }
       const proxyUrl = '/api/proxy-image?url=' + encodeURIComponent(url);
       fetch(proxyUrl)
         .then(res => {
@@ -65,16 +41,6 @@ export async function generateBrochure(warehouse) {
         })
         .catch(() => resolve(null));
     });
-  };
-
-  const loadImageAsBase64 = async (url) => {
-    if (!url) return null;
-    // Try direct canvas load first (no server round-trip, no rate limit)
-    const direct = await loadImageViaCanvas(url);
-    if (direct) return direct;
-    // Fall back to server proxy
-    const proxied = await loadImageViaProxy(url);
-    return proxied;
   };
 
   // ── Helper: draw text that handles ₹ symbol properly ──
