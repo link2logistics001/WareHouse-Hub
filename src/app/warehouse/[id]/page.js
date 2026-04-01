@@ -41,8 +41,14 @@ export default function WarehouseDetailPage({ params }) {
 
       // Merchants check for granted access
       if (user.userType === 'merchant') {
-        const access = await checkAccessStatus(id, user.uid);
-        setHasAccess(access);
+        try {
+          const access = await checkAccessStatus(id, user.uid);
+          setHasAccess(access);
+        } catch (err) {
+          // Firestore permission-denied is expected if rules restrict reads
+          console.debug('Access check skipped:', err.code || err.message);
+          setHasAccess(false);
+        }
       }
     };
     checkPermission();

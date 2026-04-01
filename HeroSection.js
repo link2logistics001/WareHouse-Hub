@@ -133,14 +133,14 @@ export default function HeroSection() {
           Find, compare, and rent warehouse space that fits your exact logistics needs.
         </p>
 
-        {/* Search Bar — Desktop */}
-        <div className="hidden lg:block" style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
+        {/* Search Bar — Single responsive form */}
+        <div style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
           <form onSubmit={handleSearch} style={{
             display: 'flex',
             alignItems: 'center',
             background: 'rgba(255,255,255,0.96)',
             borderRadius: '100px',
-            padding: '5px 22px',
+            padding: '5px 6px 5px 22px',
             boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
             gap: '8px',
           }}>
@@ -163,6 +163,7 @@ export default function HeroSection() {
                 color: '#111827',
                 padding: '10px 0',
                 fontFamily: "'Inter', sans-serif",
+                minWidth: 0,
               }}
             />
             <button
@@ -181,56 +182,6 @@ export default function HeroSection() {
                 whiteSpace: 'nowrap',
                 transition: 'background 0.2s',
                 flexShrink: 0,
-              }}
-            >
-              Search Space
-            </button>
-          </form>
-        </div>
-
-        {/* Search Bar — Mobile/Tablet */}
-        <div className="lg:hidden" style={{ width: '100%', maxWidth: '560px', marginBottom: '28px' }}>
-          <form onSubmit={handleSearch} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-          }}>
-            <input
-              type="text"
-              placeholder="ZIP, City, or State..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                flex: 1,
-                background: 'rgba(255,255,255,0.96)',
-                border: 'none',
-                outline: 'none',
-                fontSize: '0.9rem',
-                fontWeight: 500,
-                color: '#111827',
-                padding: '14px 18px',
-                borderRadius: '100px',
-                fontFamily: "'Inter', sans-serif",
-                boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
-              }}
-            />
-            <button
-              className="search-btn"
-              type="submit"
-              style={{
-                background: '#f97316',
-                color: '#ffffff',
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                padding: '14px 24px',
-                borderRadius: '100px',
-                border: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'background 0.2s',
-                flexShrink: 0,
-                width: '100%',
               }}
             >
               Search Space

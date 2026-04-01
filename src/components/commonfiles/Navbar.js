@@ -1,15 +1,22 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useSpring } from 'framer-motion'
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext';
+import { LogOut, User, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const pathname = usePathname();
   const router = useRouter();
+  const { user, setUser } = useAuth();
   
   // Always use solid styling on non-home pages
   const isHome = pathname === '/';
@@ -29,6 +36,17 @@ export default function Navbar() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const navLinks = [
@@ -63,6 +81,82 @@ export default function Navbar() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      setProfileOpen(false);
+      router.push('/');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
+
+  const handleDashboard = () => {
+    setProfileOpen(false);
+    setMobileMenuOpen(false);
+    if (user?.userType === 'admin') {
+      router.push('/admin');
+    } else if (user?.userType === 'owner') {
+      router.push('/owner');
+    } else {
+      router.push('/search');
+    }
+  };
+
+  // Get user initials for avatar
+  const getInitials = () => {
+    if (!user) return '';
+    if (user.name) {
+      const parts = user.name.trim().split(' ');
+      return parts.length > 1
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0][0].toUpperCase();
+    }
+    return user.email ? user.email[0].toUpperCase() : 'U';
+  };
+
+  // ── Profile dropdown (shared between desktop & mobile) ──
+  const ProfileDropdown = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100]"
+    >
+      {/* User info */}
+      <div className="px-4 py-3 border-b border-slate-100">
+        <p className="text-sm font-bold text-slate-900 truncate">{user.name || 'User'}</p>
+        <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
+        <span className="inline-block mt-1.5 px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-orange-100">
+          {user.userType || 'Merchant'}
+        </span>
+      </div>
+
+      {/* Menu items */}
+      <div className="py-1">
+        <button
+          onClick={handleDashboard}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <LayoutDashboard className="w-4 h-4 text-slate-400" />
+          Dashboard
+        </button>
+      </div>
+
+      <div className="border-t border-slate-100 pt-1">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign out
+        </button>
+      </div>
+    </motion.div>
+  );
+
   return (
     <>
       {/* Top Progress Bar */}
@@ -75,7 +169,6 @@ export default function Navbar() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-        // UPGRADE: Dynamic transparent-to-solid frosted glass effect
         className={`fixed w-full top-0 z-50 transition-all duration-300 border-b ${navScrolled
           ? 'bg-white/90 backdrop-blur-xl border-slate-200 shadow-sm py-0'
           : 'bg-transparent border-transparent py-2'
@@ -88,7 +181,6 @@ export default function Navbar() {
             <motion.a
               href="/"
               onClick={(e) => handleNavClick(e, '#')}
-              // UPGRADE: Text changes from white to dark when scrolling
               className={`font-display font-bold text-xl flex items-center gap-2 group transition-colors duration-300 ${navScrolled ? 'text-slate-900' : 'text-white'
                 }`}
               whileHover={{ scale: 1.05 }}
@@ -110,7 +202,6 @@ export default function Navbar() {
                   key={link.label}
                   href={`/${link.href}`}
                   onClick={e => handleNavClick(e, link.href)}
-                  // UPGRADE: Link colors adapt to the background
                   className={`font-medium transition-colors relative group cursor-pointer ${navScrolled ? 'text-slate-600 hover:text-orange-500' : 'text-slate-200 hover:text-white'
                     }`}
                   initial={{ opacity: 0, y: -20 }}
@@ -125,15 +216,48 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-3">
-              <motion.a
-                href="/#login"
-                onClick={(e) => handleNavClick(e, '#login')}
-                className="px-6 py-2.5 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25 relative overflow-hidden group"
-                whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(249, 115, 22, 0.4)' }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="relative z-10">Login / SignUp</span>
-              </motion.a>
+              {user ? (
+                /* ── Logged-in: Profile avatar + dropdown ── */
+                <div className="relative" ref={profileRef}>
+                  <motion.button
+                    onClick={() => setProfileOpen(prev => !prev)}
+                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-full transition-all border ${
+                      navScrolled
+                        ? 'hover:bg-slate-50 border-slate-200 hover:border-slate-300'
+                        : 'hover:bg-white/10 border-white/20 hover:border-white/40'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
+                      {getInitials()}
+                    </div>
+                    <span className={`text-sm font-semibold hidden lg:block max-w-[120px] truncate ${
+                      navScrolled ? 'text-slate-700' : 'text-white'
+                    }`}>
+                      {user.name || 'Account'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''} ${
+                      navScrolled ? 'text-slate-400' : 'text-white/70'
+                    }`} />
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {profileOpen && <ProfileDropdown />}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                /* ── Not logged in: Login / SignUp button ── */
+                <motion.a
+                  href="/#login"
+                  onClick={(e) => handleNavClick(e, '#login')}
+                  className="px-6 py-2.5 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25 relative overflow-hidden group"
+                  whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(249, 115, 22, 0.4)' }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="relative z-10">Login / SignUp</span>
+                </motion.a>
+              )}
             </div>
           </div>
 
@@ -157,22 +281,39 @@ export default function Navbar() {
               <span>WarehouseHub</span>
             </motion.a>
 
-            {/* Hamburger button */}
-            <button
-              onClick={() => setMobileMenuOpen(prev => !prev)}
-              className={`p-2 rounded-lg transition-colors ${navScrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'}`}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+            <div className="flex items-center gap-2">
+              {/* Mobile: Show avatar if logged in */}
+              {user && (
+                <div className="relative" ref={!mobileMenuOpen ? profileRef : undefined}>
+                  <button
+                    onClick={() => setProfileOpen(prev => !prev)}
+                    className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
+                  >
+                    {getInitials()}
+                  </button>
+                  <AnimatePresence>
+                    {profileOpen && <ProfileDropdown />}
+                  </AnimatePresence>
+                </div>
               )}
-            </button>
+
+              {/* Hamburger button */}
+              <button
+                onClick={() => setMobileMenuOpen(prev => !prev)}
+                className={`p-2 rounded-lg transition-colors ${navScrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'}`}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Mobile dropdown menu */}
@@ -195,13 +336,32 @@ export default function Navbar() {
                     {link.label}
                   </a>
                 ))}
-                <a
-                  href="/#login"
-                  onClick={(e) => handleNavClick(e, '#login')}
-                  className="mt-3 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl text-center hover:bg-orange-600 transition-colors"
-                >
-                  Login / SignUp
-                </a>
+
+                {user ? (
+                  /* Logged-in mobile menu items */
+                  <>
+                    <button
+                      onClick={handleDashboard}
+                      className="py-3 text-base font-semibold text-slate-700 hover:text-orange-500 border-b border-slate-100 transition-colors text-left flex items-center gap-2"
+                    >
+                      <LayoutDashboard className="w-4 h-4" /> Dashboard
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="mt-3 py-3 px-4 bg-red-50 text-red-600 font-semibold rounded-xl text-center hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign out
+                    </button>
+                  </>
+                ) : (
+                  <a
+                    href="/#login"
+                    onClick={(e) => handleNavClick(e, '#login')}
+                    className="mt-3 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl text-center hover:bg-orange-600 transition-colors"
+                  >
+                    Login / SignUp
+                  </a>
+                )}
               </div>
             </motion.div>
           )}

@@ -73,6 +73,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             // Manual sort as a fallback for missing composite index
             chats.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
             setRealChats(chats);
+        }, (error) => {
+            console.debug('Conversations listener error:', error.code || error.message);
         });
 
         return () => unsubscribe();
@@ -326,8 +328,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                             filteredWarehouses.map((warehouse) => (
                                                 <div
                                                     key={warehouse.id}
-                                                    onClick={() => setSelectedWarehouse(warehouse)}
-                                                    className="cursor-pointer transition-transform hover:scale-[1.02]"
+                                                    className="transition-transform hover:scale-[1.02]"
                                                 >
                                                     <WarehouseCard
                                                         id={warehouse.id}
@@ -680,62 +681,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                 </main>
             </div>
 
-            {/* Warehouse Detail Modal */}
-            <AnimatePresence>
-                {selectedWarehouse && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                        <motion.div
-                            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        >
-                            <div className="relative h-80">
-                                <OptimizedImage
-                                    src={selectedWarehouse.photos?.frontView || selectedWarehouse.images?.[0]}
-                                    alt={selectedWarehouse.warehouseName}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 800px"
-                                    quality={80}
-                                    priority
-                                    className="w-full h-full"
-                                    imgClassName="object-cover"
-                                />
-                                <button
-                                    onClick={() => setSelectedWarehouse(null)}
-                                    className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:bg-white"
-                                >✕</button>
-                            </div>
 
-                            <div className="p-4 sm:p-8">
-                                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">{selectedWarehouse.warehouseName}</h2>
-                                <p className="text-slate-500 mb-6 sm:mb-8">📍 {selectedWarehouse.address || selectedWarehouse.location?.address}</p>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 p-4 sm:p-6 bg-slate-50 rounded-2xl">
-                                    <DetailBox label="Monthly Rent" value={`₹${selectedWarehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'}`} isPrice />
-                                    <DetailBox label="Size" value={`${selectedWarehouse.totalArea} sq ft`} />
-                                    <DetailBox label="Type" value={selectedWarehouse.warehouseCategory} />
-                                </div>
-
-                                <div className="space-y-4 sm:space-y-6">
-                                    <div>
-                                        <h3 className="text-base sm:text-lg font-bold mb-2">Description</h3>
-                                        <p className="text-slate-600 leading-relaxed">{selectedWarehouse.description}</p>
-                                    </div>
-                                    <div className="flex w-full">
-                                        <button
-                                            className="mx-auto w-full sm:w-auto py-3 sm:py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-blue-200 transition-all"
-                                            onClick={() => onOpenChat(selectedWarehouse, user)}
-                                        >
-                                            Message Warehouse Owner
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
             {/* ChatBox for Dashboard */}
             <AnimatePresence>
                 {selectedConv && (
