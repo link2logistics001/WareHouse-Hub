@@ -22,7 +22,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   setPersistence,
-  browserLocalPersistence,
+  browserSessionPersistence,
   connectAuthEmulator,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -68,12 +68,14 @@ if (
   }
 }
 
-// Set persistence to localStorage so the auth token survives page refreshes.
+// Set persistence to sessionStorage so each browser tab has its own
+// independent auth session — logging in as admin in one tab will NOT
+// affect a merchant session in another tab.
 // We export the promise so that AuthContext can await it BEFORE subscribing
 // to onAuthStateChanged — otherwise the listener can fire before the
 // token is loaded, causing the user to be redirected to the landing page.
 export const persistenceReady = typeof window !== 'undefined'
-  ? setPersistence(auth, browserLocalPersistence).catch(() => {})
+  ? setPersistence(auth, browserSessionPersistence).catch(() => {})
   : Promise.resolve();
 
 export const db = getFirestore(app);
