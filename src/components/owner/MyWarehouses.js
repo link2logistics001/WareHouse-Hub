@@ -4,13 +4,22 @@ import { useEffect, useState, useRef } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Building2, Layers, Package, DoorOpen,
-  TrendingUp, Calendar, CheckCircle, Loader2, Plus,
-  Warehouse, ShieldCheck, Tag, Clock,
-  ChevronDown, Wifi, WifiOff, CheckCircle2, XCircle, Trash2
+  Calendar, Loader2, Plus, Warehouse, ShieldCheck, 
+  Tag, Clock, ChevronDown, Wifi, WifiOff, CheckCircle2, XCircle, Trash2, Maximize, ArrowRight, ArrowUpRight
 } from 'lucide-react';
 import OptimizedImage from '../commonfiles/OptimizedImage';
+
+// --- PREMIUM SKELETON LOADER ---
+const SkeletonPulse = ({ className }) => (
+  <motion.div 
+    animate={{ opacity: [0.2, 0.5, 0.2] }} 
+    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }} 
+    className={`bg-slate-300/50 backdrop-blur-md rounded-xl ${className}`} 
+  />
+);
 
 export default function MyWarehouses({ setActiveTab }) {
   const { user } = useAuth();
@@ -18,7 +27,6 @@ export default function MyWarehouses({ setActiveTab }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // ── Fetch warehouses for the logged-in owner ────────────────
   useEffect(() => {
     if (!user?.uid) return;
 
@@ -30,13 +38,11 @@ export default function MyWarehouses({ setActiveTab }) {
           where('ownerId', '==', user.uid)
         );
         const snap = await getDocs(q);
-        // Sort newest first on the client — avoids needing a Firestore composite index
         const data = snap.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
         setWarehouses(data);
       } catch (err) {
-
         setError('Failed to load warehouses. Please refresh.');
       } finally {
         setLoading(false);
@@ -46,130 +52,123 @@ export default function MyWarehouses({ setActiveTab }) {
     fetchWarehouses();
   }, [user?.uid]);
 
-  // ─────────────────────────────────────────────────────────────
-  // Loading state
-  // ─────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 text-slate-400">
-        <Loader2 className="w-10 h-10 animate-spin mb-4 text-orange-400" />
-        <p className="text-sm font-medium">Loading your warehouses…</p>
-      </div>
-    );
-  }
+  // Framer Motion Variants for Staggered Entrance
+  const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.12 } } };
+  const cardVariants = { 
+    hidden: { opacity: 0, y: 40, scale: 0.95 }, 
+    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 150, damping: 18 } }, 
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } } 
+  };
 
-  // ─────────────────────────────────────────────────────────────
-  // Error state
-  // ─────────────────────────────────────────────────────────────
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 text-red-400">
-        <p className="text-sm font-medium">{error}</p>
-      </div>
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Empty state
-  // ─────────────────────────────────────────────────────────────
-  if (warehouses.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-          <Warehouse className="w-10 h-10 text-orange-400" />
-        </div>
-        <h2 className="text-xl font-bold text-slate-800 mb-2">No Warehouses Yet</h2>
-        <p className="text-slate-400 mb-8 max-w-xs">
-          You haven&apos;t listed any warehouses. Add your first one and start receiving inquiries!
-        </p>
-        {setActiveTab && (
-          <button
-            onClick={() => setActiveTab('add-warehouse')}
-            className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
-          >
-            <Plus className="w-4 h-4" /> Add Warehouse
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Main list
-  // ─────────────────────────────────────────────────────────────
   return (
-    <div className="w-full pb-16">
+    <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0 pb-20">
+      
+      {/* --- DRIFTING AMBIENT BACKGROUND GLOWS --- */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
+        <motion.div animate={{ x: [0, -30, 20, 0], y: [0, 40, -20, 0], scale: [1, 1.1, 0.9, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute top-[5%] right-[-5%] w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px]" />
+        <motion.div animate={{ x: [0, 40, -30, 0], y: [0, -40, 20, 0], scale: [1, 1.05, 0.95, 1] }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px]" />
+      </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-10 py-8 bg-white/60 backdrop-blur-xl border-b border-white sticky top-0 z-30 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Warehouses</h1>
-          <p className="text-slate-500 mt-1">{warehouses.length} listing{warehouses.length !== 1 ? 's' : ''} published</p>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Property Directory</h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            {loading ? "Syncing portfolio data..." : `${warehouses.length} listing${warehouses.length !== 1 ? 's' : ''} in your network`}
+          </p>
         </div>
-
+        
         {setActiveTab && (
-          <button
+          <motion.button 
+            whileHover={{ scale: 1.03, boxShadow: "0px 10px 25px rgba(249, 115, 22, 0.3)" }} 
+            whileTap={{ scale: 0.97 }}
             onClick={() => setActiveTab('add-warehouse')}
-            className="self-start sm:self-auto px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-lg shadow-slate-200 text-sm"
+            className="mt-4 sm:mt-0 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-500/20 border border-orange-400/50"
           >
-            <Plus className="w-4 h-4" /> Add New
-          </button>
+            <Plus size={18} /> Add New Property
+          </motion.button>
         )}
       </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {warehouses.map(w => (
-          <WarehouseCard
-            key={w.id}
-            warehouse={w}
-            onDelete={(id) => setWarehouses(prev => prev.filter(item => item.id !== id))}
-          />
-        ))}
+      <div className="px-10 pt-10 relative z-10">
+        {loading ? (
+          // --- PREMIUM SKELETON GRID ---
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white/40 border border-white rounded-[2rem] p-4 shadow-sm backdrop-blur-md">
+                <SkeletonPulse className="w-full h-56 rounded-t-3xl rounded-b-xl mb-6" />
+                <div className="px-4">
+                  <SkeletonPulse className="w-2/3 h-7 rounded-md mb-3" />
+                  <SkeletonPulse className="w-1/3 h-4 rounded-md mb-6" />
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white">
+                    <SkeletonPulse className="w-full h-14 rounded-2xl" />
+                    <SkeletonPulse className="w-full h-14 rounded-2xl" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-32 text-rose-500 bg-white/60 backdrop-blur-xl border border-white rounded-3xl shadow-sm">
+            <XCircle className="w-12 h-12 mb-4 opacity-50" />
+            <p className="text-sm font-bold">{error}</p>
+          </div>
+        ) : warehouses.length === 0 ? (
+          // --- EMPTY STATE ---
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-24 bg-white/60 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] text-center px-4">
+            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-28 h-28 bg-gradient-to-br from-orange-50 to-orange-100 rounded-[2rem] rotate-3 flex items-center justify-center mb-6 border border-orange-200 shadow-inner">
+              <Warehouse className="text-orange-500 w-12 h-12 -rotate-3" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">No Properties Yet</h2>
+            <p className="text-slate-500 max-w-sm mb-8 leading-relaxed font-medium">
+              Your portfolio is currently empty. Add your first warehouse to start tracking capacity and receiving inquiries.
+            </p>
+            {setActiveTab && (
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setActiveTab('add-warehouse')} className="flex items-center gap-2 px-8 py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-slate-300">
+                <Plus size={18} /> Create First Listing
+              </motion.button>
+            )}
+          </motion.div>
+        ) : (
+          // --- PROPERTY CARDS GRID ---
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <AnimatePresence>
+              {warehouses.map((w) => (
+                <WarehouseCard key={w.id} warehouse={w} onDelete={(id) => setWarehouses(prev => prev.filter(item => item.id !== id))} variants={cardVariants} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// WarehouseCard — renders one Firestore warehouse document
+// WarehouseCard — Magic Animated Card
 // ─────────────────────────────────────────────────────────────
-function WarehouseCard({ warehouse: w, onDelete }) {
+function WarehouseCard({ warehouse: w, onDelete, variants }) {
   const frontPhoto = w.photos?.frontView || null;
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // ── Approval status badge (set by admin) ──────────────────
-  const approvalBadge = {
-    approved: {
-      color: 'bg-emerald-500/85 border-emerald-400 text-white',
-      label: '✓ Approved',
-    },
-    pending: {
-      color: 'bg-amber-400/90 border-amber-300 text-white',
-      label: '⏳ Pending',
-    },
-    rejected: {
-      color: 'bg-red-500/85 border-red-400 text-white',
-      label: '✕ Rejected',
-    },
-  };
-  const adminStatus = w.status || 'pending';
-  const badge = approvalBadge[adminStatus] || approvalBadge.pending;
-
-  // ── Online / Offline toggle (set by owner) ─────────────────
-  // Only meaningful when the warehouse is approved.
-  // isOnline defaults to true unless explicitly set false.
   const [isOnline, setIsOnline] = useState(w.isOnline !== false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
   const dropRef = useRef(null);
 
-  // Close dropdown on outside click
+  const adminStatus = w.status || 'pending';
+  const isApproved = adminStatus === 'approved';
+
+  // Dynamic Badge Logic with Pulsing LED dot
+  const badgeConfig = {
+    approved: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-700', glow: 'bg-emerald-500', label: 'Approved' },
+    pending: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-700', glow: 'bg-amber-500', label: 'Pending' },
+    rejected: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-700', glow: 'bg-rose-500', label: 'Rejected' },
+  };
+  const badge = badgeConfig[adminStatus] || badgeConfig.pending;
+
   useEffect(() => {
     const handler = (e) => {
-      if (dropRef.current && !dropRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-      }
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropdownOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -184,7 +183,7 @@ function WarehouseCard({ warehouse: w, onDelete }) {
       await updateDoc(doc(db, 'warehouse_details', w.id), { isOnline: newValue });
       setIsOnline(newValue);
     } catch (err) {
-
+      console.error(err);
     } finally {
       setToggling(false);
     }
@@ -192,235 +191,167 @@ function WarehouseCard({ warehouse: w, onDelete }) {
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this warehouse? This action cannot be undone.')) return;
-
     setIsDeleting(true);
     try {
       await deleteDoc(doc(db, 'warehouse_details', w.id));
       if (onDelete) onDelete(w.id);
     } catch (err) {
-
       alert('Failed to delete warehouse. Please try again.');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const isApproved = adminStatus === 'approved';
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
-
-      {/* Photo or placeholder */}
-      <div className="h-48 relative bg-slate-100 flex items-center justify-center">
-        {frontPhoto ? (
-          <OptimizedImage
-            src={frontPhoto}
-            alt={w.warehouseName}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            quality={70}
-            className="w-full h-full"
-            imgClassName="object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-slate-300">
-            <Warehouse className="w-12 h-12" />
-            <span className="text-xs font-medium">No photo</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-
-        {/* ── TOP-LEFT ──────────────────────────────────────────────
-            Approved  → Online/Offline toggle (replaces the badge)
-            Pending   → ⏳ Pending badge
-            Rejected  → ✕ Rejected badge
-        ──────────────────────────────────────────────────────────── */}
+    <motion.div 
+      variants={variants}
+      exit="exit"
+      whileHover={{ y: -8 }}
+      className="group relative flex flex-col bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white hover:border-orange-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.12)] transition-all duration-500"
+    >
+      {/* --- FLOATING CONTROLS (Rendered OUTSIDE overflow-hidden to prevent clipping) --- */}
+      <div className="absolute top-4 left-4 z-20" ref={dropRef}>
         {isApproved ? (
-          /* Online / Offline toggle — now at TOP-LEFT */
-          <div ref={dropRef} className="absolute top-3 left-3" style={{ zIndex: 10 }}>
+          <div className="relative">
             <button
-              onClick={() => setDropdownOpen(prev => !prev)}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
               disabled={toggling}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-sm transition-all
-                ${isOnline
-                  ? 'bg-green-600/90 border-green-400 text-white'
-                  : 'bg-slate-600/80 border-slate-400 text-white'
-                } ${toggling ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 cursor-pointer'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border backdrop-blur-xl transition-all shadow-md ${
+                isOnline ? 'bg-emerald-500/90 border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-800/90 border-slate-600 text-white'
+              } ${toggling ? 'opacity-60 cursor-not-allowed' : 'hover:scale-105'}`}
             >
-              {toggling ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : isOnline ? (
-                <Wifi className="w-3 h-3" />
-              ) : (
-                <WifiOff className="w-3 h-3" />
-              )}
+              {toggling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
               {isOnline ? 'Online' : 'Offline'}
-              <ChevronDown className={`w-3 h-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown */}
-            {dropdownOpen && (
-              <div className="absolute left-0 mt-1.5 w-36 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden py-1">
-                <button
-                  onClick={() => handleAvailabilityChange(true)}
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
-                    ${isOnline ? 'text-green-600 bg-green-50' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  <Wifi className="w-3.5 h-3.5" />
-                  Set Online
-                  {isOnline && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
-                </button>
-                <button
-                  onClick={() => handleAvailabilityChange(false)}
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
-                    ${!isOnline ? 'text-slate-700 bg-slate-100' : 'text-slate-500 hover:bg-slate-50'}`}
-                >
-                  <WifiOff className="w-3.5 h-3.5" />
-                  Set Offline
-                  {!isOnline && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-slate-600" />}
-                </button>
-              </div>
-            )}
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="absolute left-0 mt-2 w-44 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-white overflow-hidden py-1 z-50">
+                  <button onClick={() => handleAvailabilityChange(true)} className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold transition-colors ${isOnline ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <Wifi className="w-4 h-4" /> Set Online {isOnline && <CheckCircle2 className="w-4 h-4 ml-auto" />}
+                  </button>
+                  <button onClick={() => handleAvailabilityChange(false)} className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-bold transition-colors ${!isOnline ? 'text-slate-700 bg-slate-100' : 'text-slate-500 hover:bg-slate-50'}`}>
+                    <WifiOff className="w-4 h-4" /> Set Offline {!isOnline && <CheckCircle2 className="w-4 h-4 ml-auto text-slate-600" />}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
-          /* Pending / Rejected badge — stays at top-left */
-          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-sm ${badge.color}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border backdrop-blur-md shadow-sm ${badge.bg} ${badge.border} ${badge.text}`}>
+            {/* Pulsing LED Dot */}
+            <div className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${badge.glow}`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${badge.glow}`}></span>
+            </div>
             {badge.label}
           </div>
         )}
-
-        {/* ── TOP-RIGHT — Category badge & Delete button ── */}
-        <div className="absolute top-3 right-3 flex items-center gap-2">
-          {w.warehouseCategory && (
-            <div className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-slate-700 border border-white/60">
-              {w.warehouseCategory}
-            </div>
-          )}
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="p-1.5 bg-red-500/10 hover:bg-red-500/90 text-red-500 hover:text-white backdrop-blur-sm border border-red-500/20 rounded-lg transition-all"
-            title="Delete Listing"
-          >
-            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-          </button>
-        </div>
       </div>
 
+      <div className="absolute top-4 right-4 z-20 flex gap-2">
+        {w.warehouseCategory && (
+          <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-700 border border-white shadow-md shadow-black/5">
+            {w.warehouseCategory}
+          </div>
+        )}
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="w-10 h-10 bg-white/90 backdrop-blur-md border border-white text-rose-500 hover:bg-rose-500 hover:text-white rounded-full flex items-center justify-center shadow-md transition-all opacity-0 group-hover:opacity-100 translate-y-[-10px] group-hover:translate-y-0"
+          title="Delete Property"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        </button>
+      </div>
 
-      {/* Card body */}
-      <div className="p-5 flex flex-col flex-1">
+      {/* --- IMAGE HEADER (Hidden overflow applied here) --- */}
+      <div className="h-56 relative bg-slate-100 rounded-t-[2rem] overflow-hidden shrink-0 border-b border-white/50">
+        {frontPhoto ? (
+          <OptimizedImage src={frontPhoto} alt={w.warehouseName} fill sizes="(max-width: 768px) 100vw, 33vw" quality={80} className="w-full h-full" imgClassName="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" />
+        ) : (
+          // --- THE MAGIC PLACEHOLDER ---
+          <div className="w-full h-full relative bg-gradient-to-br from-slate-100 to-orange-50/50 overflow-hidden group-hover:scale-105 transition-transform duration-1000">
+            {/* Subtle dot pattern */}
+            <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, black 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+                <Warehouse className="w-14 h-14 text-orange-500/40 drop-shadow-lg mb-2" />
+              </motion.div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">No Image Provided</span>
+            </div>
+          </div>
+        )}
+        {/* Soft bottom vignette so badges pop */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent pointer-events-none" />
+      </div>
 
-        {/* Name & Location */}
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{w.warehouseName}</h3>
+      {/* --- CARD BODY --- */}
+      <div className="p-6 flex flex-col flex-1 relative rounded-b-[2rem]">
+        
+        {/* Title & Location */}
+        <div className="mb-6 z-10">
+          <h3 className="text-xl font-bold text-slate-800 line-clamp-1 mb-1.5 group-hover:text-orange-600 transition-colors">
+            {w.warehouseName || 'Unnamed Facility'}
+          </h3>
           {(w.city || w.state) && (
-            <div className="flex items-center gap-1 text-slate-400 text-sm mt-1">
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium">
+              <MapPin className="w-4 h-4 text-orange-400" />
               <span className="line-clamp-1">{[w.city, w.state].filter(Boolean).join(', ')}</span>
             </div>
           )}
         </div>
 
-        {/* Key stats grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <StatChip icon={<Layers className="w-3.5 h-3.5 text-orange-500" />}
-            label="Total Area" value={w.totalArea ? `${w.totalArea.toLocaleString()} sq ft` : '—'} />
-          <StatChip icon={<Package className="w-3.5 h-3.5 text-blue-500" />}
-            label="Available" value={w.availableArea ? `${w.availableArea.toLocaleString()} sq ft` : '—'} />
-          <StatChip icon={<Building2 className="w-3.5 h-3.5 text-slate-500" />}
-            label="Clear Height" value={w.clearHeight ? `${w.clearHeight} ft` : '—'} />
-          <StatChip icon={<DoorOpen className="w-3.5 h-3.5 text-purple-500" />}
-            label="Dock Doors" value={w.numberOfDockDoors ?? '—'} />
+        {/* Premium Stat Glass Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-6 z-10">
+          <StatChip icon={<Layers className="w-4 h-4 text-orange-500" />} label="Total Area" value={w.totalArea ? `${Number(w.totalArea).toLocaleString()} sq ft` : '—'} />
+          <StatChip icon={<Package className="w-4 h-4 text-blue-500" />} label="Available" value={w.availableArea ? `${Number(w.availableArea).toLocaleString()} sq ft` : '—'} />
+          <StatChip icon={<Building2 className="w-4 h-4 text-slate-500" />} label="Clear Height" value={w.clearHeight ? `${w.clearHeight} ft` : '—'} />
+          <StatChip icon={<DoorOpen className="w-4 h-4 text-purple-500" />} label="Dock Doors" value={w.numberOfDockDoors ?? '—'} />
         </div>
 
-        {/* Storage types */}
-        {w.storageTypes?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {w.storageTypes.map(t => (
-              <span key={t} className="px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-xs font-medium">
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Pricing */}
+        {/* Pricing Ribbon */}
         {(w.pricingUnit || w.pricingModel || w.storageRate) && (
-          <div className="flex items-center gap-2 mb-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <Tag className="w-4 h-4 text-slate-500 shrink-0" />
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Pricing</p>
-              <p className="text-sm font-bold text-slate-800">
-                {w.storageRate ? `₹${w.storageRate.toLocaleString()}` : ''}
-                {(w.pricingUnit || w.pricingModel) ? ` / ${w.pricingUnit || w.pricingModel}` : ''}
-              </p>
+          <div className="mb-6 flex items-center justify-between p-3 bg-white/80 border border-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner"><Tag className="w-4 h-4" /></div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Rate</span>
             </div>
+            <p className="text-sm font-black text-slate-800">
+              {w.storageRate ? `₹${Number(w.storageRate).toLocaleString()}` : ''}
+              <span className="text-slate-400 font-medium text-xs ml-1">{(w.pricingUnit || w.pricingModel) ? `/ ${w.pricingUnit || w.pricingModel}` : ''}</span>
+            </p>
           </div>
         )}
 
-        {/* Security features */}
-        {w.securityFeatures?.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 text-sm text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />
-            <span className="line-clamp-1">{w.securityFeatures.join(' · ')}</span>
+        {/* Footer Metadata */}
+        <div className="mt-auto pt-5 border-t border-slate-200/60 flex items-center justify-between text-xs font-semibold text-slate-400 z-10">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-4 h-4 text-slate-300" />
+            {w.createdAt?.seconds ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Just now'}
           </div>
-        )}
-
-        {/* Operation info */}
-        {(w.daysOfOperation || w.operationTime) && (
-          <div className="flex items-center gap-2 mb-4 text-sm text-slate-500">
-            <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-            <span>{[w.daysOfOperation, w.operationTime].filter(Boolean).join(' · ')}</span>
+          
+          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-orange-500 translate-x-4 group-hover:translate-x-0 duration-300">
+            View Details <ArrowRight className="w-4 h-4" />
           </div>
-        )}
-
-        {/* Suitable goods */}
-        {w.suitableGoods?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-5">
-            {w.suitableGoods.map(g => (
-              <span key={g} className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-medium">
-                {g}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Created date at bottom */}
-        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
-            {w.createdAt?.seconds
-              ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-              : 'Just now'}
-          </div>
-          {adminStatus === 'approved' ? (
-            <span className="flex items-center gap-1 text-emerald-500 font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-            </span>
-          ) : adminStatus === 'rejected' ? (
-            <span className="flex items-center gap-1 text-red-400 font-semibold">
-              <XCircle className="w-3.5 h-3.5" /> Rejected
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-amber-500 font-semibold">
-              <Clock className="w-3.5 h-3.5" /> Under Review
-            </span>
-          )}
         </div>
+
+        {/* Hidden hover glow inside card */}
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-500/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-// Small stat chip used inside the card
+// Minimal Glass Stat Chip
 function StatChip({ icon, label, value }) {
   return (
-    <div className="flex items-start gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-      <div className="mt-0.5 shrink-0">{icon}</div>
+    <div className="flex items-center gap-3 p-3 bg-white/50 backdrop-blur-sm rounded-2xl border border-white shadow-[0_2px_10px_-4px_rgba(0,0,0,0.03)] hover:bg-white/80 transition-colors">
+      <div className="shrink-0 bg-white p-2 rounded-xl shadow-sm border border-slate-50">{icon}</div>
       <div className="min-w-0">
-        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide leading-none mb-0.5">{label}</p>
-        <p className="text-sm font-bold text-slate-800 leading-tight truncate">{value}</p>
+        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">{label}</p>
+        <p className="text-sm font-black text-slate-800 leading-tight truncate">{value}</p>
       </div>
     </div>
   );

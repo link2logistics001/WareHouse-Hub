@@ -8,6 +8,11 @@ import AddWarehouse from './AddWarehouse';
 import MyWarehouses from './MyWarehouses';
 import Availability from './Availability';
 import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
+import { 
+  LogOut, Plus, User, Mail, Building2, Shield, 
+  Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Sparkles 
+} from 'lucide-react';
+
 export default function OwnerDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,39 +27,26 @@ export default function OwnerDashboard({ user, onLogout }) {
   const [localUser, setLocalUser] = useState(user);
   const [mounted, setMounted] = useState(false);
 
-  // Sync localUser with user prop
   useEffect(() => {
     if (user) {
       setLocalUser(user);
-      setProfileData({
-        name: user.name || '',
-        company: user.company || ''
-      });
+      setProfileData({ name: user.name || '', company: user.company || '' });
     }
   }, [user]);
 
-  // Handle mounted state for hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Reset file input to allow re-uploading the same file
     e.target.value = '';
-
     setUploading(true);
     setMessage({ type: '', text: '' });
 
-    // Add timeout protection (30 seconds)
     const uploadTimeout = setTimeout(() => {
       setUploading(false);
-      setMessage({
-        type: 'error',
-        text: 'Upload timeout. Please check your internet connection and Firebase Storage configuration.'
-      });
+      setMessage({ type: 'error', text: 'Upload timeout. Please check your internet connection.' });
     }, 30000);
 
     try {
@@ -64,18 +56,10 @@ export default function OwnerDashboard({ user, onLogout }) {
       setMessage({ type: 'success', text: 'Profile image updated successfully!' });
     } catch (error) {
       clearTimeout(uploadTimeout);
-
-      // Show user-friendly error messages
-      let errorMessage = error.message;
-      if (error.message.includes('Permission denied') || error.message.includes('storage/unauthorized')) {
-        errorMessage = 'Upload failed: Storage permission denied. Please configure Firebase Storage rules.';
-      } else if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
-        errorMessage = 'Upload failed: Network error. Please check your internet connection.';
-      }
-
-      setMessage({ type: 'error', text: errorMessage });
+      setMessage({ type: 'error', text: error.message });
     } finally {
       setUploading(false);
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     }
   };
 
@@ -88,16 +72,14 @@ export default function OwnerDashboard({ user, onLogout }) {
       if (profileData.company !== localUser.company) updates.company = profileData.company;
 
       if (Object.keys(updates).length === 0) {
-        setMessage({ type: 'info', text: 'No changes to save' });
-        setEditMode(false);
-        setSaving(false);
-        return;
+        setEditMode(false); setSaving(false); return;
       }
 
       const updatedData = await updateUserProfile(localUser.uid, updates);
       setLocalUser({ ...localUser, ...updatedData });
       setEditMode(false);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -105,68 +87,25 @@ export default function OwnerDashboard({ user, onLogout }) {
     }
   };
 
-  const handleSendVerification = async () => {
-    setMessage({ type: '', text: '' });
-    try {
-      await sendVerificationEmail();
-      setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message });
-    }
-  };
-
-  const handleRefreshVerification = async () => {
-    setMessage({ type: '', text: '' });
-    try {
-      const isVerified = await refreshEmailVerification();
-      if (isVerified) {
-        setLocalUser({ ...localUser, emailVerified: true });
-        setMessage({ type: 'success', text: 'Email verified successfully!' });
-      } else {
-        setMessage({ type: 'info', text: 'Email not yet verified. Please check your inbox.' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message });
-    }
-  };
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
-  }, []);
+  }, [activeTab]);
 
-  // Prevent hydration errors by not rendering until client-side
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
-    <motion.div
-      className="min-h-screen bg-slate-50 flex"
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 70, damping: 18 }}
-    >
+    <motion.div className="min-h-screen bg-[#f4f5f7] flex" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      
       {/* Sidebar for desktop */}
       <div className="hidden md:block">
         <OwnerSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
       </div>
+      
       {/* Sidebar overlay for mobile/tablet */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/40 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <motion.div
-              className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl border-r border-slate-200 flex flex-col"
-              initial={{ x: -260 }}
-              animate={{ x: 0 }}
-              exit={{ x: -260 }}
-              transition={{ type: 'tween', duration: 0.25 }}
-              onClick={e => e.stopPropagation()}
-            >
+          <motion.div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}>
+            <motion.div className="absolute left-0 top-0 h-full w-64 bg-[#111111] shadow-2xl border-r border-slate-800 flex flex-col" initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }} transition={{ type: 'tween', duration: 0.25 }} onClick={e => e.stopPropagation()}>
               <OwnerSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} />
             </motion.div>
           </motion.div>
@@ -174,324 +113,165 @@ export default function OwnerDashboard({ user, onLogout }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64">
-        {/* Header */}
-        <header className="bg-white h-auto min-h-16 border-b border-slate-200 sticky top-0 z-10 px-4 sm:px-8 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 py-2">
-          <div className="flex items-center gap-3 w-full xs:w-auto">
-            {/* Hamburger for mobile/tablet */}
-            <button className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none" onClick={() => setSidebarOpen(true)}>
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <h2 className="font-semibold text-slate-700 capitalize text-lg xs:text-xl">
-              {activeTab.replace('-', ' ')}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2 xs:gap-4 w-full xs:w-auto justify-between xs:justify-end">
-            <span className="text-sm text-slate-500 truncate max-w-[120px] xs:max-w-none">Welcome, {localUser?.name || 'Owner'}</span>
-            {localUser?.photoURL ? (
-              <img
-                src={localUser.photoURL}
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
-                {localUser?.name ? localUser.name[0] : 'O'}
+      <main className="flex-1 md:ml-20 overflow-x-hidden min-h-screen flex flex-col relative z-0">
+        
+        {/* Generic Header for non-dashboard tabs */}
+        {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (
+          <header className="bg-white/60 backdrop-blur-xl h-auto min-h-16 border-b border-white sticky top-0 z-30 px-6 sm:px-10 flex flex-col xs:flex-row xs:items-center justify-between gap-4 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center gap-3">
+              <button className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-white shadow-sm transition-all" onClick={() => setSidebarOpen(true)}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+              <h2 className="font-bold text-slate-800 capitalize text-xl flex items-center gap-2">
+                {activeTab.replace('-', ' ')}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold text-slate-800 leading-tight">{localUser?.name || 'Owner'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Admin</p>
               </div>
-            )}
-          </div>
-        </header>
+              {localUser?.photoURL ? (
+                <img src={localUser.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center font-bold shadow-md border-2 border-white">
+                  {localUser?.name ? localUser.name[0].toUpperCase() : 'O'}
+                </div>
+              )}
+            </div>
+          </header>
+        )}
 
-        {/* Dynamic Content with animation */}
-        <div className="p-2 sm:p-4 min-h-[60vh]">
+        {/* Dynamic Content Routing */}
+        <div className={`flex-1 relative ${activeTab === 'dashboard' || activeTab === 'my-warehouses' || activeTab === 'availability' ? '' : 'p-6 sm:p-10'}`}>
           <AnimatePresence mode="wait">
-            {activeTab === 'dashboard' && (
-              <motion.div
-                key="dashboard"
-                initial={{ x: -60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-              >
-                <DashboardHome setActiveTab={setActiveTab} user={user} />
-              </motion.div>
-            )}
-            {activeTab === 'my-warehouses' && (
-              <motion.div
-                key="my-warehouses"
-                initial={{ x: 60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-              >
-                <MyWarehouses setActiveTab={setActiveTab} />
-              </motion.div>
-            )}
-            {activeTab === 'add-warehouse' && (
-              <motion.div
-                key="add-warehouse"
-                initial={{ x: -60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-              >
-                <AddWarehouse setActiveTab={setActiveTab} />
-              </motion.div>
-            )}
-            {activeTab === 'inquiries' && (
-              <motion.div
-                key="inquiries"
-                initial={{ x: 60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-              >
-                <Inquiries />
-              </motion.div>
-            )}
-            {activeTab === 'calendar' && (
-              <motion.div
-                key="calendar"
-                initial={{ x: -60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-              >
-                <Availability />
-              </motion.div>
-            )}
+            {activeTab === 'dashboard' && <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><DashboardHome setActiveTab={setActiveTab} /></motion.div>}
+            {activeTab === 'my-warehouses' && <motion.div key="wh" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><MyWarehouses setActiveTab={setActiveTab} /></motion.div>}
+            {activeTab === 'add-warehouse' && <motion.div key="add" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><AddWarehouse setActiveTab={setActiveTab} /></motion.div>}
+            {activeTab === 'inquiries' && <motion.div key="inq" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Inquiries /></motion.div>}
+            {activeTab === 'calendar' && <motion.div key="cal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Availability /></motion.div>}
+            
+            {/* ════════════════════════════════════════════════════════════════════════
+                THE NEW PREMIUM SETTINGS TAB
+            ════════════════════════════════════════════════════════════════════════ */}
             {activeTab === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ x: 60, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -60, opacity: 0 }}
-                transition={{ duration: 0.3, type: 'tween' }}
-                className="space-y-6"
-              >
-                {/* Profile Section */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-slate-900">Profile Information</h2>
+              <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8 max-w-4xl mx-auto relative z-10 w-full">
+                
+                {/* Ambient Background Glow for Settings */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+                
+                {/* ── PROFILE CARD ── */}
+                <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden relative">
+                  
+                  {/* Executive Cover Banner */}
+                  <div className="h-32 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 relative">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+                  </div>
+
+                  {/* Floating Action Button */}
+                  <div className="absolute top-6 right-6">
                     {!editMode && (
-                      <button
-                        onClick={() => {
-                          setEditMode(true);
-                          setProfileData({
-                            name: localUser?.name || '',
-                            company: localUser?.company || ''
-                          });
-                          setMessage({ type: '', text: '' });
-                        }}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium text-sm transition-colors"
-                      >
-                        Edit Profile
+                      <button onClick={() => { setEditMode(true); setProfileData({ name: localUser?.name || '', company: localUser?.company || '' }); }} className="px-5 py-2.5 bg-white/20 backdrop-blur-md hover:bg-white/30 border border-white/50 text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg">
+                        <Edit2 size={16} /> Edit Profile
                       </button>
                     )}
                   </div>
 
-                  {message.text && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-                        message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-                          'bg-blue-50 text-blue-700 border border-blue-200'
-                        }`}
-                    >
-                      {message.text}
-                    </motion.div>
-                  )}
-
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="relative">
+                  <div className="px-8 pb-8">
+                    {/* Glowing Avatar */}
+                    <div className="relative w-28 h-28 -mt-14 mb-6 group inline-block">
+                      <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 to-rose-400 rounded-full blur-lg opacity-40 group-hover:opacity-60 transition duration-500 animate-pulse" />
+                      <div className="relative w-full h-full rounded-full border-4 border-white overflow-hidden bg-slate-100 shadow-xl flex items-center justify-center">
                         {localUser?.photoURL ? (
-                          <img
-                            src={localUser.photoURL}
-                            alt="Profile"
-                            className="w-20 h-20 rounded-full object-cover shadow-lg"
-                          />
+                          <img src={localUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center text-3xl font-bold shadow-lg">
-                            {localUser?.name?.charAt(0)?.toUpperCase() || 'O'}
-                          </div>
+                          <span className="text-4xl font-black text-slate-300">{localUser?.name?.charAt(0)?.toUpperCase() || 'O'}</span>
                         )}
-                        <label
-                          htmlFor="profile-image"
-                          className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg border-2 border-orange-500 hover:bg-orange-50 transition-colors"
-                        >
-                          <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
+                        
+                        {/* Glass Upload Overlay */}
+                        <label htmlFor="profile-image" className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                          {uploading ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white drop-shadow-md" />}
                         </label>
-                        <input
-                          id="profile-image"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                          disabled={uploading}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900">{localUser?.name || 'Owner'}</h3>
-                        <p className="text-slate-500">{localUser?.email}</p>
-                        <span className="inline-block mt-1 px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                          Owner Account
-                        </span>
-                        {uploading && <p className="text-xs text-orange-600 mt-1">Uploading image...</p>}
+                        <input id="profile-image" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                       </div>
                     </div>
 
+                    {/* Messages */}
+                    <AnimatePresence>
+                      {message.text && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className={`mb-6 p-4 rounded-2xl text-sm font-bold flex items-center gap-2 backdrop-blur-md border ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' : 'bg-rose-500/10 text-rose-700 border-rose-500/20'}`}>
+                          {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />} {message.text}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Content Area */}
                     {editMode ? (
-                      <div className="space-y-4 border-t pt-4">
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Full Name
-                            {localUser?.nameChanged && (
-                              <span className="text-xs text-amber-600 ml-2">(Cannot be changed again)</span>
-                            )}
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.name}
-                            onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                            disabled={localUser?.nameChanged}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all disabled:bg-slate-100 disabled:cursor-not-allowed"
-                          />
-                          {!localUser?.nameChanged && (
-                            <p className="text-xs text-amber-600 mt-1">⚠️ Name can only be changed once!</p>
-                          )}
+                          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Full Name</label>
+                          <input type="text" value={profileData.name} onChange={(e) => setProfileData({ ...profileData, name: e.target.value })} disabled={localUser?.nameChanged} className="w-full px-5 py-3.5 bg-slate-50/50 backdrop-blur-sm rounded-2xl border border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all disabled:opacity-50 font-semibold text-slate-800" />
                         </div>
-
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Company Name</label>
-                          <input
-                            type="text"
-                            value={profileData.company}
-                            onChange={(e) => setProfileData({ ...profileData, company: e.target.value })}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-                          />
+                          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Company / Organization</label>
+                          <input type="text" value={profileData.company} onChange={(e) => setProfileData({ ...profileData, company: e.target.value })} className="w-full px-5 py-3.5 bg-slate-50/50 backdrop-blur-sm rounded-2xl border border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all font-semibold text-slate-800" />
                         </div>
-
-                        <div className="flex gap-3 pt-2">
-                          <button
-                            onClick={handleProfileUpdate}
-                            disabled={saving}
-                            className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:bg-orange-400"
-                          >
-                            {saving ? 'Saving...' : 'Save Changes'}
+                        <div className="flex gap-3 pt-4 border-t border-slate-100">
+                          <button onClick={handleProfileUpdate} disabled={saving} className="px-8 py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all disabled:opacity-50 flex items-center gap-2">
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Save Profile
                           </button>
-                          <button
-                            onClick={() => {
-                              setEditMode(false);
-                              setMessage({ type: '', text: '' });
-                            }}
-                            disabled={saving}
-                            className="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors"
-                          >
+                          <button onClick={() => { setEditMode(false); setMessage({ type: '', text: '' }); }} disabled={saving} className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm">
                             Cancel
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InfoField label="Full Name" value={localUser?.name || 'N/A'} />
-                        <InfoField label="Email" value={localUser?.email || 'N/A'} />
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <InfoField icon={<User />} label="Full Name" value={localUser?.name || 'Not Provided'} />
+                        <InfoField icon={<Mail />} label="Email Address" value={localUser?.email || 'Not Provided'} />
+                        
                         {localUser?.company ? (
-                          <InfoField label="Company" value={localUser.company} />
+                          <InfoField icon={<Building2 />} label="Company Organization" value={localUser.company} />
                         ) : (
-                          <div className="p-4 bg-slate-50 rounded-xl">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Company</p>
-                            <button
-                              onClick={() => {
-                                setEditMode(true);
-                                setProfileData({
-                                  name: localUser?.name || '',
-                                  company: ''
-                                });
-                                setMessage({ type: '', text: '' });
-                              }}
-                              className="text-sm px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                              Add Company
+                          <div className="flex flex-col justify-center p-5 bg-white/40 backdrop-blur-md rounded-2xl border border-white border-dashed hover:border-orange-300 transition-colors group">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Organization</p>
+                            <button onClick={() => { setEditMode(true); setProfileData({ name: localUser?.name || '', company: '' }); }} className="text-sm w-fit px-5 py-2.5 bg-orange-50 text-orange-600 rounded-xl font-bold transition-all flex items-center gap-2 group-hover:bg-orange-500 group-hover:text-white shadow-sm">
+                              <Plus size={16} /> Add Company Info
                             </button>
                           </div>
                         )}
-                        <InfoField label="Account Type" value="Owner" />
-                        <div className="p-4 bg-slate-50 rounded-xl">
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Email Verified</p>
-                          <p className="text-base font-medium text-slate-900 mb-2">
-                            {localUser?.emailVerified ? '✓ Verified' : '✗ Not Verified'}
-                          </p>
-                          {!localUser?.emailVerified && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={handleSendVerification}
-                                className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
-                              >
-                                Send Email
-                              </button>
-                              <button
-                                onClick={handleRefreshVerification}
-                                className="text-xs px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors"
-                              >
-                                Refresh
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <InfoField label="User ID" value={localUser?.uid?.slice(0, 12) + '...' || 'N/A'} />
-                      </div>
+                        
+                        <InfoField icon={<Shield />} label="Account Access Level" value="Administrative Owner" />
+                      </motion.div>
                     )}
                   </div>
                 </div>
 
-                {/* Account Settings */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Account Settings</h2>
-                  <div className="space-y-3">
-                    <button className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-between group">
-                      <span className="text-slate-700 font-medium">Change Password</span>
-                      <span className="text-slate-400 group-hover:text-slate-600">→</span>
-                    </button>
-                    <button className="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-between group">
-                      <span className="text-slate-700 font-medium">Notification Preferences</span>
-                      <span className="text-slate-400 group-hover:text-slate-600">→</span>
+                {/* ── SECURITY & SESSION (Danger Zone) ── */}
+                <div className="bg-white/60 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-rose-100 shadow-[0_8px_30px_rgba(244,63,94,0.05)] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none" />
+                  
+                  <div className="flex items-center gap-4 mb-6 relative z-10">
+                    <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 shadow-inner">
+                      <Shield className="w-6 h-6 text-rose-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black text-slate-800">Security & Session</h2>
+                      <p className="text-sm font-medium text-slate-500 mt-0.5">Manage your active portal session.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/80 p-5 rounded-2xl border border-white shadow-sm relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">Ready to wrap up?</p>
+                      <p className="text-xs text-slate-500 font-medium mt-1">Logging out will securely encrypt and close your current session.</p>
+                    </div>
+                    <button onClick={async () => { try { await logoutUser(); onLogout(); } catch { alert('Failed to log out.'); } }} className="px-6 py-3 bg-white border border-rose-200 hover:bg-rose-50 hover:border-rose-300 text-rose-600 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 shrink-0">
+                      <LogOut size={16} /> Secure Log Out
                     </button>
                   </div>
                 </div>
 
-                {/* Danger Zone */}
-                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-red-200 shadow-sm">
-                  <h2 className="text-2xl font-bold text-red-600 mb-4">Danger Zone</h2>
-                  <p className="text-slate-600 mb-6">Once you log out, you'll need to sign in again to access your account.</p>
-                  <motion.button
-                    onClick={async () => {
-                      try {
-                        await logoutUser();
-                        onLogout();
-                      } catch {
-                        alert('Failed to log out. Please try again.');
-                      }
-                    }}
-                    className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Log Out
-                  </motion.button>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -501,11 +281,19 @@ export default function OwnerDashboard({ user, onLogout }) {
   );
 }
 
-function InfoField({ label, value }) {
+// ─────────────────────────────────────────────────────────────
+// Premium Glass Info Field
+// ─────────────────────────────────────────────────────────────
+function InfoField({ icon, label, value }) {
   return (
-    <div className="p-4 bg-slate-50 rounded-xl">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-base font-medium text-slate-900">{value}</p>
+    <div className="flex items-center gap-4 p-5 bg-white/50 backdrop-blur-md rounded-2xl border border-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] hover:bg-white/80 transition-all group cursor-default">
+      <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-50 text-orange-400 group-hover:text-orange-500 group-hover:scale-110 transition-all">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</p>
+        <p className="text-sm font-bold text-slate-800 truncate">{value}</p>
+      </div>
     </div>
   );
 }
