@@ -270,7 +270,7 @@ export default function AddWarehouse({ setActiveTab }) {
         },
         (error) => { reject(error); },
         async () => {
-          try { const url = await getDownloadURL(uploadTask.snapshot.ref); resolve(url); } 
+          try { const url = await getDownloadURL(uploadTask.snapshot.ref); resolve(url); }
           catch (err) { reject(err); }
         }
       );
@@ -298,7 +298,7 @@ export default function AddWarehouse({ setActiveTab }) {
       await currentAuthUser.getIdToken(true);
       const uid = currentAuthUser.uid;
       if (user.uid !== uid) { setSubmitError('Session mismatch detected. Please log out and log in again.'); setSubmitting(false); return; }
-      
+
       const safeWarehouseName = warehouseDetails.warehouseName.trim().replace(/[^a-zA-Z0-9-]/g, '_');
       const basePath = `warehouse_photos/${ownerDetails.email.trim()}/${safeWarehouseName}`;
 
@@ -351,8 +351,8 @@ export default function AddWarehouse({ setActiveTab }) {
       await addDoc(collection(db, 'warehouse_details'), docData);
       setSubmitted(true);
     } catch (err) {
-      if (err.code === 'storage/unauthorized') { setSubmitError('Upload blocked: auth token rejected by Storage. Please log out, log in again, and retry.'); } 
-      else if (err.code === 'storage/bucket-not-found') { setSubmitError('Upload blocked: Storage bucket not configured correctly.'); } 
+      if (err.code === 'storage/unauthorized') { setSubmitError('Upload blocked: auth token rejected by Storage. Please log out, log in again, and retry.'); }
+      else if (err.code === 'storage/bucket-not-found') { setSubmitError('Upload blocked: Storage bucket not configured correctly.'); }
       else { setSubmitError(`Failed to save: ${err.message || 'Unknown network error.'}`); }
     } finally {
       setSubmitting(false); setUploadProgress(0);
@@ -385,7 +385,7 @@ export default function AddWarehouse({ setActiveTab }) {
 
   return (
     <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0 pb-24">
-      
+
       {/* --- STATIC AMBIENT BACKGROUND GLOWS --- */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
         <div className="absolute top-[5%] right-[-5%] w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px]" />
@@ -414,20 +414,19 @@ export default function AddWarehouse({ setActiveTab }) {
           {/* Premium Step Indicator */}
           <div className="relative mb-4 flex justify-between">
             <div className="absolute top-1/2 left-0 w-full h-1.5 bg-slate-200/50 -translate-y-1/2 rounded-full overflow-hidden backdrop-blur-sm z-0">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-orange-400 to-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" 
+              <motion.div
+                className="h-full bg-gradient-to-r from-orange-400 to-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]"
                 initial={{ width: 0 }}
-                animate={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }} 
+                animate={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
               />
             </div>
-            
+
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
-              <div key={s} className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
-                s < step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 
-                s === step ? 'bg-slate-900 text-white shadow-xl ring-4 ring-slate-900/20' : 
-                'bg-white border-2 border-slate-200 text-slate-400'
-              }`}>
+              <div key={s} className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${s < step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' :
+                  s === step ? 'bg-slate-900 text-white shadow-xl ring-4 ring-slate-900/20' :
+                    'bg-white border-2 border-slate-200 text-slate-400'
+                }`}>
                 {s < step ? <CheckCircle className="w-5 h-5" /> : s}
               </div>
             ))}
@@ -436,7 +435,7 @@ export default function AddWarehouse({ setActiveTab }) {
 
         {/* ── Glass Form Card ── */}
         <div className="bg-white/80 backdrop-blur-sm rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white overflow-hidden min-h-[500px] flex flex-col relative">
-          
+
           {/* Subtle overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent pointer-events-none z-0" />
 
@@ -458,14 +457,14 @@ export default function AddWarehouse({ setActiveTab }) {
                       <SelectField label="Business Type" id="businessType" options={BUSINESS_TYPES} placeholder="Select business type" value={ownerDetails.businessType} onChange={v => handleOwnerChange('businessType', v)} mandatory errors={errors} />
                       <Field label="Company Name" id="companyName" placeholder="e.g. MetroStore Pvt Ltd" value={ownerDetails.companyName} onChange={v => handleOwnerChange('companyName', v)} mandatory errors={errors} />
                       <Field label="Contact Person" id="contactPerson" placeholder="e.g. Vikram Singh" value={ownerDetails.contactPerson} onChange={v => handleOwnerChange('contactPerson', v)} mandatory errors={errors} />
-                      
+
                       <div className="flex flex-col relative w-full">
-                        <Field label="Mobile" id="mobile" type="tel" placeholder="+91 98765 43210" value={ownerDetails.mobile} onChange={v => {
+                        <Field label="Mobile" id="mobile" type="tel" placeholder="+91 98765 XXXXX" value={ownerDetails.mobile} onChange={v => {
                           handleOwnerChange('mobile', v);
                           if (otpVerified) setOtpVerified(false);
                           if (otpSent) { setOtpSent(false); setResendCountdown(0); }
                         }} mandatory errors={errors} />
-                        
+
                         {/* Premium OTP Section */}
                         <div className="mt-2">
                           {otpVerified ? (
@@ -525,7 +524,7 @@ export default function AddWarehouse({ setActiveTab }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field label="Warehouse Name" id="warehouseName" placeholder="e.g. Prime Logistics Hub" value={warehouseDetails.warehouseName} onChange={v => handleWarehouseChange('warehouseName', v)} mandatory errors={errors} />
                       <SelectField label="Warehouse Category" id="warehouseCategory" options={WAREHOUSE_CATEGORIES} placeholder="Select category" value={warehouseDetails.warehouseCategory} onChange={v => handleWarehouseChange('warehouseCategory', v)} mandatory errors={errors} />
-                      
+
                       {warehouseDetails.warehouseCategory && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="md:col-span-2">
                           <MultiChips label="Storage Type" id="storageTypes" options={STORAGE_TYPES} mandatory hint="Select all that apply" selected={warehouseDetails.storageTypes} onToggle={item => toggleItem('storageTypes', item, setWarehouseDetails)} errors={errors} />
@@ -538,7 +537,7 @@ export default function AddWarehouse({ setActiveTab }) {
                         if (available && Number(v) > 0 && available > Number(v)) setErrors(prev => ({ ...prev, availableArea: 'Cannot exceed Total Area' }));
                         else setErrors(prev => ({ ...prev, availableArea: '' }));
                       }} mandatory errors={errors} />
-                      
+
                       <Field label="Available Area (sq ft)" id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => {
                         handleWarehouseChange('availableArea', v);
                         const total = Number(warehouseDetails.totalArea);
@@ -566,7 +565,7 @@ export default function AddWarehouse({ setActiveTab }) {
                       <Field label="GST / PAN (Optional)" id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
                       <Field label="State" id="state" placeholder="e.g. Maharashtra" value={warehouseDetails.state} onChange={v => handleWarehouseChange('state', v)} mandatory errors={errors} />
                       <Field label="City" id="city" placeholder="e.g. Mumbai" value={warehouseDetails.city} onChange={v => handleWarehouseChange('city', v)} mandatory errors={errors} />
-                      
+
                       <div className="md:col-span-2">
                         <Field label="Address with Zip Code" id="addressWithZip" placeholder="Plot No, Street, Landmark, City - 400001" value={warehouseDetails.addressWithZip} onChange={v => handleWarehouseChange('addressWithZip', v)} mandatory errors={errors} />
                       </div>
@@ -631,9 +630,8 @@ export default function AddWarehouse({ setActiveTab }) {
                         {VALUE_ADDED_SERVICES.map(svc => {
                           const active = operationsDetails.valueAddedServices.includes(svc);
                           return (
-                            <button key={svc} type="button" onClick={() => toggleItem('valueAddedServices', svc, setOperationsDetails)} className={`px-4 py-3 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all duration-300 ${
-                              active ? 'bg-orange-500 text-white border-orange-400 shadow-[0_4px_15px_rgba(249,115,22,0.3)]' : 'bg-white/60 backdrop-blur-sm border-white text-slate-600 hover:border-orange-200 hover:bg-white shadow-sm'
-                            }`}>
+                            <button key={svc} type="button" onClick={() => toggleItem('valueAddedServices', svc, setOperationsDetails)} className={`px-4 py-3 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all duration-300 ${active ? 'bg-orange-500 text-white border-orange-400 shadow-[0_4px_15px_rgba(249,115,22,0.3)]' : 'bg-white/60 backdrop-blur-sm border-white text-slate-600 hover:border-orange-200 hover:bg-white shadow-sm'
+                              }`}>
                               <span>{svc}</span>
                               {active && <CheckCircle className="w-4 h-4 text-white shrink-0 drop-shadow-sm" />}
                             </button>
@@ -735,7 +733,7 @@ export default function AddWarehouse({ setActiveTab }) {
 function SectionHeading({ icon, title, subtitle }) {
   return (
     <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3 pb-4 border-b border-white/60">
-      <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-50">{icon}</div> 
+      <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-50">{icon}</div>
       {title} {subtitle && <span className="text-xs font-semibold text-slate-400 ml-2 mt-1">{subtitle}</span>}
     </h2>
   );
