@@ -13,6 +13,7 @@ import {
     LogOut, Search, RefreshCw, ChevronDown, ChevronUp,
     MapPin, Shield, AlertTriangle, X, Wifi, WifiOff,
     Settings, Package, Building2, Tag, Loader2, Database,
+    Image, Eye, ChevronLeft, ChevronRight, ZoomIn,
 } from 'lucide-react';
 import { migrateWarehouseFields } from '@/lib/migrateFields';
 
@@ -663,30 +664,34 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         transition={{ duration: 0.2, ease: 'easeInOut' }}
                         className="overflow-hidden"
                     >
-                        <div className="px-5 py-4 bg-orange-50 border-t border-orange-100 grid grid-cols-1 sm:grid-cols-3 gap-5">
-                            <DetailGroup title="Warehouse Info" items={[
-                                ['Category', w.warehouseCategory],
-                                ['Construction', w.typeOfConstruction],
-                                ['Age', w.warehouseAge],
-                                ['Storage Types', w.storageTypes?.join(', ')],
-                                ['Container', w.containerHandling],
-                            ]} />
-                            <DetailGroup title="Operations" items={[
-                                ['Days', w.daysOfOperation],
-                                ['Hours', w.operationTime],
-                                ['Inbound', w.inboundHandling],
-                                ['Outbound', w.outboundHandling],
-                                ['WMS', w.wmsAvailable],
-                                ['Security', w.securityFeatures?.join(', ')],
-                            ]} />
-                            <DetailGroup title="Pricing & Contact" items={[
-                                ['Pricing Unit', w.pricingUnit || w.pricingModel],
-                                ['Storage Rate', w.storageRate ? `₹${w.storageRate}` : null],
-                                ['Min Commitment', w.minCommitment],
-                                ['Mobile', w.mobile],
-                                ['Company', w.companyName],
-                                ['GST/PAN', w.ownerGstPan],
-                            ]} />
+                        <div className="px-5 py-4 bg-orange-50 border-t border-orange-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                <DetailGroup title="Warehouse Info" items={[
+                                    ['Category', w.warehouseCategory],
+                                    ['Construction', w.typeOfConstruction],
+                                    ['Age', w.warehouseAge],
+                                    ['Storage Types', w.storageTypes?.join(', ')],
+                                    ['Container', w.containerHandling],
+                                ]} />
+                                <DetailGroup title="Operations" items={[
+                                    ['Days', w.daysOfOperation],
+                                    ['Hours', w.operationTime],
+                                    ['Inbound', w.inboundHandling],
+                                    ['Outbound', w.outboundHandling],
+                                    ['WMS', w.wmsAvailable],
+                                    ['Security', w.securityFeatures?.join(', ')],
+                                ]} />
+                                <DetailGroup title="Pricing & Contact" items={[
+                                    ['Pricing Unit', w.pricingUnit || w.pricingModel],
+                                    ['Storage Rate', w.storageRate ? `₹${w.storageRate}` : null],
+                                    ['Min Commitment', w.minCommitment],
+                                    ['Mobile', w.mobile],
+                                    ['Company', w.companyName],
+                                    ['GST/PAN', w.ownerGstPan],
+                                ]} />
+                            </div>
+                            {/* Photo Gallery Section */}
+                            <PhotoGallery photos={w.photos} />
                         </div>
                     </motion.div>
                 )}
@@ -754,6 +759,229 @@ function DetailGroup({ title, items }) {
                 ))}
             </div>
         </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Photo Thumbnail with skeleton loader
+// ─────────────────────────────────────────────────────────────────────
+const loadedImagesCache = new Set();
+
+function PhotoThumb({ src, alt, onClick, className = '' }) {
+    const [loaded, setLoaded] = useState(() => loadedImagesCache.has(src));
+    const [error, setError] = useState(false);
+
+    return (
+        <button
+            onClick={onClick}
+            className={`group relative bg-white rounded-xl overflow-hidden border-2 border-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-200 cursor-pointer ${className}`}
+        >
+            {/* Skeleton shimmer — visible until image loads */}
+            {!loaded && !error && (
+                <div className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
+                    <Image className="w-5 h-5 text-slate-300" />
+                </div>
+            )}
+            {error && (
+                <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center gap-1">
+                    <AlertTriangle className="w-4 h-4 text-slate-300" />
+                    <span className="text-[9px] text-slate-400 font-semibold">Failed</span>
+                </div>
+            )}
+            <img
+                src={src}
+                alt={alt}
+                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                loading="eager"
+                decoding="async"
+                onLoad={() => {
+                    loadedImagesCache.add(src);
+                    setLoaded(true);
+                }}
+                onError={() => setError(true)}
+            />
+            {/* Hover overlay */}
+            {loaded && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-between p-2.5">
+                    <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider">{alt}</span>
+                    <ZoomIn className="w-4 h-4 text-white/80" />
+                </div>
+            )}
+            {/* Always-visible label */}
+            {loaded && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2 group-hover:opacity-0 transition-opacity">
+                    <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">{alt}</span>
+                </div>
+            )}
+        </button>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Photo Gallery (Admin Review)
+// ─────────────────────────────────────────────────────────────────────
+function PhotoGallery({ photos }) {
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [lightboxLoaded, setLightboxLoaded] = useState(false);
+
+    const photoLabels = {
+        frontView: 'Front View',
+        insideView: 'Inside View',
+        dockArea: 'Dock Area',
+        rateCard: 'Rate Card',
+    };
+
+    // Build array of available photos
+    const photoEntries = Object.entries(photoLabels)
+        .map(([key, label]) => ({ key, label, url: photos?.[key] }))
+        .filter(p => p.url);
+
+    if (photoEntries.length === 0) {
+        return (
+            <div className="mt-5 pt-4 border-t border-orange-200/60">
+                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-2">Photos</p>
+                <div className="flex items-center gap-2 text-slate-400 text-xs">
+                    <Image className="w-4 h-4" />
+                    <span>No photos uploaded by the owner</span>
+                </div>
+            </div>
+        );
+    }
+
+    const openLightbox = (index) => {
+        setActiveIndex(index);
+        setLightboxLoaded(false);
+        setLightboxOpen(true);
+    };
+
+    const handleNavigation = (newIndex) => {
+        setLightboxLoaded(false);
+        setActiveIndex(newIndex);
+    };
+
+    const goNext = () => handleNavigation((activeIndex + 1) % photoEntries.length);
+    const goPrev = () => handleNavigation((activeIndex - 1 + photoEntries.length) % photoEntries.length);
+
+    return (
+        <>
+            <div className="mt-5 pt-4 border-t border-orange-200/60">
+                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Image className="w-3.5 h-3.5" />
+                    Warehouse Photos
+                    <span className="ml-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold">
+                        {photoEntries.length}
+                    </span>
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {photoEntries.map((photo, idx) => (
+                        <PhotoThumb
+                            key={photo.key}
+                            src={photo.url}
+                            alt={photo.label}
+                            onClick={() => openLightbox(idx)}
+                            className="aspect-[4/3]"
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Lightbox Modal */}
+            <AnimatePresence>
+                {lightboxOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
+                        onClick={() => setLightboxOpen(false)}
+                    >
+                        {/* Top bar — label + close */}
+                        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <div />
+                            <span className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-white border border-white/10">
+                                {photoEntries[activeIndex]?.label}
+                                <span className="ml-2 text-white/50">
+                                    {activeIndex + 1} / {photoEntries.length}
+                                </span>
+                            </span>
+                            <button
+                                onClick={() => setLightboxOpen(false)}
+                                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Main image area — fills all remaining space */}
+                        <div
+                            className="flex-1 flex items-center justify-center relative px-16 min-h-0"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Navigation - Previous */}
+                            {photoEntries.length > 1 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                            )}
+
+                            {/* Spinner while lightbox image loads */}
+                            {!lightboxLoaded && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
+                                </div>
+                            )}
+                            <motion.img
+                                key={activeIndex}
+                                src={photoEntries[activeIndex]?.url}
+                                alt={photoEntries[activeIndex]?.label}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: lightboxLoaded ? 1 : 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="max-w-full max-h-full object-contain rounded-lg"
+                                style={{ width: 'auto', height: 'auto' }}
+                                onLoad={() => setLightboxLoaded(true)}
+                            />
+
+                            {/* Navigation - Next */}
+                            {photoEntries.length > 1 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Bottom thumbnail strip */}
+                        {photoEntries.length > 1 && (
+                            <div className="flex-shrink-0 flex justify-center py-3" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex gap-2 bg-white/5 p-1.5 rounded-xl border border-white/10">
+                                    {photoEntries.map((photo, idx) => (
+                                        <button
+                                            key={photo.key}
+                                            onClick={(e) => { e.stopPropagation(); handleNavigation(idx); }}
+                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                                                idx === activeIndex
+                                                    ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
+                                                    : 'border-transparent opacity-50 hover:opacity-80'
+                                            }`}
+                                        >
+                                            <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 }
 
