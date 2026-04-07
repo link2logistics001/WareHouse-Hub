@@ -11,6 +11,7 @@ import GetStarted from '@/components/commonfiles/GetStarted'
 import Footer from '@/components/commonfiles/Footer'
 import MerchantDashboard from '@/components/merchant/MerchantDashboard'
 import OwnerDashboard from '@/components/owner/OwnerDashboard'
+import DataEntryDashboard from '@/components/dataentry/DataEntryDashboard'
 import AdminDashboard from '@/components/admin/AdminDashboard'
 import ChatBox from '@/components/commonfiles/ChatBox'
 import FeedbackWidget from '@/components/commonfiles/FeedbackWidget' // <-- 1. Import the widget
@@ -66,6 +67,12 @@ export default function Home() {
       <>
         {user.userType === 'merchant' ? (
           <MerchantDashboard
+            user={user}
+            onLogout={handleLogout}
+            onOpenChat={handleOpenChat}
+          />
+        ) : user.userType === 'dataentry' ? (
+          <DataEntryDashboard
             user={user}
             onLogout={handleLogout}
             onOpenChat={handleOpenChat}

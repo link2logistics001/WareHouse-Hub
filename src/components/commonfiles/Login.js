@@ -319,7 +319,7 @@ function RoleStep({ onSelect }) {
         <h3 className="text-3xl font-bold text-slate-900 mt-6">Who are you?</h3>
         <p className="text-slate-500 mt-2">Select your role to continue your journey</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mx-auto">
         {roles.map((role) => (
           <button key={role.id} type="button" onClick={() => onSelect(role.id)}
             className="group flex flex-col items-center p-8 bg-white border border-slate-100 hover:border-[#E65100] rounded-2xl transition-all duration-300 text-center shadow-sm hover:shadow-xl">
@@ -340,8 +340,8 @@ function RoleStep({ onSelect }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AuthFormStep({ userType, onBack, onLoginSuccess }) {
-  const displayRole = userType === 'owner' ? 'Owner' : 'Merchant'
-  const roleColor = userType === 'owner' ? 'text-slate-700 bg-slate-100' : 'text-[#E65100] bg-orange-50'
+  const displayRole = userType === 'owner' ? 'Owner' : userType === 'dataentry' ? 'Data Entry' : 'Merchant'
+  const roleColor = userType === 'owner' ? 'text-slate-700 bg-slate-100' : userType === 'dataentry' ? 'text-cyan-700 bg-cyan-50' : 'text-[#E65100] bg-orange-50'
 
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '' })
@@ -378,6 +378,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
     <div className="w-full">
       <div className="flex items-center justify-between mb-8">
         <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${roleColor}`}>
+
           {userType === 'owner' ? '🏛️' : '🏢'} {displayRole}
         </span>
         <button type="button" onClick={onBack} className="text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest">

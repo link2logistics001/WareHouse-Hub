@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
 import { useAuth } from '@/contexts/AuthContext';
+import { getWarehouseCollection } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, User, ArrowLeft, ArrowRight, CheckCircle,
@@ -346,9 +347,11 @@ export default function AddWarehouse({ setActiveTab }) {
         mobile: ownerDetails.mobile.trim(), email: ownerDetails.email.trim(), ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
         // Meta
         ownerId: uid, status: 'pending', createdAt: serverTimestamp(),
+        source: 'owner',
       };
 
-      await addDoc(collection(db, 'warehouse_details'), docData);
+      const ownerEmail = user.email.toLowerCase().trim();
+      await addDoc(getWarehouseCollection('owner', ownerEmail), docData);
       setSubmitted(true);
     } catch (err) {
       if (err.code === 'storage/unauthorized') { setSubmitError('Upload blocked: auth token rejected by Storage. Please log out, log in again, and retry.'); }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import {
-    collection, query, getDocs, doc, updateDoc,
+    collection, collectionGroup, query, getDocs, doc, updateDoc,
     serverTimestamp, orderBy, onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -114,18 +114,33 @@ export default function AdminDashboard({ user, onLogout }) {
         sessionStorage.setItem('admin_activeView', activeView);
     }, [activeView]);
 
-    // Real-time Firestore subscription
+    // Real-time Firestore subscription — listen to collectionGroup 'warehouses'
+    // which pulls docs from warehouse_details/owner/emails/*/warehouses AND warehouse_details/dataentry/emails/*/warehouses
     useEffect(() => {
         setLoading(true);
-        const q = query(collection(db, 'warehouse_details'), orderBy('createdAt', 'desc'));
-        const unsub = onSnapshot(q,
+        const cg = collectionGroup(db, 'warehouses');
+        const unsub = onSnapshot(cg,
             (snap) => {
-                setWarehouses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                const allWarehouses = snap.docs.map(d => {
+                    const data = d.data();
+                    // Extract role and email from path: warehouse_details/{role}/emails/{email}/warehouses/{id}
+                    const segments = d.ref.path.split('/');
+                    return {
+                        id: d.id,
+                        ...data,
+                        _role: segments[1],       // 'owner' or 'dataentry'
+                        _email: segments[3],       // user email (after 'emails' at index 2)
+                        _docPath: d.ref.path,      // full path for updates
+                    };
+                });
+                // Sort by createdAt descending
+                allWarehouses.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+                setWarehouses(allWarehouses);
                 setLoading(false);
                 setError('');
             },
             (err) => {
-
+                console.error('Admin warehouse listener error:', err);
                 setError('Failed to load warehouses. Check your connection.');
                 setLoading(false);
             }
@@ -138,10 +153,17 @@ export default function AdminDashboard({ user, onLogout }) {
         setTimeout(() => setToast(null), 3500);
     };
 
-    const handleAction = async (warehouseId, newStatus) => {
+    const handleAction = async (warehouseId, newStatus, docPath) => {
         setActionLoading(prev => ({ ...prev, [warehouseId]: newStatus }));
         try {
-            await updateDoc(doc(db, 'warehouse_details', warehouseId), {
+            // docPath is always available from collectionGroup results
+            if (!docPath) {
+                showToast('Cannot update: missing document path.', 'error');
+                setActionLoading(prev => ({ ...prev, [warehouseId]: null }));
+                return;
+            }
+            const docRef = doc(db, docPath);
+            await updateDoc(docRef, {
                 status: newStatus,
                 reviewedAt: serverTimestamp(),
                 reviewedBy: user?.uid || 'admin',
@@ -151,7 +173,7 @@ export default function AdminDashboard({ user, onLogout }) {
                 newStatus === 'approved' ? 'success' : 'error'
             );
         } catch (err) {
-
+            console.error('Action failed:', err);
             showToast('Action failed. Please try again.', 'error');
         } finally {
             setActionLoading(prev => ({ ...prev, [warehouseId]: null }));
@@ -612,7 +634,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '—'}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '—'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
                     </div>
 
                     {/* Owner */}
@@ -705,7 +727,7 @@ function ActionButtons({ w, status, isActing, handleAction }) {
         <div className="flex flex-wrap gap-2">
             {status !== 'approved' && (
                 <button
-                    onClick={() => handleAction(w.id, 'approved')}
+                    onClick={() => handleAction(w.id, 'approved', w._docPath)}
                     disabled={!!isActing}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -717,7 +739,7 @@ function ActionButtons({ w, status, isActing, handleAction }) {
             )}
             {status !== 'rejected' && (
                 <button
-                    onClick={() => handleAction(w.id, 'rejected')}
+                    onClick={() => handleAction(w.id, 'rejected', w._docPath)}
                     disabled={!!isActing}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -729,7 +751,7 @@ function ActionButtons({ w, status, isActing, handleAction }) {
             )}
             {status !== 'pending' && (
                 <button
-                    onClick={() => handleAction(w.id, 'pending')}
+                    onClick={() => handleAction(w.id, 'pending', w._docPath)}
                     disabled={!!isActing}
                     title="Reset to pending"
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -966,11 +988,10 @@ function PhotoGallery({ photos }) {
                                         <button
                                             key={photo.key}
                                             onClick={(e) => { e.stopPropagation(); handleNavigation(idx); }}
-                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                                                idx === activeIndex
+                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIndex
                                                     ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
                                                     : 'border-transparent opacity-50 hover:opacity-80'
-                                            }`}
+                                                }`}
                                         >
                                             <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
                                         </button>
