@@ -1,0 +1,580 @@
+'use client';
+
+/**
+ * DEAddWarehouse — Data Entry version of AddWarehouse.
+ * 
+ * This is almost identical to the Owner AddWarehouse but:
+ * 1. Saves to warehouse_details/dataentry/{email}/warehouses
+ * 2. Marks source as 'dataentry'
+ * 3. Uses a cyan/teal theme accent
+ */
+
+import { useState, useRef, useEffect } from 'react';
+import { addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '@/lib/firebase';
+import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { getWarehouseCollection } from '@/lib/warehouseCollections';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Building2, User, ArrowLeft, ArrowRight, CheckCircle,
+  AlertCircle, Loader2, Settings, DollarSign, ImageIcon, UploadCloud, X, ChevronDown
+} from 'lucide-react';
+
+// ─ Same option lists as Owner ─
+const WAREHOUSE_CATEGORIES = ['Bonded', 'General', 'FTWZ'];
+const CONSTRUCTION_TYPES = ['RCC', 'PEB', 'Shed', 'Other'];
+const STORAGE_TYPES = ['Hazardous', 'Non-Hazardous', 'Temperature Controlled', 'Non-Temperature'];
+const WAREHOUSE_AGES = ['0-3 years', '3-7 years', '7+ years'];
+const DAYS_OF_OPERATION = ['Mon-Fri', 'Mon-Sat', 'All 7 Days'];
+const OPERATION_TIMES = ['24x7', 'Fixed Hours', 'Other'];
+const SECURITY_FEATURES = ['CCTV', 'Fire Safety System', 'Security Guard', 'Others'];
+const SUITABLE_GOODS = ['FMCG', 'Pharma', 'Chemicals', 'Food', 'Automobile', 'Metals', 'Others'];
+const VALUE_ADDED_SERVICES = [
+  'Pick & Pack', 'Kitting / Assembly', 'Labelling / Barcoding',
+  'Repacking', 'Quality Inspection', 'E-commerce Fulfillment',
+  'Cross Docking', 'Transportation Support', 'Others',
+];
+const PRICING_UNITS = ['Per sq ft', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
+const MIN_COMMITMENT_OPTIONS = ['No Minimum', '1 Month', '3 Months', '6 Months', '12 Months'];
+const SHORT_TERM_OPTIONS = ['Yes (1-3 months)', 'Yes (3-6 months)', 'No (Only Long-Term)'];
+const BUSINESS_TYPES = ['Warehouse Owner', '3PL Service Provider', 'Both'];
+
+const STEP_LABELS = { 1: 'Owner / Business Details', 2: 'Warehouse Details', 3: 'Operations & Services', 4: 'Pricing & Photos' };
+
+// Use cyan accent color
+const ACCENT = 'cyan';
+
+export default function DEAddWarehouse({ setActiveTab }) {
+  const { user } = useAuth();
+  const [step, setStep] = useState(1);
+  const totalSteps = 4;
+
+  const [ownerDetails, setOwnerDetails] = useState({
+    businessType: '', companyName: '', contactPerson: '', mobile: '', email: '', ownerGstPan: '',
+  });
+  const [warehouseDetails, setWarehouseDetails] = useState({
+    warehouseName: '', warehouseCategory: '', totalArea: '', availableArea: '', clearHeight: '',
+    numberOfDockDoors: '', containerHandling: '', typeOfConstruction: '', customTypeOfConstruction: '',
+    storageTypes: [], warehouseAge: '', warehouseGstPan: '', state: '', city: '', addressWithZip: '', googleMapPin: '',
+  });
+  const [operationsDetails, setOperationsDetails] = useState({
+    inboundHandling: '', outboundHandling: '', wmsAvailable: '', daysOfOperation: '', operationTime: '',
+    customOperationTime: '', securityFeatures: [], customSecurityFeature: '', suitableGoods: [],
+    customSuitableGood: '', valueAddedServices: [], customValueAddedService: '',
+  });
+  const [pricingDetails, setPricingDetails] = useState({
+    pricingUnit: '', customPricingUnit: '', storageRate: '', handlingRate: '', minCommitment: '', shortTermStorage: '',
+  });
+  const [photos, setPhotos] = useState({ frontView: null, insideView: null, dockArea: null, rateCard: null });
+
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const countdownRef = useRef(null);
+
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const frontViewRef = useRef(null); const insideViewRef = useRef(null);
+  const dockAreaRef = useRef(null); const rateCardRef = useRef(null);
+
+  const handleWarehouseChange = (field, value) => { setWarehouseDetails(prev => ({ ...prev, [field]: value })); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); };
+  const handleOperationsChange = (field, value) => { setOperationsDetails(prev => ({ ...prev, [field]: value })); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); };
+  const handlePricingChange = (field, value) => { setPricingDetails(prev => ({ ...prev, [field]: value })); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); };
+  const handleOwnerChange = (field, value) => { setOwnerDetails(prev => ({ ...prev, [field]: value })); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); };
+  const toggleItem = (field, item, setter) => { setter(prev => { const current = prev[field]; const updated = current.includes(item) ? current.filter(i => i !== item) : [...current, item]; return { ...prev, [field]: updated }; }); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); };
+  const handleFileChange = (photoKey, file) => { if (file && file.size > 10 * 1024 * 1024) { setErrors(prev => ({ ...prev, [photoKey]: 'File too large — max 10 MB' })); return; } setPhotos(prev => ({ ...prev, [photoKey]: file })); if (errors[photoKey]) setErrors(prev => ({ ...prev, [photoKey]: '' })); };
+
+  // ── Validators (same as Owner) ──
+  const validateStep1 = () => { const e = {}; if (!ownerDetails.businessType) e.businessType = 'Please select a business type'; if (!ownerDetails.companyName.trim()) e.companyName = 'Company name is required'; if (!ownerDetails.contactPerson.trim()) e.contactPerson = 'Contact person is required'; if (!ownerDetails.mobile.trim()) e.mobile = 'Mobile number is required'; else if (!otpVerified) e.mobile = 'Mobile number must be OTP verified'; if (!ownerDetails.email.trim()) e.email = 'Email is required'; return e; };
+  const validateStep2 = () => { const e = {}; if (!warehouseDetails.warehouseName.trim()) e.warehouseName = 'Warehouse name is required'; if (!warehouseDetails.warehouseCategory) e.warehouseCategory = 'Please select a category'; const total = Number(warehouseDetails.totalArea); const available = Number(warehouseDetails.availableArea); if (!warehouseDetails.totalArea) e.totalArea = 'Total area is required'; else if (total < 0) e.totalArea = 'Total area cannot be negative'; if (!warehouseDetails.availableArea) e.availableArea = 'Available area is required'; else if (available < 0) e.availableArea = 'Available area cannot be negative'; else if (total > 0 && available > total) e.availableArea = 'Available area cannot exceed total area'; if (!warehouseDetails.state.trim()) e.state = 'State is required'; if (!warehouseDetails.city.trim()) e.city = 'City is required'; if (!warehouseDetails.addressWithZip.trim()) e.addressWithZip = 'Address with zip is required'; return e; };
+  const validateStep3 = () => { const e = {}; if (!operationsDetails.daysOfOperation) e.daysOfOperation = 'Please select days'; if (!operationsDetails.operationTime) e.operationTime = 'Please select time'; if ((operationsDetails.operationTime === 'Other' || operationsDetails.operationTime === 'Fixed Hours') && !operationsDetails.customOperationTime.trim()) e.customOperationTime = 'Please specify hours'; if (operationsDetails.securityFeatures.length === 0) e.securityFeatures = 'Select at least one'; return e; };
+  const validateStep4 = () => { const e = {}; if (!pricingDetails.pricingUnit) e.pricingUnit = 'Please select a pricing unit'; if (pricingDetails.pricingUnit === 'Custom' && !pricingDetails.customPricingUnit.trim()) e.customPricingUnit = 'Please specify'; if (!pricingDetails.storageRate) e.storageRate = 'Storage rate is required'; if (!pricingDetails.minCommitment) e.minCommitment = 'Please select'; if (!pricingDetails.shortTermStorage) e.shortTermStorage = 'Please select'; return e; };
+
+  // ── OTP handlers ──
+  const startCountdown = () => { if (countdownRef.current) clearInterval(countdownRef.current); setResendCountdown(60); countdownRef.current = setInterval(() => { setResendCountdown(prev => { if (prev <= 1) { clearInterval(countdownRef.current); countdownRef.current = null; return 0; } return prev - 1; }); }, 1000); };
+  useEffect(() => { return () => { if (countdownRef.current) clearInterval(countdownRef.current); }; }, []);
+  const handleSendOtp = async () => { const mobile = ownerDetails.mobile.trim(); if (!mobile || mobile.length < 10) { setOtpError('Enter a valid mobile number.'); return; } setOtpError(''); setSendingOtp(true); try { const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile; await sendPhoneOtp(formatted); setOtpSent(true); setOtp(''); startCountdown(); } catch (error) { setOtpError(error.message); } finally { setSendingOtp(false); } };
+  const handleVerifyOtp = async () => { if (!otp || otp.trim().length < 6) { setOtpError('Enter the 6-digit OTP.'); return; } setOtpError(''); setVerifyingOtp(true); try { await verifyPhoneOtp(otp.trim()); setOtpVerified(true); setOtpSent(false); setOtp(''); if (countdownRef.current) clearInterval(countdownRef.current); setResendCountdown(0); } catch (error) { setOtpError(error.message); } finally { setVerifyingOtp(false); } };
+
+  const handleNext = () => { const validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 }; const errs = validators[step](); if (Object.keys(errs).length > 0) { setErrors(errs); return; } setErrors({}); setStep(s => s + 1); };
+  const handleBack = () => { setErrors({}); setStep(s => s - 1); };
+
+  const uploadFile = (file, basePath, onProgress) => {
+    return new Promise((resolve, reject) => {
+      if (!file) { resolve(null); return; }
+      const ext = file.name.split('.').pop();
+      const pathWithExt = `${basePath}.${ext}`;
+      const storageRef = ref(storage, pathWithExt);
+      const metadata = { contentType: file.type };
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+      uploadTask.on('state_changed',
+        (snapshot) => { const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100; if (onProgress) onProgress(progress); },
+        (error) => { reject(error); },
+        async () => { try { const url = await getDownloadURL(uploadTask.snapshot.ref); resolve(url); } catch (err) { reject(err); } }
+      );
+    });
+  };
+
+  // ── SUBMIT — saves to dataentry subcollection ──
+  const handleSubmit = async () => {
+    const errs = validateStep4();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
+    if (!user || !user.uid) { setSubmitError('You must be logged in'); setSubmitting(false); return; }
+    const currentAuthUser = auth.currentUser;
+    if (!currentAuthUser) { setSubmitError('Session expired. Log in again.'); setSubmitting(false); return; }
+
+    setSubmitting(true); setSubmitError(''); setUploadProgress(0);
+
+    try {
+      await currentAuthUser.getIdToken(true);
+      const uid = currentAuthUser.uid;
+      if (user.uid !== uid) { setSubmitError('Session mismatch.'); setSubmitting(false); return; }
+
+      const safeWarehouseName = warehouseDetails.warehouseName.trim().replace(/[^a-zA-Z0-9-]/g, '_');
+      const basePath = `warehouse_photos/${ownerDetails.email.trim()}/${safeWarehouseName}`;
+
+      const filesToUpload = [photos.frontView, photos.insideView, photos.dockArea, photos.rateCard].filter(f => f !== null);
+      if (filesToUpload.length === 0) setUploadProgress(100);
+
+      const progressMap = {};
+      const handleProgress = (fileKey, pct) => { progressMap[fileKey] = pct; const totalPct = Object.values(progressMap).reduce((a, b) => a + b, 0) / (filesToUpload.length || 1); setUploadProgress(Math.round(totalPct)); };
+
+      const [frontViewURL, insideViewURL, dockAreaURL, rateCardURL] = await Promise.all([
+        uploadFile(photos.frontView, `${basePath}/front_view`, (pct) => handleProgress('frontView', pct)),
+        uploadFile(photos.insideView, `${basePath}/inside_view`, (pct) => handleProgress('insideView', pct)),
+        uploadFile(photos.dockArea, `${basePath}/dock_area`, (pct) => handleProgress('dockArea', pct)),
+        uploadFile(photos.rateCard, `${basePath}/rate_card`, (pct) => handleProgress('rateCard', pct))
+      ]);
+
+      const docData = {
+        warehouseName: warehouseDetails.warehouseName.trim(), warehouseCategory: warehouseDetails.warehouseCategory,
+        totalArea: Number(warehouseDetails.totalArea), availableArea: Number(warehouseDetails.availableArea),
+        clearHeight: Number(warehouseDetails.clearHeight), numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors),
+        containerHandling: warehouseDetails.containerHandling,
+        typeOfConstruction: warehouseDetails.typeOfConstruction === 'Other' ? warehouseDetails.customTypeOfConstruction.trim() : (warehouseDetails.typeOfConstruction || null),
+        storageTypes: warehouseDetails.storageTypes, warehouseAge: warehouseDetails.warehouseAge || null,
+        warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null, state: warehouseDetails.state.trim(),
+        city: warehouseDetails.city.trim(), addressWithZip: warehouseDetails.addressWithZip.trim(), googleMapPin: warehouseDetails.googleMapPin.trim(),
+        inboundHandling: operationsDetails.inboundHandling || null, outboundHandling: operationsDetails.outboundHandling || null,
+        wmsAvailable: operationsDetails.wmsAvailable || null, daysOfOperation: operationsDetails.daysOfOperation,
+        operationTime: operationsDetails.operationTime === 'Other' ? operationsDetails.customOperationTime.trim() : operationsDetails.operationTime,
+        securityFeatures: operationsDetails.securityFeatures.map(f => f === 'Others' && operationsDetails.customSecurityFeature.trim() ? operationsDetails.customSecurityFeature.trim() : f),
+        suitableGoods: operationsDetails.suitableGoods.map(g => g === 'Others' && operationsDetails.customSuitableGood.trim() ? operationsDetails.customSuitableGood.trim() : g),
+        valueAddedServices: operationsDetails.valueAddedServices.map(s => s === 'Others' && operationsDetails.customValueAddedService.trim() ? operationsDetails.customValueAddedService.trim() : s),
+        pricingUnit: pricingDetails.pricingUnit === 'Custom' ? pricingDetails.customPricingUnit.trim() : pricingDetails.pricingUnit,
+        storageRate: Number(pricingDetails.storageRate), handlingRate: pricingDetails.handlingRate ? Number(pricingDetails.handlingRate) : null,
+        minCommitment: pricingDetails.minCommitment, shortTermStorage: pricingDetails.shortTermStorage,
+        photos: { frontView: frontViewURL, insideView: insideViewURL, dockArea: dockAreaURL, rateCard: rateCardURL },
+        businessType: ownerDetails.businessType, companyName: ownerDetails.companyName.trim(), contactPerson: ownerDetails.contactPerson.trim(),
+        mobile: ownerDetails.mobile.trim(), email: ownerDetails.email.trim(), ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
+        ownerId: uid, status: 'pending', createdAt: serverTimestamp(),
+        source: 'dataentry',
+        submittedBy: user.email,
+      };
+
+      const dataEntryEmail = user.email.toLowerCase().trim();
+      await addDoc(getWarehouseCollection('dataentry', dataEntryEmail), docData);
+      setSubmitted(true);
+    } catch (err) {
+      if (err.code === 'storage/unauthorized') { setSubmitError('Upload blocked. Log out and retry.'); }
+      else if (err.code === 'storage/bucket-not-found') { setSubmitError('Storage not configured.'); }
+      else { setSubmitError(`Failed: ${err.message || 'Unknown error.'}`); }
+    } finally {
+      setSubmitting(false); setUploadProgress(0);
+    }
+  };
+
+  // ── SUCCESS SCREEN ──
+  if (submitted) {
+    return (
+      <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0 flex items-center justify-center">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
+          <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px]" />
+        </div>
+        <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="max-w-lg w-full mx-auto text-center z-10 p-6">
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white p-12 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-emerald-500" />
+            <div className="w-20 h-20 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <CheckCircle className="w-10 h-10 text-emerald-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800 mb-3">Entry Submitted!</h2>
+            <p className="text-slate-500 mb-10 font-medium">Your warehouse entry has been saved and is now in the admin review queue.</p>
+            <button onClick={() => setActiveTab('dashboard')} className="w-full px-8 py-3.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all shadow-lg hover:-translate-y-0.5">
+              Back to Dashboard
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── FORM ──
+  return (
+    <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0 pb-24">
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
+        <div className="absolute top-[5%] right-[-5%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[20%] left-[-10%] w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-10 relative z-10">
+        <div className="mb-10">
+          <button onClick={() => setActiveTab('dashboard')} className="text-slate-500 hover:text-cyan-600 flex items-center gap-2 mb-6 transition-colors font-semibold bg-white/60 px-4 py-2 rounded-lg w-fit border border-white shadow-sm backdrop-blur-md">
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          </button>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Add Warehouse Entry</h1>
+              <p className="text-sm font-medium text-slate-500 mt-1">Step {step} of {totalSteps}: {STEP_LABELS[step]}</p>
+            </div>
+            <div className="bg-white/80 backdrop-blur-md border border-white shadow-sm px-5 py-2.5 rounded-full flex items-center gap-3">
+              <span className="text-sm font-bold text-slate-700">{Math.round((step / totalSteps) * 100)}%</span>
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Completed</span>
+            </div>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="relative mb-4 flex justify-between">
+            <div className="absolute top-1/2 left-0 w-full h-1.5 bg-slate-200/50 -translate-y-1/2 rounded-full overflow-hidden backdrop-blur-sm z-0">
+              <motion.div className="h-full bg-gradient-to-r from-cyan-400 to-teal-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" initial={{ width: 0 }} animate={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }} transition={{ duration: 0.5, ease: "easeInOut" }} />
+            </div>
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
+              <div key={s} className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${s < step ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : s === step ? 'bg-slate-900 text-white shadow-xl ring-4 ring-slate-900/20' : 'bg-white border-2 border-slate-200 text-slate-400'}`}>
+                {s < step ? <CheckCircle className="w-5 h-5" /> : s}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Glass Form Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white overflow-hidden min-h-[500px] flex flex-col relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent pointer-events-none z-0" />
+          <div className="relative z-10 flex-1 flex flex-col">
+            <AnimatePresence mode="wait">
+              <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex-1 flex flex-col">
+                
+                {/* STEP 1 */}
+                {step === 1 && (
+                  <div className="p-8 sm:p-10 flex-1">
+                    <SectionHeading icon={<User className="w-6 h-6 text-cyan-500 drop-shadow-md" />} title="Owner / Business Details" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <SelectField label="Business Type" id="businessType" options={BUSINESS_TYPES} placeholder="Select business type" value={ownerDetails.businessType} onChange={v => handleOwnerChange('businessType', v)} mandatory errors={errors} />
+                      <Field label="Company Name" id="companyName" placeholder="e.g. MetroStore Pvt Ltd" value={ownerDetails.companyName} onChange={v => handleOwnerChange('companyName', v)} mandatory errors={errors} />
+                      <Field label="Contact Person" id="contactPerson" placeholder="e.g. Vikram Singh" value={ownerDetails.contactPerson} onChange={v => handleOwnerChange('contactPerson', v)} mandatory errors={errors} />
+                      <div className="flex flex-col relative w-full">
+                        <Field label="Mobile" id="mobile" type="tel" placeholder="+91 98765 XXXXX" value={ownerDetails.mobile} onChange={v => { handleOwnerChange('mobile', v); if (otpVerified) setOtpVerified(false); if (otpSent) { setOtpSent(false); setResendCountdown(0); } }} mandatory errors={errors} />
+                        <div className="mt-2">
+                          {otpVerified ? (
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit border border-emerald-100"><CheckCircle className="w-4 h-4" /> Phone Verified</span>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              {!otpSent ? (
+                                <div className="flex items-center justify-between bg-white/50 p-2 rounded-xl border border-white">
+                                  <span className="text-slate-500 text-xs font-semibold px-2">Verification Required</span>
+                                  <button type="button" onClick={handleSendOtp} disabled={sendingOtp || !ownerDetails.mobile || ownerDetails.mobile.replace(/\D/g, '').length < 10} className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 shadow-md">
+                                    {sendingOtp && <Loader2 className="w-3 h-3 animate-spin" />} {sendingOtp ? 'Sending...' : 'Send OTP'}
+                                  </button>
+                                  <div id="recaptcha-container" style={{ display: 'none' }} />
+                                </div>
+                              ) : (
+                                <div className="bg-white/80 p-4 rounded-2xl border border-white shadow-sm backdrop-blur-md">
+                                  <div className="flex gap-3">
+                                    <div className="flex-1">
+                                      <label htmlFor="otpCode" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Enter OTP</label>
+                                      <input id="otpCode" type="text" inputMode="numeric" maxLength={6} autoComplete="one-time-code" placeholder="123456" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all tracking-widest text-center font-mono font-bold text-lg shadow-inner" />
+                                    </div>
+                                    <button type="button" onClick={handleVerifyOtp} disabled={verifyingOtp || otp.length < 6} className="self-end px-5 py-3.5 bg-cyan-500 text-white text-sm font-bold rounded-xl hover:bg-cyan-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md">
+                                      {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                                    </button>
+                                  </div>
+                                  {!verifyingOtp && (
+                                    <div className="mt-3 text-center">
+                                      {resendCountdown > 0 ? <span className="text-[11px] font-semibold text-slate-400">Resend OTP in {resendCountdown}s</span> : <button type="button" onClick={handleSendOtp} disabled={sendingOtp} className="text-[11px] text-cyan-600 hover:text-cyan-700 font-bold underline transition-colors">{sendingOtp ? 'Sending...' : 'Resend OTP'}</button>}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {otpError && <ErrMsg msg={otpError} />}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Field label="Email" id="email" type="email" placeholder="contact@company.com" value={ownerDetails.email} onChange={v => handleOwnerChange('email', v)} mandatory errors={errors} />
+                      <Field label="GST / PAN (Optional)" id="ownerGstPan" placeholder="e.g. ABCDE1234F" value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 2 */}
+                {step === 2 && (
+                  <div className="p-8 sm:p-10 flex-1">
+                    <SectionHeading icon={<Building2 className="w-6 h-6 text-cyan-500 drop-shadow-md" />} title="Warehouse Details" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Field label="Warehouse Name" id="warehouseName" placeholder="e.g. Prime Logistics Hub" value={warehouseDetails.warehouseName} onChange={v => handleWarehouseChange('warehouseName', v)} mandatory errors={errors} />
+                      <SelectField label="Warehouse Category" id="warehouseCategory" options={WAREHOUSE_CATEGORIES} placeholder="Select category" value={warehouseDetails.warehouseCategory} onChange={v => handleWarehouseChange('warehouseCategory', v)} mandatory errors={errors} />
+                      {warehouseDetails.warehouseCategory && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="md:col-span-2">
+                          <MultiChips label="Storage Type" id="storageTypes" options={STORAGE_TYPES} mandatory hint="Select all that apply" selected={warehouseDetails.storageTypes} onToggle={item => toggleItem('storageTypes', item, setWarehouseDetails)} errors={errors} />
+                        </motion.div>
+                      )}
+                      <Field label="Total Area (sq ft)" id="totalArea" type="number" placeholder="e.g. 25000" value={warehouseDetails.totalArea} onChange={v => handleWarehouseChange('totalArea', v)} mandatory errors={errors} />
+                      <Field label="Available Area (sq ft)" id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => handleWarehouseChange('availableArea', v)} mandatory errors={errors} />
+                      <Field label="Clear Height (ft)" id="clearHeight" type="number" placeholder="e.g. 30" value={warehouseDetails.clearHeight} onChange={v => handleWarehouseChange('clearHeight', v)} errors={errors} />
+                      <Field label="Number of Dock Doors" id="numberOfDockDoors" type="number" placeholder="e.g. 4" value={warehouseDetails.numberOfDockDoors} onChange={v => handleWarehouseChange('numberOfDockDoors', v)} errors={errors} />
+                      <YesNoField label="40 ft Container Handling" id="containerHandling" value={warehouseDetails.containerHandling} onChange={v => handleWarehouseChange('containerHandling', v)} errors={errors} />
+                      <SelectField label="Type of Construction" id="typeOfConstruction" options={CONSTRUCTION_TYPES} placeholder="Select type (optional)" value={warehouseDetails.typeOfConstruction} onChange={v => handleWarehouseChange('typeOfConstruction', v)} errors={errors} />
+                      <SelectField label="Warehouse Age" id="warehouseAge" options={WAREHOUSE_AGES} placeholder="Select age (optional)" value={warehouseDetails.warehouseAge} onChange={v => handleWarehouseChange('warehouseAge', v)} errors={errors} />
+                      <Field label="GST / PAN (Optional)" id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
+                      <Field label="State" id="state" placeholder="e.g. Maharashtra" value={warehouseDetails.state} onChange={v => handleWarehouseChange('state', v)} mandatory errors={errors} />
+                      <Field label="City" id="city" placeholder="e.g. Mumbai" value={warehouseDetails.city} onChange={v => handleWarehouseChange('city', v)} mandatory errors={errors} />
+                      <div className="md:col-span-2">
+                        <Field label="Address with Zip Code" id="addressWithZip" placeholder="Plot No, Street, City - 400001" value={warehouseDetails.addressWithZip} onChange={v => handleWarehouseChange('addressWithZip', v)} mandatory errors={errors} />
+                      </div>
+                      <Field label="Google Map Pin (Lat, Long)" id="googleMapPin" placeholder="e.g. 19.0760, 72.8777" value={warehouseDetails.googleMapPin} onChange={v => handleWarehouseChange('googleMapPin', v)} errors={errors} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3 */}
+                {step === 3 && (
+                  <div className="p-8 sm:p-10 flex-1 space-y-10">
+                    <div>
+                      <SectionHeading icon={<Settings className="w-6 h-6 text-cyan-500 drop-shadow-md" />} title="Operations & Security" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <YesNoField label="Inbound Handling" id="inboundHandling" value={operationsDetails.inboundHandling} onChange={v => handleOperationsChange('inboundHandling', v)} errors={errors} />
+                        <YesNoField label="Outbound Handling" id="outboundHandling" value={operationsDetails.outboundHandling} onChange={v => handleOperationsChange('outboundHandling', v)} errors={errors} />
+                        <YesNoField label="WMS Available" id="wmsAvailable" value={operationsDetails.wmsAvailable} onChange={v => handleOperationsChange('wmsAvailable', v)} errors={errors} />
+                        <SelectField label="Days of Operation" id="daysOfOperation" options={DAYS_OF_OPERATION} placeholder="Select days" value={operationsDetails.daysOfOperation} onChange={v => handleOperationsChange('daysOfOperation', v)} mandatory errors={errors} />
+                        <SelectField label="Operation Time" id="operationTime" options={OPERATION_TIMES} placeholder="Select time" value={operationsDetails.operationTime} onChange={v => handleOperationsChange('operationTime', v)} mandatory errors={errors} />
+                      </div>
+                      <div className="mt-8 space-y-8">
+                        <MultiChips label="Security Features" id="securityFeatures" options={SECURITY_FEATURES} mandatory selected={operationsDetails.securityFeatures} onToggle={item => toggleItem('securityFeatures', item, setOperationsDetails)} errors={errors} />
+                        <MultiChips label="Suitable Goods" id="suitableGoods" options={SUITABLE_GOODS} mandatory selected={operationsDetails.suitableGoods} onToggle={item => toggleItem('suitableGoods', item, setOperationsDetails)} errors={errors} />
+                      </div>
+                    </div>
+                    <div>
+                      <SectionHeading icon={<CheckCircle className="w-6 h-6 text-cyan-500 drop-shadow-md" />} title="Value Added Services" subtitle="(Optional)" />
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {VALUE_ADDED_SERVICES.map(svc => {
+                          const active = operationsDetails.valueAddedServices.includes(svc);
+                          return (
+                            <button key={svc} type="button" onClick={() => toggleItem('valueAddedServices', svc, setOperationsDetails)} className={`px-4 py-3 rounded-2xl border text-sm font-semibold flex items-center justify-between transition-all duration-300 ${active ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_4px_15px_rgba(6,182,212,0.3)]' : 'bg-white/60 backdrop-blur-sm border-white text-slate-600 hover:border-cyan-200 hover:bg-white shadow-sm'}`}>
+                              <span>{svc}</span>
+                              {active && <CheckCircle className="w-4 h-4 text-white shrink-0 drop-shadow-sm" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4 */}
+                {step === 4 && (
+                  <div className="p-8 sm:p-10 flex-1 space-y-10">
+                    <div>
+                      <SectionHeading icon={<DollarSign className="w-6 h-6 text-emerald-500 drop-shadow-md" />} title="Pricing Details" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SelectField label="Pricing Unit" id="pricingUnit" options={PRICING_UNITS} placeholder="Select unit" value={pricingDetails.pricingUnit} onChange={v => handlePricingChange('pricingUnit', v)} mandatory errors={errors} />
+                        <Field label="Storage Rate (₹)" id="storageRate" type="number" placeholder="Approximate value" value={pricingDetails.storageRate} onChange={v => handlePricingChange('storageRate', v)} mandatory errors={errors} />
+                        <Field label="Handling Rate — Optional (₹)" id="handlingRate" type="number" placeholder="Leave blank if N/A" value={pricingDetails.handlingRate} onChange={v => handlePricingChange('handlingRate', v)} errors={errors} />
+                        <SelectField label="Minimum Commitment" id="minCommitment" options={MIN_COMMITMENT_OPTIONS} placeholder="Select duration" value={pricingDetails.minCommitment} onChange={v => handlePricingChange('minCommitment', v)} mandatory errors={errors} />
+                        <div className="md:col-span-2">
+                          <SelectField label="Short-Term Storage Available" id="shortTermStorage" options={SHORT_TERM_OPTIONS} placeholder="Select option" value={pricingDetails.shortTermStorage} onChange={v => handlePricingChange('shortTermStorage', v)} mandatory errors={errors} />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <SectionHeading icon={<ImageIcon className="w-6 h-6 text-blue-500 drop-shadow-md" />} title="Warehouse Photos" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <PhotoUpload label="Front View (Optional)" id="frontView" fileRef={frontViewRef} file={photos.frontView} onFileChange={handleFileChange} errors={errors} />
+                        <PhotoUpload label="Inside View (Optional)" id="insideView" fileRef={insideViewRef} file={photos.insideView} onFileChange={handleFileChange} errors={errors} />
+                        <PhotoUpload label="Dock Area (Optional)" id="dockArea" fileRef={dockAreaRef} file={photos.dockArea} onFileChange={handleFileChange} errors={errors} />
+                      </div>
+                      <div className="mt-6 md:w-1/3">
+                        <PhotoUpload label="Rate Card — PDF/JPG (Optional)" id="rateCard" fileRef={rateCardRef} file={photos.rateCard} onFileChange={handleFileChange} errors={errors} />
+                      </div>
+                    </div>
+                    {submitError && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-600 backdrop-blur-sm">
+                        <AlertCircle className="w-5 h-5 shrink-0" />
+                        <p className="text-sm font-bold">{submitError}</p>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Footer */}
+            <div className="p-6 sm:px-10 border-t border-white/50 bg-white/40 backdrop-blur-md flex justify-between items-center mt-auto">
+              {step > 1 ? (
+                <button onClick={handleBack} className="px-6 py-3 text-slate-500 font-bold hover:text-slate-800 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 shadow-sm">Back</button>
+              ) : <div />}
+              {step < totalSteps ? (
+                <button onClick={handleNext} className="px-8 py-3.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 flex items-center gap-2 shadow-lg shadow-slate-300 hover:-translate-y-0.5 transition-all">
+                  Next Step <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button onClick={handleSubmit} disabled={submitting} className="px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(6,182,212,0.3)] hover:shadow-[0_12px_25px_rgba(6,182,212,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-70 w-64 relative overflow-hidden">
+                  {submitting && uploadProgress < 100 && <div className="absolute left-0 top-0 bottom-0 bg-cyan-800/20 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />}
+                  <div className="relative z-10 flex items-center gap-2">
+                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadProgress < 100 ? `Uploading... ${uploadProgress}%` : 'Saving...'}</> : <><CheckCircle className="w-4 h-4 drop-shadow-sm" /> Submit Entry</>}
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Shared UI Components (same as Owner but with cyan accent) ───
+
+function SectionHeading({ icon, title, subtitle }) {
+  return (
+    <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3 pb-4 border-b border-white/60">
+      <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-50">{icon}</div>
+      {title} {subtitle && <span className="text-xs font-semibold text-slate-400 ml-2 mt-1">{subtitle}</span>}
+    </h2>
+  );
+}
+
+function ErrMsg({ msg }) {
+  return <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-[11px] font-bold text-rose-500 flex items-center gap-1 mt-1.5 ml-1"><AlertCircle className="w-3.5 h-3.5" /> {msg}</motion.p>;
+}
+
+function Field({ label, id, type = 'text', placeholder, value, onChange, mandatory = false, errors = {} }) {
+  const isNumeric = type === 'number';
+  const inputType = isNumeric ? 'text' : type;
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">{label} {mandatory && <span className="text-cyan-500">*</span>}</label>
+      <input id={id} type={inputType} inputMode={isNumeric ? 'numeric' : undefined} pattern={isNumeric ? '[0-9]*' : undefined} placeholder={placeholder} value={value}
+        onChange={e => { const val = e.target.value; if (isNumeric && val !== '' && !/^\d*\.?\d*$/.test(val)) return; onChange(val); }}
+        className={`w-full p-3.5 bg-white/70 backdrop-blur-sm border rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all shadow-inner text-slate-800 font-medium ${errors[id] ? 'border-rose-400 bg-rose-50/50' : 'border-white hover:border-cyan-200/60'}`}
+      />
+      {errors[id] && <ErrMsg msg={errors[id]} />}
+    </div>
+  );
+}
+
+function SelectField({ label, id, options, value, onChange, mandatory = false, placeholder = 'Select...', errors = {} }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  useEffect(() => { const handleClickOutside = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []);
+  return (
+    <div className="space-y-1.5 relative" ref={dropdownRef}>
+      <label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">{label} {mandatory && <span className="text-cyan-500">*</span>}</label>
+      <button type="button" onClick={() => setIsOpen(!isOpen)} className={`w-full p-3.5 bg-white/70 backdrop-blur-sm border rounded-xl outline-none text-left transition-all flex items-center justify-between shadow-inner font-medium ${errors[id] ? 'border-rose-400 bg-rose-50/50 text-slate-800' : 'border-white text-slate-800 hover:border-cyan-200/60'} ${isOpen ? 'ring-2 ring-cyan-500/50 border-cyan-300' : ''}`}>
+        <span className={!value ? 'text-slate-400 font-normal' : ''}>{value || placeholder}</span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-cyan-500' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.2 }} className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] overflow-hidden py-1">
+            <div className="max-h-60 overflow-y-auto p-1.5">
+              <button type="button" disabled className="w-full text-left px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 cursor-default">{placeholder}</button>
+              {options.map(opt => {
+                const isActive = value === opt;
+                return (
+                  <button key={opt} type="button" onClick={() => { onChange(opt); setIsOpen(false); }} className={`w-full text-left px-4 py-3 text-sm font-semibold rounded-xl transition-all flex items-center justify-between mb-0.5 ${isActive ? 'bg-cyan-50 text-cyan-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    {opt} {isActive && <CheckCircle className="w-4 h-4 text-cyan-500" />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {errors[id] && <ErrMsg msg={errors[id]} />}
+    </div>
+  );
+}
+
+function YesNoField({ label, id, value, onChange, mandatory = false, errors = {} }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">{label} {mandatory && <span className="text-cyan-500">*</span>}</label>
+      <div className="flex gap-3">
+        {['Yes', 'No'].map(opt => {
+          const isActive = value === opt;
+          return (
+            <label key={opt} className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border cursor-pointer transition-all ${isActive ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_4px_15px_rgba(6,182,212,0.3)]' : 'bg-white/60 backdrop-blur-sm border-white text-slate-600 hover:border-cyan-200 shadow-sm'}`}>
+              <input type="radio" name={id} value={opt} checked={isActive} onChange={e => onChange(e.target.value)} className="hidden" />
+              <span className="font-bold text-sm">{opt}</span>
+              {isActive && <CheckCircle className="w-4 h-4 text-white drop-shadow-sm" />}
+            </label>
+          );
+        })}
+      </div>
+      {errors[id] && <ErrMsg msg={errors[id]} />}
+    </div>
+  );
+}
+
+function MultiChips({ label, id, options, selected, onToggle, mandatory = false, hint = '', errors = {} }) {
+  return (
+    <div className="space-y-2.5">
+      <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1 flex items-center gap-2">
+        {label} {mandatory && <span className="text-cyan-500">*</span>}
+        {hint && <span className="text-[10px] font-semibold text-slate-400 normal-case tracking-normal">({hint})</span>}
+      </label>
+      <div className="flex flex-wrap gap-2.5">
+        {options.map(opt => {
+          const active = selected.includes(opt);
+          return (
+            <button key={opt} type="button" onClick={() => onToggle(opt)} className={`px-5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-2 transition-all duration-300 ${active ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_4px_15px_rgba(6,182,212,0.3)]' : 'bg-white/60 backdrop-blur-sm border-white text-slate-600 hover:border-cyan-200 hover:bg-white shadow-sm'}`}>
+              {opt} {active && <CheckCircle className="w-4 h-4 text-white shrink-0 drop-shadow-sm" />}
+            </button>
+          );
+        })}
+      </div>
+      {errors[id] && <ErrMsg msg={errors[id]} />}
+    </div>
+  );
+}
+
+function PhotoUpload({ label, id, fileRef, file, onFileChange, mandatory = false, errors = {} }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">{label} {mandatory && <span className="text-cyan-500">*</span>}</label>
+      <input type="file" accept="image/*,.pdf" ref={fileRef} className="hidden" onChange={e => onFileChange(id, e.target.files[0] || null)} />
+      {file ? (
+        <div className="flex items-center gap-3 p-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-200 rounded-2xl shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0"><CheckCircle className="w-5 h-5 text-emerald-500" /></div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-800 truncate">{file.name}</p>
+            <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Ready to upload</p>
+          </div>
+          <button type="button" onClick={() => { onFileChange(id, null); if (fileRef.current) fileRef.current.value = ''; }} className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors shadow-sm shrink-0"><X className="w-4 h-4" /></button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => fileRef.current?.click()} className={`w-full flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-2xl text-center transition-all bg-white/40 backdrop-blur-sm group ${errors[id] ? 'border-rose-400 hover:bg-rose-50/50' : 'border-slate-300 hover:border-cyan-300 hover:bg-white/60'}`}>
+          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform group-hover:shadow-cyan-200">
+            <UploadCloud className={`w-6 h-6 ${errors[id] ? 'text-rose-400' : 'text-slate-400 group-hover:text-cyan-500 transition-colors'}`} />
+          </div>
+          <div>
+            <span className="block text-sm font-bold text-slate-700 mb-0.5">Click to select file</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-widest text-slate-400">JPG, PNG or PDF (Max 10MB)</span>
+          </div>
+        </button>
+      )}
+      {errors[id] && <ErrMsg msg={errors[id]} />}
+    </div>
+  );
+}

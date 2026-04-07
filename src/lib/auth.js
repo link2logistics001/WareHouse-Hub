@@ -224,17 +224,17 @@ export const loginUser = async (email, password, userType) => {
     if (userDoc.exists()) {
       const userData = userDoc.data();
 
-      // ── Admin override: admin accounts can log in from any portal ────
-      // If this email is an admin, redirect them to the admin panel
+      // ── Admin & Data Entry override: can log in from any portal ────
+      // If this email is an admin or data entry, redirect them to their panel
       // regardless of which role (merchant/owner) they selected.
-      if (userData.userType === 'admin') {
+      if (userData.userType === 'admin' || userData.userType === 'dataentry') {
         return {
           uid: user.uid,
           email: user.email,
           name: userData.name || user.displayName || '',
           company: userData.company || '',
-          userType: 'admin',
-          verified: userData.verified || true,
+          userType: userData.userType,
+          verified: userData.verified || (userData.userType === 'admin' ? true : false),
           emailVerified: userData.emailVerified || user.emailVerified || false,
           photoURL: userData.photoURL || user.photoURL || null,
           nameChanged: userData.nameChanged || false
@@ -339,15 +339,15 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
     // User exists — check for admin override first
     const existingUserData = userDoc.data();
 
-    // ── Admin override: admin accounts can log in from any portal ────
-    if (existingUserData.userType === 'admin') {
+    // ── Admin & Data Entry override: can log in from any portal ────
+    if (existingUserData.userType === 'admin' || existingUserData.userType === 'dataentry') {
       return {
         uid: user.uid,
         email: user.email,
         name: existingUserData.name || user.displayName || '',
         company: existingUserData.company || '',
-        userType: 'admin',
-        verified: existingUserData.verified || true,
+        userType: existingUserData.userType,
+        verified: existingUserData.verified || (existingUserData.userType === 'admin' ? true : false),
         emailVerified: existingUserData.emailVerified || user.emailVerified || false,
         photoURL: existingUserData.photoURL || user.photoURL || null,
         nameChanged: existingUserData.nameChanged || false

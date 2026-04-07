@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Fuse from 'fuse.js';
 import Navbar from '@/components/commonfiles/Navbar';
@@ -23,12 +23,14 @@ function SearchResults() {
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
-        const q = query(collection(db, 'warehouse_details'), where('status', '==', 'approved'));
-        const snap = await getDocs(q);
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const cg = collectionGroup(db, 'warehouses');
+        const snap = await getDocs(cg);
+        const data = snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path }))
+          .filter(w => w.status === 'approved');
         setAllWarehouses(data);
       } catch (error) {
-
+        console.error('Search fetch error:', error);
       } finally {
         setLoading(false);
       }

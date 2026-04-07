@@ -19,7 +19,7 @@ const STATUS_OPTIONS = [
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map(s => [s.value, s]));
 const availDocId = (warehouseId, dateStr) => `${warehouseId}_${dateStr}`;
 
-export default function Availability() {
+export default function DECalendar() {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [warehouses, setWarehouses] = useState([]);
@@ -51,7 +51,7 @@ export default function Availability() {
   const fetchWarehouses = useCallback(async () => {
     if (!user?.uid || !user?.email) return;
     try {
-      const data = await fetchUserWarehouses('owner', user.email, user.uid);
+      const data = await fetchUserWarehouses('dataentry', user.email, user.uid);
       setWarehouses(data);
     } catch (err) { console.error(err); }
   }, [user?.uid, user?.email]);
@@ -129,7 +129,7 @@ export default function Availability() {
 
       for (const w of updated) {
         const payload = {
-          warehouse_id: w.id, owner_id: user.uid, owner_name: ownerName, owner_type: user.userType || 'owner',
+          warehouse_id: w.id, owner_id: user.uid, owner_name: ownerName, owner_type: user.userType || 'dataentry',
           date: modalDate, month: saveMonth, status: modalStatuses[w.id],
           warehouse_name: w.warehouseName || w.name || 'Warehouse', updated_at: new Date().toISOString(),
         };

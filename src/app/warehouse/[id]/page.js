@@ -57,13 +57,16 @@ export default function WarehouseDetailPage({ params }) {
   useEffect(() => {
     const fetchWarehouse = async () => {
       try {
-        const docRef = doc(db, 'warehouse_details', id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setWarehouse({ id: docSnap.id, ...docSnap.data() });
+        // Search across both owner and dataentry subcollections
+        const { collectionGroup, query, getDocs } = await import('firebase/firestore');
+        const cg = collectionGroup(db, 'warehouses');
+        const snap = await getDocs(cg);
+        const matched = snap.docs.find(d => d.id === id);
+        if (matched) {
+          setWarehouse({ id: matched.id, ...matched.data(), _docPath: matched.ref.path });
         }
       } catch (error) {
-
+        console.error('Warehouse detail fetch error:', error);
       } finally {
         setLoading(false);
       }

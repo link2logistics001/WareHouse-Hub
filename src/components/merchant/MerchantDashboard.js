@@ -8,7 +8,7 @@ import { conversations } from '@/data/warehouseData';
 import MerchantSidebar from './MerchantSidebar';
 import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import ChatBox from '../commonfiles/ChatBox';
 import OptimizedImage from '../commonfiles/OptimizedImage';
 import { Inbox, MessageCircle, Clock as ClockIcon, ExternalLink } from 'lucide-react';
@@ -80,22 +80,18 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    // Real-time listener for approved warehouses
+    // Real-time listener for approved warehouses (from both owner & dataentry subcollections)
     useEffect(() => {
-        const q = query(
-            collection(db, 'warehouse_details'),
-            where('status', '==', 'approved')
-        );
+        const cg = collectionGroup(db, 'warehouses');
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const whList = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+        const unsubscribe = onSnapshot(cg, (snapshot) => {
+            const whList = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path }))
+                .filter(w => w.status === 'approved');
             setRealWarehouses(whList);
             setWarehousesLoading(false);
         }, (error) => {
-
+            console.error('Warehouse listener error:', error);
             setWarehousesLoading(false);
         });
 

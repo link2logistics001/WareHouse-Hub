@@ -18,7 +18,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
       try {
         // IMPORTANT: The merchantId is either the logged-in user (if they are a merchant)
         // or the specific merchant who sent the inquiry (if the owner is viewing)
-        const merchantId = user.userType === 'owner' ? warehouse.merchantId : (user.id || user.uid);
+        const merchantId = ['owner', 'admin', 'dataentry'].includes(user.userType) ? warehouse.merchantId : (user.id || user.uid);
         
         const conv = await getOrCreateConversation(
           warehouse.id || warehouse.warehouseId, 

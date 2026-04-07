@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchUserWarehouses, getWarehouseCollectionPath } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Building2, Layers, Package, DoorOpen,
@@ -28,19 +29,13 @@ export default function MyWarehouses({ setActiveTab }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid || !user?.email) return;
 
     const fetchWarehouses = async () => {
       try {
         setLoading(true);
-        const q = query(
-          collection(db, 'warehouse_details'),
-          where('ownerId', '==', user.uid)
-        );
-        const snap = await getDocs(q);
-        const data = snap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+        const data = await fetchUserWarehouses('owner', user.email, user.uid);
+        data.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
         setWarehouses(data);
       } catch (err) {
         setError('Failed to load warehouses. Please refresh.');
@@ -50,7 +45,7 @@ export default function MyWarehouses({ setActiveTab }) {
     };
 
     fetchWarehouses();
-  }, [user?.uid]);
+  }, [user?.uid, user?.email]);
 
   // Framer Motion Variants for Staggered Entrance
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.12 } } };
@@ -180,7 +175,8 @@ function WarehouseCard({ warehouse: w, onDelete, variants }) {
     if (newValue === isOnline) return;
     setToggling(true);
     try {
-      await updateDoc(doc(db, 'warehouse_details', w.id), { isOnline: newValue });
+      const docRef = w._docPath ? doc(db, w._docPath) : doc(db, `warehouse_details/owner/emails/${w.email.toLowerCase().trim()}/warehouses`, w.id);
+      await updateDoc(docRef, { isOnline: newValue });
       setIsOnline(newValue);
     } catch (err) {
       console.error(err);
@@ -193,7 +189,8 @@ function WarehouseCard({ warehouse: w, onDelete, variants }) {
     if (!window.confirm('Are you sure you want to delete this warehouse? This action cannot be undone.')) return;
     setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, 'warehouse_details', w.id));
+      const docRef = w._docPath ? doc(db, w._docPath) : doc(db, `warehouse_details/owner/emails/${w.email.toLowerCase().trim()}/warehouses`, w.id);
+      await deleteDoc(docRef);
       if (onDelete) onDelete(w.id);
     } catch (err) {
       alert('Failed to delete warehouse. Please try again.');

@@ -36,7 +36,6 @@ const AnimatedNumber = ({ value, isDecimal = false }) => {
   return <span ref={nodeRef}>0</span>;
 };
 
-// --- NEON SPARKLINE ---
 const AnimatedTrendLine = ({ color, glowColor, pathData }) => (
   <svg 
     className={`w-16 h-8 ${color}`} 
@@ -52,7 +51,6 @@ const AnimatedTrendLine = ({ color, glowColor, pathData }) => (
   </svg>
 );
 
-// --- PREMIUM SKELETON LOADER ---
 const SkeletonPulse = ({ className }) => (
   <motion.div 
     animate={{ opacity: [0.4, 0.7, 0.4] }} 
@@ -61,7 +59,7 @@ const SkeletonPulse = ({ className }) => (
   />
 );
 
-export default function DashboardHome({ setActiveTab }) {
+export default function DEDashboardHome({ setActiveTab }) {
   const { user } = useAuth();
   
   const [warehouses, setWarehouses] = useState([]);
@@ -73,7 +71,6 @@ export default function DashboardHome({ setActiveTab }) {
   
   const timeframes = ['Today', 'This Week', 'This Month', 'This Year'];
 
-  // Time-aware greeting logic
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good morning');
@@ -86,7 +83,7 @@ export default function DashboardHome({ setActiveTab }) {
       if (!user?.uid || !user?.email) return;
       try {
         setLoading(true);
-        const fetchedWarehouses = await fetchUserWarehouses('owner', user.email, user.uid);
+        const fetchedWarehouses = await fetchUserWarehouses('dataentry', user.email, user.uid);
         
         let calcTotalArea = 0;
         let calcActive = 0;
@@ -107,7 +104,7 @@ export default function DashboardHome({ setActiveTab }) {
     fetchMyWarehouses();
   }, [user]);
 
-  const firstName = user?.displayName ? user.displayName.split(' ')[0] : 'Owner';
+  const firstName = user?.name ? user.name.split(' ')[0] : 'User';
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const cardVariants = { hidden: { opacity: 0, y: 20, scale: 0.95 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 200, damping: 20 } } };
@@ -115,10 +112,9 @@ export default function DashboardHome({ setActiveTab }) {
   return (
     <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0">
       
-      {/* --- STATIC AMBIENT BACKGROUND GLOWS (no animation = no jank) --- */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[100px]" />
       </div>
 
       {/* Header */}
@@ -128,14 +124,14 @@ export default function DashboardHome({ setActiveTab }) {
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2"
           >
-            {greeting}, {firstName} <Sparkles className="text-orange-400 w-5 h-5" />
+            {greeting}, {firstName} <Sparkles className="text-cyan-400 w-5 h-5" />
           </motion.h1>
-          <p className="text-sm text-slate-500 mt-1">Here is the latest telemetry for your logistics portfolio.</p>
+          <p className="text-sm text-slate-500 mt-1">Data Entry Portal — manage your warehouse submissions.</p>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="relative">
-            <button onClick={() => setIsTimeframeOpen(!isTimeframeOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl text-sm font-semibold text-slate-700 hover:border-orange-300 hover:shadow-md hover:shadow-orange-500/10 transition-all focus:ring-2 focus:ring-orange-500/20 outline-none">
+            <button onClick={() => setIsTimeframeOpen(!isTimeframeOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl text-sm font-semibold text-slate-700 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-500/10 transition-all focus:ring-2 focus:ring-cyan-500/20 outline-none">
               <Calendar size={16} className="text-slate-400" />
               {selectedTimeframe} 
               <motion.div animate={{ rotate: isTimeframeOpen ? 180 : 0 }}><ChevronDown size={14} className="text-slate-500" /></motion.div>
@@ -144,7 +140,7 @@ export default function DashboardHome({ setActiveTab }) {
               {isTimeframeOpen && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="absolute right-0 mt-3 w-40 bg-white/90 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-50 p-1">
                   {timeframes.map((time) => (
-                    <button key={time} onClick={() => { setSelectedTimeframe(time); setIsTimeframeOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${selectedTimeframe === time ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <button key={time} onClick={() => { setSelectedTimeframe(time); setIsTimeframeOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${selectedTimeframe === time ? 'text-cyan-600 bg-cyan-50' : 'text-slate-600 hover:bg-slate-50'}`}>
                       {time}
                     </button>
                   ))}
@@ -154,11 +150,11 @@ export default function DashboardHome({ setActiveTab }) {
           </div>
 
           <motion.button 
-            whileHover={{ scale: 1.03, boxShadow: "0px 10px 25px rgba(249, 115, 22, 0.4)" }} whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.03, boxShadow: "0px 10px 25px rgba(6, 182, 212, 0.4)" }} whileTap={{ scale: 0.97 }}
             onClick={() => setActiveTab('add-warehouse')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-orange-500/20 border border-orange-400/50"
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-cyan-500/20 border border-cyan-400/50"
           >
-            <Plus size={18} /> New Property
+            <Plus size={18} /> New Entry
           </motion.button>
         </div>
       </div>
@@ -168,8 +164,8 @@ export default function DashboardHome({ setActiveTab }) {
         {/* Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
-            { title: "Total Facilities", value: stats.total, color: "text-orange-500", glow: "rgba(249,115,22,0.4)", path: "M5 25 Q 25 5, 50 15 T 95 5", isDec: false },
-            { title: "Active Listings", value: stats.active, color: "text-emerald-500", glow: "rgba(16,185,129,0.4)", path: "M5 20 Q 30 25, 50 10 T 95 5", isDec: false },
+            { title: "Total Entries", value: stats.total, color: "text-cyan-500", glow: "rgba(6,182,212,0.4)", path: "M5 25 Q 25 5, 50 15 T 95 5", isDec: false },
+            { title: "Approved", value: stats.active, color: "text-emerald-500", glow: "rgba(16,185,129,0.4)", path: "M5 20 Q 30 25, 50 10 T 95 5", isDec: false },
             { title: "Total Capacity", value: stats.totalArea / 1000, suffix: "k sq ft", color: "text-blue-500", glow: "rgba(59,130,246,0.4)", path: "M5 15 Q 25 25, 50 15 T 95 10", isDec: true },
             { title: "New Inquiries", value: 0, suffix: " this week", color: "text-rose-500", glow: "rgba(244,63,94,0.4)", path: "M5 10 Q 30 5, 50 20 T 95 15", isDec: false }
           ].map((card, i) => (
@@ -184,7 +180,6 @@ export default function DashboardHome({ setActiveTab }) {
                 </div>
                 <AnimatedTrendLine color={card.color} glowColor={card.glow} pathData={card.path} />
               </div>
-              <div className={`absolute inset-0 bg-gradient-to-tr from-${card.color.split('-')[1]}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`} />
             </motion.div>
           ))}
         </div>
@@ -195,16 +190,15 @@ export default function DashboardHome({ setActiveTab }) {
           <motion.div variants={cardVariants} className="lg:col-span-2 bg-white/80 border border-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] p-8 relative overflow-hidden">
             <div className="flex justify-between items-center mb-8 relative z-10">
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Building2 size={18} className="text-orange-500" /> Your Properties
+                <Building2 size={18} className="text-cyan-500" /> Your Entries
               </h2>
-              <button onClick={() => setActiveTab('my-warehouses')} className="text-xs font-bold text-orange-600 hover:text-white bg-orange-50 hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-500/20 px-5 py-2.5 rounded-xl transition-all">
-                View All Directory
+              <button onClick={() => setActiveTab('my-warehouses')} className="text-xs font-bold text-cyan-600 hover:text-white bg-cyan-50 hover:bg-cyan-500 hover:shadow-lg hover:shadow-cyan-500/20 px-5 py-2.5 rounded-xl transition-all">
+                View All
               </button>
             </div>
 
             <div className="space-y-4 relative z-10">
               {loading ? (
-                // Premium Skeleton Shimmer State
                 [1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-white bg-white/40">
                     <div className="flex items-center gap-5">
@@ -222,21 +216,21 @@ export default function DashboardHome({ setActiveTab }) {
                   <div className="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white">
                     <Building2 className="text-slate-300 w-8 h-8" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-800 mb-1">No properties listed yet</h3>
-                  <p className="text-sm text-slate-500">Your portfolio is currently empty.</p>
+                  <h3 className="text-base font-bold text-slate-800 mb-1">No entries yet</h3>
+                  <p className="text-sm text-slate-500">Start adding warehouses to your portfolio.</p>
                 </motion.div>
               ) : (
                 warehouses.map((wh, index) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + (index * 0.1) }} key={wh.id} 
-                    className="flex items-center justify-between p-4 rounded-2xl border border-white shadow-sm hover:shadow-lg hover:shadow-orange-500/5 hover:border-orange-100 transition-shadow group bg-white/80 cursor-pointer"
+                    className="flex items-center justify-between p-4 rounded-2xl border border-white shadow-sm hover:shadow-lg hover:shadow-cyan-500/5 hover:border-cyan-100 transition-shadow group bg-white/80 cursor-pointer"
                   >
                     <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-white text-orange-600 flex items-center justify-center font-bold text-lg group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-50 to-cyan-100 border border-white text-cyan-600 flex items-center justify-center font-bold text-lg group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
                         {(wh.companyName || wh.warehouseName || 'W').charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="text-base font-bold text-slate-800 group-hover:text-orange-600 transition-colors">
+                        <h4 className="text-base font-bold text-slate-800 group-hover:text-cyan-600 transition-colors">
                           {wh.companyName || wh.warehouseName || 'Unnamed Facility'}
                         </h4>
                         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
@@ -250,10 +244,10 @@ export default function DashboardHome({ setActiveTab }) {
                         <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Capacity</span>
                         <span className="text-sm font-bold text-slate-700">{Number(wh.totalArea || 0).toLocaleString()} sq ft</span>
                       </div>
-                      <span className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${wh.status === 'Live' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-orange-50 text-orange-600 border-orange-200/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]'}`}>
-                        {wh.status || 'Draft'}
+                      <span className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${wh.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-cyan-50 text-cyan-600 border-cyan-200/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]'}`}>
+                        {wh.status || 'Pending'}
                       </span>
-                      <button onClick={() => setActiveTab('my-warehouses')} className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all opacity-0 group-hover:opacity-100">
+                      <button onClick={() => setActiveTab('my-warehouses')} className="p-2 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-xl transition-all opacity-0 group-hover:opacity-100">
                         <ArrowUpRight size={20} />
                       </button>
                     </div>
@@ -262,61 +256,55 @@ export default function DashboardHome({ setActiveTab }) {
               )}
             </div>
             
-            {/* Subtle card glow overlay */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-500/5 to-transparent pointer-events-none rounded-tr-3xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/5 to-transparent pointer-events-none rounded-tr-3xl" />
           </motion.div>
 
-          {/* THE MAGIC GRAPH */}
+          {/* Chart section */}
           <motion.div variants={cardVariants} className="bg-white/80 border border-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] p-8 flex flex-col relative overflow-hidden group hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-shadow duration-500">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2 relative z-10">
-              <Activity size={18} className="text-blue-500" /> Space Overview
+              <Activity size={18} className="text-cyan-500" /> Submission Overview
             </h2>
-            <p className="text-xs text-slate-400 mb-8 relative z-10">Capacity utilization curve</p>
+            <p className="text-xs text-slate-400 mb-8 relative z-10">Entries submitted over time</p>
             
             <div className="flex-1 flex flex-col justify-center w-full relative h-48">
-              
-              {/* Animated Vertical Grid Lines */}
               <div className="absolute inset-0 flex justify-between px-6 pt-4 pb-6 pointer-events-none">
                 {[1, 2, 3, 4].map((i, index) => (
                   <motion.div key={i} initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 1.5, delay: 0.5 + (index * 0.2), ease: "circOut" }} className="w-px border-l border-dashed border-slate-200/60"></motion.div>
                 ))}
               </div>
 
-              {/* Magical Animated SVG Curve */}
               <svg viewBox="0 0 1000 300" className="w-full h-full absolute inset-0 overflow-visible z-10">
                 <defs>
-                  <linearGradient id="magicGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity="0.5"/>
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0.0"/>
+                  <linearGradient id="deMagicGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.5"/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0"/>
                   </linearGradient>
-                  <filter id="neonGlow">
-                    <feDropShadow dx="0" dy="12" stdDeviation="12" floodColor="#f97316" floodOpacity="0.6" />
+                  <filter id="deNeonGlow">
+                    <feDropShadow dx="0" dy="12" stdDeviation="12" floodColor="#06b6d4" floodOpacity="0.6" />
                   </filter>
                 </defs>
                 
                 <motion.path
                   d="M 0 250 C 200 250, 300 100, 500 150 C 700 200, 800 50, 1000 100 L 1000 300 L 0 300 Z"
-                  fill="url(#magicGradient)" initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
+                  fill="url(#deMagicGradient)" initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
                 />
                 
                 <motion.path
                   d="M 0 250 C 200 250, 300 100, 500 150 C 700 200, 800 50, 1000 100"
-                  fill="none" stroke="#f97316" strokeWidth="6" strokeLinecap="round" filter="url(#neonGlow)"
+                  fill="none" stroke="#06b6d4" strokeWidth="6" strokeLinecap="round" filter="url(#deNeonGlow)"
                   initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2.5, ease: "easeInOut", delay: 0.2 }}
                 />
 
-                {/* Static Data Nodes (no infinite pulsing) */}
                 {[
                   { cx: 300, cy: 100, delay: 1.5 }, { cx: 500, cy: 150, delay: 1.8 }, { cx: 800, cy: 50, delay: 2.1 }
                 ].map((node, i) => (
                   <g key={i}>
-                    <circle cx={node.cx} cy={node.cy} r="15" fill="#f97316" opacity="0.12" />
-                    <motion.circle cx={node.cx} cy={node.cy} r="8" fill="white" stroke="#f97316" strokeWidth="4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: node.delay, type: 'spring', stiffness: 300 }} />
+                    <circle cx={node.cx} cy={node.cy} r="15" fill="#06b6d4" opacity="0.12" />
+                    <motion.circle cx={node.cx} cy={node.cy} r="8" fill="white" stroke="#06b6d4" strokeWidth="4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: node.delay, type: 'spring', stiffness: 300 }} />
                   </g>
                 ))}
               </svg>
 
-              {/* X-Axis Labels */}
               <div className="absolute bottom-0 w-full flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 pointer-events-none">
                 <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
               </div>
@@ -324,7 +312,7 @@ export default function DashboardHome({ setActiveTab }) {
 
             <div className="mt-6 pt-4 border-t border-slate-100/50 flex justify-between items-center bg-white/50 border border-white shadow-sm rounded-2xl p-4 relative z-10 backdrop-blur-md">
               <div>
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Peak Demand</span>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Peak Activity</span>
                 <span className="font-bold text-slate-800 text-sm">Week 4</span>
               </div>
               <div className="text-right">
@@ -333,7 +321,7 @@ export default function DashboardHome({ setActiveTab }) {
               </div>
             </div>
             
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none rounded-bl-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-teal-500/5 to-transparent pointer-events-none rounded-bl-3xl" />
           </motion.div>
 
         </div>
