@@ -113,7 +113,7 @@ export default function OwnerDashboard({ user, onLogout }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-20 overflow-x-hidden min-h-screen flex flex-col relative z-0">
+      <main className="flex-1 overflow-x-hidden min-h-screen flex flex-col relative z-0">
         
         {/* Generic Header for non-dashboard tabs */}
         {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (

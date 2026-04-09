@@ -91,14 +91,14 @@ export default function WhyChooseUs() {
   }, []);
 
   return (
-    <section id="why-warehousehub" ref={sectionRef} className="w-full max-w-7xl mx-auto px-6 py-32 md:py-48 bg-white">
+    <section id="why-link2logistics" ref={sectionRef} className="w-full max-w-7xl mx-auto px-6 py-32 md:py-48 bg-white">
       <div className="mb-24 text-left">
 
         {/* FIX: Vertical line is now unbold (1px width) and taller for a sleeker look */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-[1px] h-6 bg-[#E65100]"></div>
           <span className="text-xs font-bold tracking-[0.15em] uppercase text-[#E65100]">
-            Why WarehouseHub
+            Why Link2Logistics
           </span>
         </div>
 

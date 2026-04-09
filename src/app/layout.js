@@ -13,7 +13,7 @@ const firaSans = Fira_Sans({
 })
 
 export const metadata = {
-  title: 'WarehouseHub | Smart Warehouse Management',
+  title: 'Link2Logistics | Smart Warehouse Management',
   description: 'Streamline your logistics with real-time inventory, smart tracking, and seamless operations. The complete warehouse management platform.',
 }
 

@@ -92,7 +92,7 @@ export default function FeedbackWidget() {
                   <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-800 mb-1">Got it!</h4>
-                <p className="text-sm font-medium text-slate-500">Thanks for helping us improve WarehouseHub.</p>
+                <p className="text-sm font-medium text-slate-500">Thanks for helping us improve Link2Logistics.</p>
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">

@@ -14,9 +14,9 @@ export default function DashboardNavbar({ user, onLogout }) {
           {/* LEFT SIDE: Logo & Brand */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.reload()}>
             <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white font-bold shadow-md">
-              WH
+              L2L
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">WarehouseHub</span>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">Link2Logistics</span>
           </div>
 
           {/* RIGHT SIDE: Actions */}

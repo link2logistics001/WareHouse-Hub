@@ -31,10 +31,10 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
             {/* Brand */}
             <div className="p-6 border-b border-slate-100 flex items-center gap-3">
                 <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    WH
+                    L2L
                 </div>
                 <div>
-                    <span className="text-base font-bold text-slate-900 leading-none block">WarehouseHub</span>
+                    <span className="text-base font-bold text-slate-900 leading-none block">Link2Logistics</span>
                     <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Admin Panel</span>
                 </div>
             </div>

@@ -1,9 +1,24 @@
 'use client'
+
+import Link from 'next/link'
+
 export default function Footer() {
   const links = {
-    merchants: ['Find Warehouses', 'Post Requirements', 'How It Works'],
-    owners: ['List Your Warehouse', 'View Inquiries', 'Pricing'],
-    company: ['About Us', 'Contact', 'Privacy Policy']
+    merchants: [
+      { label: 'Find Warehouses', href: '/search' },
+      { label: 'Post Requirements', href: '/#login' },
+      { label: 'How It Works', href: '/#how-link2logistics-works' }
+    ],
+    owners: [
+      { label: 'List Your Warehouse', href: '/#login' },
+      { label: 'View Inquiries', href: '/#login' },
+      { label: 'Pricing', href: '/#login' }
+    ],
+    company: [
+      { label: 'About Us', href: '/#why-link2logistics' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Privacy Policy', href: '#' }
+    ]
   };
 
   return (
@@ -17,7 +32,7 @@ export default function Footer() {
             <div className="col-span-2 md:col-span-1 space-y-5">
               <div className="flex items-center gap-3">
                 <div className="w-[1px] h-6 bg-[#E65100]" />
-                <span className="font-bold text-white text-2xl tracking-tighter uppercase">WarehouseHub</span>
+                <span className="font-bold text-white text-2xl tracking-tighter uppercase">Link2Logistics</span>
               </div>
               <p className="text-sm text-slate-400 leading-relaxed font-light italic">
               </p>
@@ -30,9 +45,9 @@ export default function Footer() {
                 <ul className="space-y-3">
                   {items.map((item, i) => (
                     <li key={i}>
-                      <a href="#" className="text-sm text-slate-500 hover:text-white transition-all duration-300">
-                        {item}
-                      </a>
+                      <Link href={item.href} className="text-sm text-slate-500 hover:text-white transition-all duration-300">
+                        {item.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -42,7 +57,7 @@ export default function Footer() {
 
           {/* Bottom row */}
           <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-medium text-slate-600 uppercase tracking-[0.2em]">
-            <p>© {new Date().getFullYear()} WarehouseHub // Structural Logistics</p>
+            <p>© {new Date().getFullYear()} Link2Logistics // Structural Logistics</p>
             <div className="flex gap-8">
               {['Terms', 'Privacy', 'Cookie Policy'].map((item, i) => (
                 <a key={i} href="#" className="hover:text-white transition-colors">{item}</a>
@@ -54,4 +69,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+}

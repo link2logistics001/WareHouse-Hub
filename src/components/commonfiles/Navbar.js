@@ -50,8 +50,8 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: 'Why WarehouseHub', href: '#why-warehousehub' },
-    { label: 'How WarehouseHub Works', href: '#how-warehousehub-works' },
+    { label: 'Why Link2Logistics', href: '#why-link2logistics' },
+    { label: 'How Link2Logistics Works', href: '#how-link2logistics-works' },
   ]
 
   // Smooth scroll handler for anchor links
@@ -191,9 +191,9 @@ export default function Navbar() {
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                WH
+                L2L
               </motion.span>
-              <span className="group-hover:text-orange-500 transition-colors">WarehouseHub</span>
+              <span className="group-hover:text-orange-500 transition-colors">Link2Logistics</span>
             </motion.a>
 
             <div className="flex items-center gap-8">
@@ -276,9 +276,9 @@ export default function Navbar() {
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                WH
+                L2L
               </motion.span>
-              <span>WarehouseHub</span>
+              <span>Link2Logistics</span>
             </motion.a>
 
             <div className="flex items-center gap-2">

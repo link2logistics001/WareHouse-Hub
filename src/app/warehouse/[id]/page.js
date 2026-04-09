@@ -375,7 +375,7 @@ export default function WarehouseDetailPage({ params }) {
               <div className="mt-8 pt-8 border-t border-slate-50 flex items-center gap-4 px-2">
                 <Shield className="w-10 h-10 text-orange-500/20" />
                 <p className="text-[10px] text-slate-400 leading-relaxed font-bold uppercase tracking-wider">
-                  Secured by WarehouseHub
+                  Secured by Link2Logistics
                 </p>
               </div>
             </motion.section>
