@@ -16,6 +16,7 @@ import {
     Image, Eye, ChevronLeft, ChevronRight, ZoomIn,
 } from 'lucide-react';
 import { migrateWarehouseFields } from '@/lib/migrateFields';
+import { migrateExistingUsersToContactDetails } from '@/lib/migrateContactDetails';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -357,6 +358,8 @@ function OverviewView({ counts, warehouses }) {
     const recentPending = warehouses.filter(w => w.status === 'pending').slice(0, 5);
     const [migrating, setMigrating] = useState(false);
     const [migrateResult, setMigrateResult] = useState(null);
+    const [contactMigrating, setContactMigrating] = useState(false);
+    const [contactMigrateResult, setContactMigrateResult] = useState(null);
 
     const handleMigrate = async () => {
         setMigrating(true);
@@ -365,10 +368,22 @@ function OverviewView({ counts, warehouses }) {
             const result = await migrateWarehouseFields();
             setMigrateResult(result);
         } catch (err) {
-
             setMigrateResult({ error: err.message });
         } finally {
             setMigrating(false);
+        }
+    };
+
+    const handleContactMigrate = async () => {
+        setContactMigrating(true);
+        setContactMigrateResult(null);
+        try {
+            const result = await migrateExistingUsersToContactDetails();
+            setContactMigrateResult(result);
+        } catch (err) {
+            setContactMigrateResult({ error: err.message });
+        } finally {
+            setContactMigrating(false);
         }
     };
 
@@ -465,6 +480,49 @@ function OverviewView({ counts, warehouses }) {
                         <span className="text-sm text-red-600 font-semibold">
                             Error: {migrateResult.error}
                         </span>
+                    )}
+                </div>
+            </div>
+
+            {/* User Structure & Contact Details Migration Tool */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-5 h-5 text-indigo-500" />
+                    <h2 className="text-lg font-bold text-slate-900">User Structure Migration</h2>
+                </div>
+                <p className="text-sm text-slate-500 mb-4">
+                    Migrates the flat <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono">users</code> collection
+                    into the new categorized structure: <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono">users/&#123;role&#125;/accounts/&#123;uid&#125;</code>, and 
+                    generates <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs font-mono">contact_details</code> for all 4 roles.
+                    Safe to run multiple times — uses merge writes.
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                    <button
+                        onClick={handleContactMigrate}
+                        disabled={contactMigrating}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {contactMigrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        {contactMigrating ? 'Migrating…' : 'Migrate Contact Details'}
+                    </button>
+                    {contactMigrateResult && !contactMigrateResult.error && (
+                        <span className="text-sm text-emerald-600 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4" />
+                            {contactMigrateResult.migrated} migrated, {contactMigrateResult.skipped} skipped (of {contactMigrateResult.total} users)
+                        </span>
+                    )}
+                    {contactMigrateResult?.error && (
+                        <span className="text-sm text-red-600 font-semibold">
+                            Error: {contactMigrateResult.error}
+                        </span>
+                    )}
+                    {contactMigrateResult?.errors?.length > 0 && (
+                        <div className="w-full mt-2">
+                            <p className="text-xs text-red-500 font-semibold mb-1">Failed entries:</p>
+                            {contactMigrateResult.errors.map((e, i) => (
+                                <p key={i} className="text-xs text-red-400">{e}</p>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>

@@ -19,6 +19,36 @@ import {
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
+import { saveContactDetails } from './contactDetails';
+
+const USER_ROLES = ['owner', 'merchant', 'admin', 'dataentry'];
+
+export const getUserDocParams = async (uid) => {
+  // Check the new structure first
+  const docs = await Promise.all(USER_ROLES.map(role => 
+    getDoc(doc(db, 'users', role, 'accounts', uid))
+  ));
+  const found = docs.find(d => d.exists());
+  
+  if (found) {
+    return { ref: found.ref, data: found.data() };
+  }
+
+  // Fallback to the old structure
+  const oldDocRef = doc(db, 'users', uid);
+  const oldDoc = await getDoc(oldDocRef);
+  if (oldDoc.exists()) {
+    const data = oldDoc.data();
+    const role = data.userType || 'merchant'; // safe fallback
+    
+    // Auto-migrate the user to the new structure
+    const newRef = doc(db, 'users', role, 'accounts', uid);
+    await setDoc(newRef, data);
+    return { ref: newRef, data };
+  }
+
+  return null;
+};
 
 // ─── Client-side auth rate limiting ─────────────────────────────────────────
 // Client-side backoff helper to discourage rapid retries in the UI.
@@ -135,8 +165,8 @@ export const registerUser = async (email, password, name, userType, company = ''
     const emailExists = await checkEmailExists(email);
     if (emailExists) {
       // Check if user document exists in Firestore to get userType
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email));
+      // We use collectionGroup 'accounts' since profiles are now subcollections
+      const q = query(collectionGroup(db, 'accounts'), where('email', '==', email));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -161,7 +191,7 @@ export const registerUser = async (email, password, name, userType, company = ''
     });
 
     // Store additional user data in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    await setDoc(doc(db, 'users', userType, 'accounts', user.uid), {
       uid: user.uid,
       email: user.email,
       name: name,
@@ -173,6 +203,13 @@ export const registerUser = async (email, password, name, userType, company = ''
       photoURL: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
+    });
+
+    // Also save to contact_details/{userType}/users/{uid}
+    await saveContactDetails(userType, user.uid, {
+      name,
+      email: user.email,
+      company,
     });
 
     return {
@@ -218,11 +255,11 @@ export const loginUser = async (email, password, userType) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Fetch additional user data from Firestore
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    // Fetch additional user data from Firestore using the new helper
+    const userResult = await getUserDocParams(user.uid);
 
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
+    if (userResult) {
+      const userData = userResult.data;
 
       // ── Admin & Data Entry override: can log in from any portal ────
       // If this email is an admin or data entry, redirect them to their panel
@@ -295,10 +332,10 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Check if user document exists in Firestore
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    // Check if user document exists in Firestore using new helper
+    const userResult = await getUserDocParams(user.uid);
 
-    if (!userDoc.exists()) {
+    if (!userResult) {
       if (isSignIn) {
         // User tried to SIGN IN but has no account — reject and prompt sign up
         await signOut(auth);
@@ -309,7 +346,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
       }
 
       // Sign-UP flow: create user document with selected userType
-      await setDoc(doc(db, 'users', user.uid), {
+      await setDoc(doc(db, 'users', userType, 'accounts', user.uid), {
         uid: user.uid,
         email: user.email,
         name: user.displayName,
@@ -321,6 +358,13 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
         nameChanged: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
+      });
+
+      // Also save to contact_details/{userType}/users/{uid}
+      await saveContactDetails(userType, user.uid, {
+        name: user.displayName || '',
+        email: user.email,
+        company: '',
       });
 
       return {
@@ -337,7 +381,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
     }
 
     // User exists — check for admin override first
-    const existingUserData = userDoc.data();
+    const existingUserData = userResult.data;
 
     // ── Admin & Data Entry override: can log in from any portal ────
     if (existingUserData.userType === 'admin' || existingUserData.userType === 'dataentry') {
@@ -420,9 +464,9 @@ export const resetPassword = async (email) => {
  */
 export const getUserData = async (uid) => {
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid));
-    if (userDoc.exists()) {
-      return userDoc.data();
+    const userResult = await getUserDocParams(uid);
+    if (userResult) {
+      return userResult.data;
     }
     return null;
   } catch (error) {
@@ -439,12 +483,12 @@ export const getUserData = async (uid) => {
  */
 export const updateUserProfile = async (uid, updates) => {
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid));
-    if (!userDoc.exists()) {
+    const userResult = await getUserDocParams(uid);
+    if (!userResult) {
       throw new Error('User not found');
     }
 
-    const userData = userDoc.data();
+    const userData = userResult.data;
 
     // Check if name has been changed before (only allow one name change)
     if (updates.name && updates.name !== userData.name) {
@@ -455,7 +499,7 @@ export const updateUserProfile = async (uid, updates) => {
     }
 
     // Update Firestore document
-    await updateDoc(doc(db, 'users', uid), {
+    await updateDoc(userResult.ref, {
       ...updates,
       updatedAt: serverTimestamp()
     });
@@ -468,8 +512,25 @@ export const updateUserProfile = async (uid, updates) => {
     }
 
     // Return updated user data
-    const updatedDoc = await getDoc(doc(db, 'users', uid));
-    return updatedDoc.data();
+    const updatedDoc = await getDoc(userResult.ref);
+    const finalData = updatedDoc.data();
+
+    // Sync relevant fields to contact_details collection
+    if (finalData.userType) {
+      const contactSync = {};
+      if (updates.name) contactSync.name = updates.name;
+      if (updates.company !== undefined) contactSync.company = updates.company;
+      if (Object.keys(contactSync).length > 0) {
+        try {
+          const { updateContactDetails } = await import('./contactDetails');
+          await updateContactDetails(finalData.userType, uid, contactSync);
+        } catch {
+          // contact_details doc may not exist yet — ignore gracefully
+        }
+      }
+    }
+
+    return finalData;
   } catch (error) {
 
     throw error;
@@ -509,10 +570,13 @@ export const uploadProfileImage = async (uid, file) => {
     await uploadBytes(storageRef, file, metadata);
     const downloadURL = await getDownloadURL(storageRef);
 
-    await updateDoc(doc(db, 'users', uid), {
-      photoURL: downloadURL,
-      updatedAt: serverTimestamp()
-    });
+    const userResult = await getUserDocParams(uid);
+    if (userResult) {
+      await updateDoc(userResult.ref, {
+        photoURL: downloadURL,
+        updatedAt: serverTimestamp()
+      });
+    }
 
     if (auth.currentUser) {
       await updateProfile(auth.currentUser, {
@@ -581,10 +645,13 @@ export const refreshEmailVerification = async () => {
 
     // Update Firestore if email is now verified
     if (user.emailVerified) {
-      await updateDoc(doc(db, 'users', user.uid), {
-        emailVerified: true,
-        updatedAt: serverTimestamp()
-      });
+      const userResult = await getUserDocParams(user.uid);
+      if (userResult) {
+        await updateDoc(userResult.ref, {
+          emailVerified: true,
+          updatedAt: serverTimestamp()
+        });
+      }
     }
 
     return user.emailVerified;
