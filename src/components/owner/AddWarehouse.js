@@ -387,13 +387,7 @@ export default function AddWarehouse({ setActiveTab }) {
   }
 
   return (
-    <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0 pb-24">
-
-      {/* --- STATIC AMBIENT BACKGROUND GLOWS --- */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
-        <div className="absolute top-[5%] right-[-5%] w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[20%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px]" />
-      </div>
+    <div className="flex-1 min-h-screen relative z-0 pb-24">
 
       <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-10 relative z-10">
 

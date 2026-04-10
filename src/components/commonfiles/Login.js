@@ -347,6 +347,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showVerificationSent, setShowVerificationSent] = useState(false)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -360,8 +361,12 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
         const user = await loginUser(formData.email, formData.password, userType)
         onLoginSuccess(user)
       } else {
-        const user = await registerUser(formData.email, formData.password, formData.name, userType, formData.company)
-        onLoginSuccess(user)
+        const result = await registerUser(formData.email, formData.password, formData.name, userType, formData.company)
+        if (result.verificationSent) {
+          setShowVerificationSent(true)
+        } else {
+          onLoginSuccess(result)
+        }
       }
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
@@ -372,6 +377,34 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
       const user = await loginWithGoogle(userType, isLogin)
       onLoginSuccess(user)
     } catch (err) { setError(err.message) } finally { setLoading(false) }
+  }
+
+  if (showVerificationSent) {
+    return (
+      <div className="text-center py-8">
+        <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-8">
+          <svg className="w-10 h-10 text-[#E65100]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-slate-900 mb-4">Check your email</h3>
+        <p className="text-slate-500 mb-8 max-w-sm mx-auto">
+          We've sent a verification link to <span className="font-bold text-slate-700">{formData.email}</span>. Please verify your email to continue.
+        </p>
+        <button 
+          onClick={() => setIsLogin(true)}
+          className="w-full bg-[#E65100] text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#BF360C] transition-all"
+        >
+          Proceed to Sign In
+        </button>
+        <button 
+          onClick={() => setShowVerificationSent(false)}
+          className="mt-4 text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest"
+        >
+          ← Back to Sign Up
+        </button>
+      </div>
+    )
   }
 
   return (
