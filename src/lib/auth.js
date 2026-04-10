@@ -185,6 +185,19 @@ export const registerUser = async (email, password, name, userType, company = ''
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // Send branded verification email via our custom API
+    try {
+      await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name })
+      });
+    } catch (apiError) {
+      console.error('Failed to send custom verification email, falling back to default:', apiError);
+      // Fallback to default if custom API fails
+      await sendEmailVerification(user);
+    }
+
     // Update user profile with display name
     await updateProfile(user, {
       displayName: name
@@ -221,7 +234,8 @@ export const registerUser = async (email, password, name, userType, company = ''
       verified: false,
       emailVerified: false,
       photoURL: null,
-      nameChanged: false
+      nameChanged: false,
+      verificationSent: true
     };
   } catch (error) {
 
@@ -555,7 +569,11 @@ export const uploadProfileImage = async (uid, file) => {
       throw new Error('Image size must be less than 5MB');
     }
 
-    const fileName = `${Date.now()}_${file.name}`;
+    // Build a clean filename from the user's display name
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const displayName = auth.currentUser?.displayName || 'user';
+    const safeName = displayName.replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `${safeName}.${ext}`;
     const storagePath = `profile-images/${uid}/${fileName}`;
     const storageRef = ref(storage, storagePath);
 

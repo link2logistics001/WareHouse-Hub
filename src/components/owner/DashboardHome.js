@@ -107,20 +107,14 @@ export default function DashboardHome({ setActiveTab }) {
     fetchMyWarehouses();
   }, [user]);
 
-  const firstName = user?.displayName ? user.displayName.split(' ')[0] : 'Owner';
+  const firstName = (user?.name || user?.displayName || 'Owner').split(' ')[0];
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const cardVariants = { hidden: { opacity: 0, y: 20, scale: 0.95 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 200, damping: 20 } } };
 
   return (
-    <div className="flex-1 bg-[#f4f5f7] min-h-screen relative overflow-hidden z-0">
+    <div className="flex-1 min-h-screen relative z-0">
       
-      {/* --- STATIC AMBIENT BACKGROUND GLOWS (no animation = no jank) --- */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
-      </div>
-
       {/* Header */}
       <div className="flex justify-between items-center px-10 py-6 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
         <div>
@@ -266,72 +260,165 @@ export default function DashboardHome({ setActiveTab }) {
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-500/5 to-transparent pointer-events-none rounded-tr-3xl" />
           </motion.div>
 
-          {/* THE MAGIC GRAPH */}
+          {/* THE DATA-DRIVEN GRAPH */}
           <motion.div variants={cardVariants} className="bg-white/80 border border-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] p-8 flex flex-col relative overflow-hidden group hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-shadow duration-500">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2 relative z-10">
               <Activity size={18} className="text-blue-500" /> Space Overview
             </h2>
-            <p className="text-xs text-slate-400 mb-8 relative z-10">Capacity utilization curve</p>
+            <p className="text-xs text-slate-400 mb-8 relative z-10">Cumulative capacity over time</p>
             
-            <div className="flex-1 flex flex-col justify-center w-full relative h-48">
-              
-              {/* Animated Vertical Grid Lines */}
-              <div className="absolute inset-0 flex justify-between px-6 pt-4 pb-6 pointer-events-none">
-                {[1, 2, 3, 4].map((i, index) => (
-                  <motion.div key={i} initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 1.5, delay: 0.5 + (index * 0.2), ease: "circOut" }} className="w-px border-l border-dashed border-slate-200/60"></motion.div>
-                ))}
-              </div>
+            {(() => {
+              // Build data points from real warehouse data
+              const sorted = [...warehouses]
+                .filter(w => w.createdAt)
+                .sort((a, b) => {
+                  const tA = a.createdAt?.seconds ? a.createdAt.seconds : (a.createdAt?.toDate ? a.createdAt.toDate().getTime() / 1000 : 0);
+                  const tB = b.createdAt?.seconds ? b.createdAt.seconds : (b.createdAt?.toDate ? b.createdAt.toDate().getTime() / 1000 : 0);
+                  return tA - tB;
+                });
 
-              {/* Magical Animated SVG Curve */}
-              <svg viewBox="0 0 1000 300" className="w-full h-full absolute inset-0 overflow-visible z-10">
-                <defs>
-                  <linearGradient id="magicGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity="0.5"/>
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0.0"/>
-                  </linearGradient>
-                  <filter id="neonGlow">
-                    <feDropShadow dx="0" dy="12" stdDeviation="12" floodColor="#f97316" floodOpacity="0.6" />
-                  </filter>
-                </defs>
-                
-                <motion.path
-                  d="M 0 250 C 200 250, 300 100, 500 150 C 700 200, 800 50, 1000 100 L 1000 300 L 0 300 Z"
-                  fill="url(#magicGradient)" initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
-                />
-                
-                <motion.path
-                  d="M 0 250 C 200 250, 300 100, 500 150 C 700 200, 800 50, 1000 100"
-                  fill="none" stroke="#f97316" strokeWidth="6" strokeLinecap="round" filter="url(#neonGlow)"
-                  initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2.5, ease: "easeInOut", delay: 0.2 }}
-                />
+              // Build cumulative area data points
+              let cumulative = 0;
+              const dataPoints = sorted.map(w => {
+                cumulative += Number(w.totalArea || 0);
+                const ts = w.createdAt?.seconds ? w.createdAt.seconds * 1000 : (w.createdAt?.toDate ? w.createdAt.toDate().getTime() : Date.now());
+                return { time: ts, area: cumulative, name: w.companyName || w.warehouseName || 'Warehouse' };
+              });
 
-                {/* Static Data Nodes (no infinite pulsing) */}
-                {[
-                  { cx: 300, cy: 100, delay: 1.5 }, { cx: 500, cy: 150, delay: 1.8 }, { cx: 800, cy: 50, delay: 2.1 }
-                ].map((node, i) => (
-                  <g key={i}>
-                    <circle cx={node.cx} cy={node.cy} r="15" fill="#f97316" opacity="0.12" />
-                    <motion.circle cx={node.cx} cy={node.cy} r="8" fill="white" stroke="#f97316" strokeWidth="4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: node.delay, type: 'spring', stiffness: 300 }} />
-                  </g>
-                ))}
-              </svg>
+              // If no data, show empty state
+              if (dataPoints.length === 0) {
+                return (
+                  <div className="flex-1 flex items-center justify-center h-48">
+                    <div className="text-center">
+                      <Activity size={32} className="text-slate-200 mx-auto mb-3" />
+                      <p className="text-sm text-slate-400 font-medium">No capacity data yet</p>
+                      <p className="text-xs text-slate-300 mt-1">Add warehouses to see your growth chart</p>
+                    </div>
+                  </div>
+                );
+              }
 
-              {/* X-Axis Labels */}
-              <div className="absolute bottom-0 w-full flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 pointer-events-none">
-                <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
-              </div>
-            </div>
+              // Normalize to SVG coordinates (1000 x 300)
+              const maxArea = Math.max(...dataPoints.map(d => d.area), 1);
+              const svgW = 1000, svgH = 300, padTop = 30, padBot = 40;
+              const usableH = svgH - padTop - padBot;
 
-            <div className="mt-6 pt-4 border-t border-slate-100/50 flex justify-between items-center bg-white/50 border border-white shadow-sm rounded-2xl p-4 relative z-10 backdrop-blur-md">
-              <div>
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Peak Demand</span>
-                <span className="font-bold text-slate-800 text-sm">Week 4</span>
-              </div>
-              <div className="text-right">
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Growth</span>
-                <span className="font-bold text-emerald-500 text-sm drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">+24.5%</span>
-              </div>
-            </div>
+              const points = dataPoints.map((d, i) => ({
+                x: dataPoints.length === 1 ? svgW / 2 : (i / (dataPoints.length - 1)) * (svgW - 80) + 40,
+                y: padTop + usableH - (d.area / maxArea) * usableH,
+                area: d.area,
+                name: d.name,
+              }));
+
+              // Build smooth curve path using cardinal spline-like approach
+              let linePath = `M ${points[0].x} ${points[0].y}`;
+              if (points.length === 1) {
+                // Single point — draw a flat line through it
+                linePath = `M 40 ${points[0].y} L ${svgW - 40} ${points[0].y}`;
+              } else {
+                for (let i = 1; i < points.length; i++) {
+                  const prev = points[i - 1];
+                  const curr = points[i];
+                  const cpx = (prev.x + curr.x) / 2;
+                  linePath += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                }
+              }
+
+              // Fill path (closed area under curve)
+              const fillPath = `${linePath} L ${points[points.length - 1].x} ${svgH - padBot} L ${points[0].x} ${svgH - padBot} Z`;
+
+              // Calculate growth
+              const firstArea = dataPoints[0]?.area || 0;
+              const lastArea = dataPoints[dataPoints.length - 1]?.area || 0;
+              const growthPct = firstArea > 0 ? (((lastArea - firstArea) / firstArea) * 100).toFixed(1) : '—';
+
+              // Find peak addition
+              let peakIdx = 0;
+              let peakAdd = 0;
+              for (let i = 1; i < dataPoints.length; i++) {
+                const add = dataPoints[i].area - dataPoints[i - 1].area;
+                if (add > peakAdd) { peakAdd = add; peakIdx = i; }
+              }
+              const peakName = dataPoints[peakIdx]?.name || '—';
+
+              // Time labels
+              const timeLabels = dataPoints.length <= 4
+                ? dataPoints.map(d => new Date(d.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
+                : [
+                    new Date(dataPoints[0].time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                    new Date(dataPoints[Math.floor(dataPoints.length / 2)].time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                    new Date(dataPoints[dataPoints.length - 1].time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+                  ];
+
+              return (
+                <>
+                  <div className="flex-1 flex flex-col justify-center w-full relative h-48">
+                    {/* Grid Lines */}
+                    <div className="absolute inset-0 flex justify-between px-6 pt-4 pb-6 pointer-events-none">
+                      {[1, 2, 3, 4].map((i, index) => (
+                        <motion.div key={i} initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 1.5, delay: 0.5 + (index * 0.2), ease: "circOut" }} className="w-px border-l border-dashed border-slate-200/60"></motion.div>
+                      ))}
+                    </div>
+
+                    {/* SVG Chart */}
+                    <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-full absolute inset-0 overflow-visible z-10">
+                      <defs>
+                        <linearGradient id="magicGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f97316" stopOpacity="0.5"/>
+                          <stop offset="100%" stopColor="#f97316" stopOpacity="0.0"/>
+                        </linearGradient>
+                        <filter id="neonGlow">
+                          <feDropShadow dx="0" dy="12" stdDeviation="12" floodColor="#f97316" floodOpacity="0.6" />
+                        </filter>
+                      </defs>
+                      
+                      {/* Area fill */}
+                      <motion.path
+                        d={fillPath}
+                        fill="url(#magicGradient)" initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
+                      />
+                      
+                      {/* Line */}
+                      <motion.path
+                        d={linePath}
+                        fill="none" stroke="#f97316" strokeWidth="6" strokeLinecap="round" filter="url(#neonGlow)"
+                        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2.5, ease: "easeInOut", delay: 0.2 }}
+                      />
+
+                      {/* Data Nodes */}
+                      {points.map((pt, i) => (
+                        <g key={i}>
+                          <circle cx={pt.x} cy={pt.y} r="15" fill="#f97316" opacity="0.12" />
+                          <motion.circle cx={pt.x} cy={pt.y} r="8" fill="white" stroke="#f97316" strokeWidth="4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.5 + (i * 0.3), type: 'spring', stiffness: 300 }} />
+                          {/* Tooltip label */}
+                          <motion.text x={pt.x} y={pt.y - 18} textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="700" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 + (i * 0.3) }}>
+                            {(pt.area / 1000).toFixed(1)}k
+                          </motion.text>
+                        </g>
+                      ))}
+                    </svg>
+
+                    {/* X-Axis Labels */}
+                    <div className="absolute bottom-0 w-full flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 pointer-events-none">
+                      {timeLabels.map((label, i) => (
+                        <span key={i}>{label}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-100/50 flex justify-between items-center bg-white/50 border border-white shadow-sm rounded-2xl p-4 relative z-10 backdrop-blur-md">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Biggest Addition</span>
+                      <span className="font-bold text-slate-800 text-sm">{peakName}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total Capacity</span>
+                      <span className="font-bold text-emerald-500 text-sm drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">{(lastArea / 1000).toFixed(1)}k sq ft</span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
             
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-500/5 to-transparent pointer-events-none rounded-bl-3xl" />
           </motion.div>

@@ -115,6 +115,9 @@ export default function OwnerDashboard({ user, onLogout }) {
       {/* Main Content */}
       <main className="flex-1 overflow-x-hidden min-h-screen flex flex-col relative z-0">
         
+        {/* (Background lines removed from here - now only active in Settings tab) */}
+        
+        
         {/* Generic Header for non-dashboard tabs */}
         {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (
           <header className="bg-white/90 backdrop-blur-sm h-auto min-h-16 border-b border-white sticky top-0 z-30 px-6 sm:px-10 flex flex-col xs:flex-row xs:items-center justify-between gap-4 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
@@ -155,9 +158,53 @@ export default function OwnerDashboard({ user, onLogout }) {
                 THE NEW PREMIUM SETTINGS TAB
             ════════════════════════════════════════════════════════════════════════ */}
             {activeTab === 'settings' && (
-              <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8 max-w-4xl mx-auto relative z-10 w-full">
+              <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8 max-w-4xl mx-auto relative z-10 w-full min-h-[80vh]">
                 
-                {/* Ambient Background Glow for Settings */}
+                {/* --- SETTINGS-ONLY ANIMATED BACKGROUND --- */}
+                <div className="absolute top-0 left-0 w-full h-[150%] overflow-hidden pointer-events-none z-[-1]">
+                  <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[100px]" />
+                  <div className="absolute bottom-[10%] left-[-10%] w-[700px] h-[700px] bg-blue-500/10 rounded-full blur-[100px]" />
+
+                  <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 1440 1200" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <motion.path
+                      d="M-100 200 Q 200 100, 400 220 T 800 180 T 1200 240 T 1600 200"
+                      stroke="#f97316" strokeWidth="4" strokeLinecap="round" opacity="0.35"
+                      initial={{ pathLength: 0, pathOffset: 0 }}
+                      animate={{ pathLength: 1, pathOffset: [0, 1] }}
+                      transition={{ pathLength: { duration: 3, ease: "easeOut" }, pathOffset: { duration: 20, ease: "linear", repeat: Infinity } }}
+                    />
+                    <motion.path
+                      d="M-100 400 Q 350 300, 700 420 T 1100 380 T 1500 440 T 1600 400"
+                      stroke="#f97316" strokeWidth="3" strokeLinecap="round" opacity="0.25"
+                      initial={{ pathLength: 0, pathOffset: 0 }}
+                      animate={{ pathLength: 1, pathOffset: [0, 1] }}
+                      transition={{ pathLength: { duration: 4, ease: "easeOut", delay: 0.5 }, pathOffset: { duration: 25, ease: "linear", repeat: Infinity } }}
+                    />
+                    <motion.path
+                      d="M-100 650 Q 300 550, 600 670 T 1000 630 T 1400 690 T 1600 650"
+                      stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" opacity="0.2"
+                      initial={{ pathLength: 0, pathOffset: 0 }}
+                      animate={{ pathLength: 1, pathOffset: [0, 1] }}
+                      transition={{ pathLength: { duration: 5, ease: "easeOut", delay: 1 }, pathOffset: { duration: 30, ease: "linear", repeat: Infinity } }}
+                    />
+                    <motion.path
+                      d="M-100 950 Q 400 850, 800 970 T 1200 930 T 1600 950"
+                      stroke="#f97316" strokeWidth="3.5" strokeLinecap="round" opacity="0.3"
+                      initial={{ pathLength: 0, pathOffset: 0 }}
+                      animate={{ pathLength: 1, pathOffset: [0, 1] }}
+                      transition={{ pathLength: { duration: 6, ease: "easeOut", delay: 1.5 }, pathOffset: { duration: 35, ease: "linear", repeat: Infinity } }}
+                    />
+                    <motion.path
+                      d="M1500 350 Q 1200 450, 900 330 T 500 370 T 100 310 T -200 350"
+                      stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" opacity="0.15"
+                      initial={{ pathLength: 0, pathOffset: 0 }}
+                      animate={{ pathLength: 1, pathOffset: [0, 1] }}
+                      transition={{ pathLength: { duration: 7, ease: "easeOut", delay: 2 }, pathOffset: { duration: 40, ease: "linear", repeat: Infinity } }}
+                    />
+                  </svg>
+                </div>
+
+                {/* Ambient Background Glow for Settings (Legacy) */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none z-[-1]" />
                 
                 {/* ── PROFILE CARD ── */}
