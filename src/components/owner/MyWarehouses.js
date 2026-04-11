@@ -22,7 +22,7 @@ const SkeletonPulse = ({ className }) => (
   />
 );
 
-export default function MyWarehouses({ setActiveTab }) {
+export default function MyWarehouses({ setActiveTab, onOpenSidebar }) {
   const { user } = useAuth();
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,12 +65,19 @@ export default function MyWarehouses({ setActiveTab }) {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-10 py-8 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-30 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Property Directory</h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            {loading ? "Syncing portfolio data..." : `${warehouses.length} listing${warehouses.length !== 1 ? 's' : ''} in your network`}
-          </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-6 sm:px-10 py-6 sm:py-8 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-30 shadow-[0_4px_30px_rgba(0,0,0,0.02)] gap-4">
+        <div className="flex items-center gap-3">
+          {onOpenSidebar && (
+            <button className="lg:hidden p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 shadow-sm transition-all" onClick={onOpenSidebar}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Property Directory</h1>
+            <p className="text-sm font-medium text-slate-500 mt-1">
+              {loading ? "Syncing portfolio data..." : `${warehouses.length} listing${warehouses.length !== 1 ? 's' : ''} in your network`}
+            </p>
+          </div>
         </div>
         
         {setActiveTab && (

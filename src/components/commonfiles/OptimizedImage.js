@@ -51,6 +51,8 @@ export default function OptimizedImage({
 
   const wrapperClass = `relative overflow-hidden ${className}`;
 
+  const isFirebaseURL = typeof imgSrc === 'string' && imgSrc.includes('firebasestorage.googleapis.com');
+
   const imageProps = {
     src: imgSrc,
     alt,
@@ -61,6 +63,7 @@ export default function OptimizedImage({
     onError: handleError,
     className: imgClassName,
     style: fill ? { objectFit: 'cover' } : undefined,
+    unoptimized: isFirebaseURL, // Fixes "upstream image response failed 404" in terminal for missing Firebase images
   };
 
   return (

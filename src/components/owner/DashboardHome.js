@@ -61,7 +61,7 @@ const SkeletonPulse = ({ className }) => (
   />
 );
 
-export default function DashboardHome({ setActiveTab }) {
+export default function DashboardHome({ setActiveTab, onOpenSidebar }) {
   const { user } = useAuth();
   
   const [warehouses, setWarehouses] = useState([]);
@@ -116,15 +116,22 @@ export default function DashboardHome({ setActiveTab }) {
     <div className="flex-1 min-h-screen relative z-0">
       
       {/* Header */}
-      <div className="flex justify-between items-center px-10 py-6 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-        <div>
-          <motion.h1 
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2"
-          >
-            {greeting}, {firstName} <Sparkles className="text-orange-400 w-5 h-5" />
-          </motion.h1>
-          <p className="text-sm text-slate-500 mt-1">Here is the latest telemetry for your logistics portfolio.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-6 sm:px-10 py-6 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.02)] gap-4">
+        <div className="flex items-center gap-3">
+          {onOpenSidebar && (
+            <button className="lg:hidden p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 shadow-sm transition-all" onClick={onOpenSidebar}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          )}
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+              className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2"
+            >
+              {greeting}, {firstName} <Sparkles className="text-orange-400 w-5 h-5" />
+            </motion.h1>
+            <p className="text-sm text-slate-500 mt-1">Here is the latest telemetry for your logistics portfolio.</p>
+          </div>
         </div>
         
         <div className="flex items-center gap-4">
