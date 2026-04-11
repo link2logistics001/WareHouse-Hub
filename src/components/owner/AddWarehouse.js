@@ -300,8 +300,10 @@ export default function AddWarehouse({ setActiveTab }) {
       const uid = currentAuthUser.uid;
       if (user.uid !== uid) { setSubmitError('Session mismatch detected. Please log out and log in again.'); setSubmitting(false); return; }
 
-      const safeWarehouseName = warehouseDetails.warehouseName.trim().replace(/[^a-zA-Z0-9-]/g, '_');
-      const basePath = `warehouse_photos/${ownerDetails.email.trim()}/${safeWarehouseName}`;
+      const sanitizeForPath = (str) => str.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+      const safeEmail = sanitizeForPath(ownerDetails.email);
+      const safeWHName = sanitizeForPath(warehouseDetails.warehouseName);
+      const basePath = `warehouse_photos/${safeEmail}/${safeWHName}`;
 
       const filesToUpload = [photos.frontView, photos.insideView, photos.dockArea, photos.rateCard].filter(f => f !== null);
       if (filesToUpload.length === 0) setUploadProgress(100);

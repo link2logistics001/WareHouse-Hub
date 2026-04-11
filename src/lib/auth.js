@@ -181,17 +181,13 @@ export const registerUser = async (email, password, name, userType, company = ''
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Send branded verification email via our custom API
+    // Send standard Firebase verification email
     try {
-      await fetch('/api/auth/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name })
+      await sendEmailVerification(user, {
+        url: typeof window !== 'undefined' ? window.location.origin + '/login' : 'http://localhost:3000/login',
       });
     } catch (apiError) {
-      console.error('Failed to send custom verification email, falling back to default:', apiError);
-      // Fallback to default if custom API fails
-      await sendEmailVerification(user);
+      console.error('Failed to send verification email:', apiError);
     }
 
     // Update user profile with display name

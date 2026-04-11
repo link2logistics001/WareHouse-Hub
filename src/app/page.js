@@ -14,7 +14,8 @@ import OwnerDashboard from '@/components/owner/OwnerDashboard'
 import DataEntryDashboard from '@/components/dataentry/DataEntryDashboard'
 import AdminDashboard from '@/components/admin/AdminDashboard'
 import ChatBox from '@/components/commonfiles/ChatBox'
-import FeedbackWidget from '@/components/commonfiles/FeedbackWidget' // <-- 1. Import the widget
+import FeedbackWidget from '@/components/commonfiles/FeedbackWidget'
+import VerificationBarrier from '@/components/commonfiles/VerificationBarrier'
 
 export default function Home() {
   const { user, loading, setUser } = useAuth()
@@ -53,6 +54,16 @@ export default function Home() {
 
   // ── 2. Logged-in → show correct dashboard ───────────────────
   if (user) {
+    // ── Email Verification Check ──
+    if (!user.emailVerified) {
+      return (
+        <VerificationBarrier 
+          user={user} 
+          onLogout={handleLogout} 
+        />
+      )
+    }
+
     // Admin gets the admin panel — full stop, no chat box
     if (user.userType === 'admin') {
       return (

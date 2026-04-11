@@ -87,6 +87,31 @@ export default function OwnerDashboard({ user, onLogout }) {
     }
   };
 
+  const handleSendVerification = async () => {
+    setMessage({ type: '', text: '' });
+    try {
+      await sendVerificationEmail();
+      setMessage({ type: 'success', text: 'Verification email sent! Please check your inbox.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleRefreshVerification = async () => {
+    setMessage({ type: '', text: '' });
+    try {
+      const isVerified = await refreshEmailVerification();
+      if (isVerified) {
+        setLocalUser({ ...localUser, emailVerified: true });
+        setMessage({ type: 'success', text: 'Email verified successfully!' });
+      } else {
+        setMessage({ type: 'info', text: 'Email not yet verified. Please check your inbox.' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [activeTab]);
@@ -96,17 +121,17 @@ export default function OwnerDashboard({ user, onLogout }) {
   return (
     <motion.div className="min-h-screen bg-[#f4f5f7] flex" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       
-      {/* Sidebar for desktop */}
-      <div className="hidden md:block">
+      {/* Sidebar for desktop (lg screen and above) */}
+      <div className="hidden lg:block">
         <OwnerSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
       </div>
       
       {/* Sidebar overlay for mobile/tablet */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div className="fixed inset-0 z-50 bg-slate-900/40 md:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}>
-            <motion.div className="absolute left-0 top-0 h-full w-64 bg-[#111111] shadow-2xl border-r border-slate-800 flex flex-col" initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }} transition={{ type: 'tween', duration: 0.25 }} onClick={e => e.stopPropagation()}>
-              <OwnerSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} />
+          <motion.div className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}>
+            <motion.div className="absolute left-0 top-0 h-full w-72 bg-[#111111] shadow-2xl border-r border-slate-800 flex flex-col" initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} transition={{ type: 'tween', duration: 0.25 }} onClick={e => e.stopPropagation()}>
+              <OwnerSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} isDrawer={true} />
             </motion.div>
           </motion.div>
         )}
@@ -122,7 +147,7 @@ export default function OwnerDashboard({ user, onLogout }) {
         {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (
           <header className="bg-white/90 backdrop-blur-sm h-auto min-h-16 border-b border-white sticky top-0 z-30 px-6 sm:px-10 flex flex-col xs:flex-row xs:items-center justify-between gap-4 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-3">
-              <button className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-white shadow-sm transition-all" onClick={() => setSidebarOpen(true)}>
+              <button className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-white shadow-sm transition-all" onClick={() => setSidebarOpen(true)}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
               <h2 className="font-bold text-slate-800 capitalize text-xl flex items-center gap-2">
@@ -289,6 +314,33 @@ export default function OwnerDashboard({ user, onLogout }) {
                         )}
                         
                         <InfoField icon={<Shield />} label="Account Access Level" value="Administrative Owner" />
+                        
+                        <div className="flex flex-col justify-center p-5 bg-white/40 backdrop-blur-md rounded-2xl border border-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] group cursor-default">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Email Verification</p>
+                          <p className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+                            {localUser?.emailVerified ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-emerald-500" /> 
+                                <span className="text-emerald-600 font-extrabold">Verified</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-4 h-4 text-orange-400" /> 
+                                <span className="text-orange-600 font-extrabold tracking-tight">Not Verified</span>
+                              </>
+                            )}
+                          </p>
+                          {!localUser?.emailVerified && (
+                            <div className="flex gap-2">
+                              <button onClick={handleSendVerification} className="text-[10px] px-3 py-1.5 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 transition-all shadow-sm">
+                                Resend
+                              </button>
+                              <button onClick={handleRefreshVerification} className="text-[10px] px-3 py-1.5 bg-slate-100 text-slate-600 font-bold rounded-lg hover:bg-slate-200 transition-all">
+                                Refresh
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </motion.div>
                     )}
                   </div>

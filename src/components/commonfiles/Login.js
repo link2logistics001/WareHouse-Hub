@@ -1,7 +1,7 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { registerUser, loginUser, loginWithGoogle, resetPassword } from '@/lib/auth'
+import { registerUser, loginUser, loginWithGoogle, resetPassword, refreshEmailVerification, sendVerificationEmail } from '@/lib/auth'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WAREHOUSE LEFT PANEL
@@ -345,9 +345,11 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
 
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '' })
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showVerificationSent, setShowVerificationSent] = useState(false)
+  const [verificationData, setVerificationData] = useState(null)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -363,6 +365,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
       } else {
         const result = await registerUser(formData.email, formData.password, formData.name, userType, formData.company)
         if (result.verificationSent) {
+          setVerificationData(result)
           setShowVerificationSent(true)
         } else {
           onLoginSuccess(result)
@@ -379,6 +382,54 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (!formData.email) {
+      setError('Please enter your email address')
+      return
+    }
+    setError('')
+    setLoading(true)
+    try {
+      await resetPassword(formData.email)
+      setError('Password reset email sent! Please check your inbox.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCheckVerification = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const isVerified = await refreshEmailVerification()
+      if (isVerified) {
+        onLoginSuccess(verificationData)
+      } else {
+        setError('Email not yet verified. Please check your inbox.')
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendLink = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      await sendVerificationEmail()
+      setError('A new verification link has been sent!')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (showVerificationSent) {
     return (
       <div className="text-center py-8">
@@ -391,17 +442,86 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
         <p className="text-slate-500 mb-8 max-w-sm mx-auto">
           We've sent a verification link to <span className="font-bold text-slate-700">{formData.email}</span>. Please verify your email to continue.
         </p>
+        
+        {error && (
+          <p className={`mb-6 text-sm font-bold ${error.includes('sent') ? 'text-emerald-600' : 'text-rose-500'}`}>
+            {error}
+          </p>
+        )}
+
         <button 
-          onClick={() => setIsLogin(true)}
-          className="w-full bg-[#E65100] text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#BF360C] transition-all"
+          onClick={handleCheckVerification}
+          disabled={loading}
+          className="w-full bg-[#E65100] text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#BF360C] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          Proceed to Sign In
+          {loading ? 'Checking...' : 'I\'ve Verified Top Email'}
         </button>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <button 
+            type="button"
+            onClick={handleResendLink}
+            disabled={loading}
+            className="text-sm text-slate-500 hover:text-[#E65100] transition-colors font-bold"
+          >
+            Didn't get the email? Resend Log
+          </button>
+          <button 
+            onClick={() => { setShowVerificationSent(false); setIsLogin(true); setError(''); }}
+            className="text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest"
+          >
+            ← Back to Sign In
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isForgotPassword) {
+    return (
+      <div className="w-full">
+        <div className="flex items-center gap-3 mb-8">
+          <button type="button" onClick={() => { setIsForgotPassword(false); setError(''); }} className="p-2 -ml-2 rounded-full text-slate-400 hover:text-[#E65100] transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <h3 className="text-2xl font-bold text-slate-900">Reset Password</h3>
+        </div>
+        
+        <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
+
+        <form onSubmit={handleResetPassword} className="space-y-5">
+          <input 
+            type="email" 
+            name="email" 
+            placeholder="Email Address" 
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all" 
+            required
+          />
+          
+          {error && (
+            <p className={`text-sm font-bold ${error.includes('sent') ? 'text-emerald-600' : 'text-rose-500'}`}>
+              {error}
+            </p>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-[#E65100] text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#BF360C] transition-all flex items-center justify-center gap-2"
+          >
+            {loading ? 'Sending...' : 'Send Reset Link'}
+          </button>
+        </form>
+
         <button 
-          onClick={() => setShowVerificationSent(false)}
-          className="mt-4 text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest"
+          onClick={() => { setIsForgotPassword(false); setError(''); }}
+          className="w-full mt-8 text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest text-center"
         >
-          ← Back to Sign Up
+          Back to Sign In
         </button>
       </div>
     )
@@ -433,7 +553,20 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
           className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all" />
         <input type="password" name="password" placeholder="Password" onChange={handleInputChange}
           className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all" />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        
+        {isLogin && (
+          <div className="flex justify-end px-1">
+            <button 
+              type="button" 
+              onClick={() => { setIsForgotPassword(true); setError(''); }}
+              className="text-xs font-bold text-[#E65100] hover:text-[#BF360C] transition-colors"
+            >
+              Forgot Password?
+            </button>
+          </div>
+        )}
+
+        {error && <p className="text-red-500 text-sm font-bold">{error}</p>}
         <button type="submit" disabled={loading}
           className="w-full bg-[#E65100] text-white py-4 rounded-2xl font-bold shadow-lg shadow-orange-200 hover:bg-[#BF360C] transition-all">
           {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}

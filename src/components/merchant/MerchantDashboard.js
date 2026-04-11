@@ -218,36 +218,36 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         >
             {/* (Global context background removed - now isolated to Settings) */}
             
-            {/* Sidebar for desktop */}
-            <div className="hidden md:block">
+            {/* Sidebar for desktop (lg screen and above) */}
+            <div className="hidden lg:block">
                 <MerchantSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
             </div>
             {/* Sidebar overlay for mobile/tablet */}
             <AnimatePresence>
                 {sidebarOpen && (
                     <motion.div
-                        className="fixed inset-0 z-50 bg-black/40 md:hidden"
+                        className="fixed inset-0 z-50 bg-black/40 lg:hidden"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setSidebarOpen(false)}
                     >
                         <motion.div
-                            className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl border-r border-slate-200 flex flex-col"
-                            initial={{ x: -260 }}
+                            className="absolute left-0 top-0 h-full w-72 bg-white shadow-xl border-r border-slate-200 flex flex-col"
+                            initial={{ x: -300 }}
                             animate={{ x: 0 }}
-                            exit={{ x: -260 }}
+                            exit={{ x: -300 }}
                             transition={{ type: 'tween', duration: 0.25 }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <MerchantSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} />
+                            <MerchantSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} isDrawer={true} />
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* Main Content Area */}
-            <div className="flex-1 md:ml-64 flex flex-col">
+            <div className="flex-1 lg:ml-20 flex flex-col">
                 {/* Dynamic Header */}
                 <header className="bg-white h-auto min-h-16 border-b border-slate-200 sticky top-0 z-10 px-4 sm:px-8 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 py-2">
                     <div className="flex items-center gap-3 w-full xs:w-auto">
