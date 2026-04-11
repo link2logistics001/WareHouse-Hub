@@ -354,6 +354,23 @@ export default function AddWarehouse({ setActiveTab }) {
 
       const ownerEmail = user.email.toLowerCase().trim();
       await addDoc(getWarehouseCollection('owner', ownerEmail), docData);
+
+      // Update user profile with verified phone number
+      try {
+        const { updateContactDetails } = await import('@/lib/contactDetails');
+        const userRef = doc(db, 'users', uid);
+        await updateDoc(userRef, {
+          mobile: ownerDetails.mobile.trim(),
+          phone: ownerDetails.mobile.trim(), // for compatibility
+          updatedAt: serverTimestamp()
+        });
+        await updateContactDetails('owner', uid, {
+          phone: ownerDetails.mobile.trim()
+        });
+      } catch (err) {
+        // Silently fail profile update if it's already set or fails
+      }
+
       setSubmitted(true);
     } catch (err) {
       if (err.code === 'storage/unauthorized') { setSubmitError('Upload blocked: auth token rejected by Storage. Please log out, log in again, and retry.'); }

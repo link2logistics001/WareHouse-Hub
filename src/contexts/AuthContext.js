@@ -72,7 +72,8 @@ export const AuthProvider = ({ children }) => {
                       company: retryData.company || '',
                       userType: retryData.userType,
                       verified: retryData.verified || false,
-                      emailVerified: firebaseUser.emailVerified
+                      emailVerified: firebaseUser.emailVerified,
+                      phone: retryData.phone || retryData.mobile || ''
                     });
                   }
                 } catch {
@@ -90,7 +91,8 @@ export const AuthProvider = ({ children }) => {
                 company: userData.company || '',
                 userType: userData.userType,
                 verified: userData.verified || false,
-                emailVerified: firebaseUser.emailVerified
+                emailVerified: firebaseUser.emailVerified,
+                phone: userData.phone || userData.mobile || ''
               });
             }
           } catch (err) {

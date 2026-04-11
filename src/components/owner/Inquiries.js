@@ -12,7 +12,8 @@ import {
   ShieldCheck, Unlock, Trash2
 } from 'lucide-react';
 import ChatBox from '../commonfiles/ChatBox';
-import { getOrCreateConversation, grantContactAccess, deleteConversation } from '@/lib/messaging';
+import { getOrCreateConversation, grantContactAccess, deleteConversation, sendMessage } from '@/lib/messaging';
+import { getContactDetails } from '@/lib/contactDetails';
 
 // ─────────────────────────────────────────────────────────────
 // Firestore inquiry schema (when a merchant submits an inquiry):
@@ -107,9 +108,42 @@ export default function Inquiries() {
     setGrantingId(conv.id);
     try {
       await grantContactAccess(conv.id);
+      
+      // Fetch fresh contact details to ensure we have the phone number
+      let ownerPhone = user.phone || user.mobile || '';
+      let ownerEmail = user.email;
+
+      // Check contact_details collection
+      const ownerDetails = await getContactDetails('owner', user.uid);
+      if (ownerDetails) {
+        ownerPhone = ownerPhone || ownerDetails.phone || ownerDetails.mobile || '';
+      }
+
+      // Final fallback: Check the warehouse itself (where mobile is verified/stored)
+      if (!ownerPhone && conv.warehouseId) {
+        try {
+          const { fetchUserWarehouses } = await import('@/lib/warehouseCollections');
+          const myWarehouses = await fetchUserWarehouses('owner', user.email, user.uid);
+          const thisWh = myWarehouses.find(w => w.id === conv.warehouseId);
+          if (thisWh) {
+            ownerPhone = thisWh.mobile || thisWh.phone || '';
+          } else if (myWarehouses.length > 0) {
+            // Use any verified phone from their active listings
+            ownerPhone = myWarehouses[0].mobile || myWarehouses[0].phone || '';
+          }
+        } catch (err) {
+          console.error("Fallback fetch failed:", err);
+        }
+      }
+      
+      const finalPhone = ownerPhone || 'Check dashboard profile';
+      const autoMessage = `I've given you access to my contact information:\n\nPhone: ${finalPhone}\nEmail: ${ownerEmail}`;
+      
+      await sendMessage(conv.id, user.uid, autoMessage, 'owner');
+      
       // alert('Contact access granted to ' + (conv.merchantName || 'Merchant'));
     } catch (e) {
-
+      console.error('Failed to grant access or send message:', e);
     } finally {
       setGrantingId(null);
     }
@@ -263,7 +297,7 @@ export default function Inquiries() {
                 {item.spaceRequired && (
                   <p className="text-xs text-blue-600 font-medium mb-3">📦 {item.spaceRequired}</p>
                 )}
-                <p className="text-xs text-slate-400 line-clamp-2 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                <p className="text-xs text-slate-400 line-clamp-2 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100 italic whitespace-pre-wrap">
                   {item.lastMessage ? (
                     item.lastSenderId === user.uid ? `You: ${item.lastMessage}` : item.lastMessage
                   ) : 'No messages yet'}

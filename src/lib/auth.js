@@ -225,6 +225,7 @@ export const registerUser = async (email, password, name, userType, company = ''
       userType: userType,
       verified: false,
       emailVerified: false,
+      phone: '',
       photoURL: null,
       nameChanged: false,
       verificationSent: true
@@ -279,6 +280,7 @@ export const loginUser = async (email, password, userType) => {
           userType: userData.userType,
           verified: userData.verified || (userData.userType === 'admin' ? true : false),
           emailVerified: userData.emailVerified || user.emailVerified || false,
+          phone: userData.phone || userData.mobile || '',
           photoURL: userData.photoURL || user.photoURL || null,
           nameChanged: userData.nameChanged || false
         };
@@ -302,6 +304,7 @@ export const loginUser = async (email, password, userType) => {
         userType: userData.userType,
         verified: userData.verified || false,
         emailVerified: userData.emailVerified || user.emailVerified || false,
+        phone: userData.phone || userData.mobile || '',
         photoURL: userData.photoURL || user.photoURL || null,
         nameChanged: userData.nameChanged || false
       };
@@ -381,6 +384,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
         userType: userType,
         verified: user.emailVerified,
         emailVerified: user.emailVerified,
+        phone: '',
         photoURL: user.photoURL || null,
         nameChanged: false
       };
@@ -399,6 +403,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
         userType: existingUserData.userType,
         verified: existingUserData.verified || (existingUserData.userType === 'admin' ? true : false),
         emailVerified: existingUserData.emailVerified || user.emailVerified || false,
+        phone: existingUserData.phone || existingUserData.mobile || '',
         photoURL: existingUserData.photoURL || user.photoURL || null,
         nameChanged: existingUserData.nameChanged || false
       };
@@ -420,6 +425,7 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
       userType: existingUserData.userType,
       verified: existingUserData.verified,
       emailVerified: existingUserData.emailVerified || user.emailVerified || false,
+      phone: existingUserData.phone || existingUserData.mobile || '',
       photoURL: existingUserData.photoURL || user.photoURL || null,
       nameChanged: existingUserData.nameChanged || false
     };

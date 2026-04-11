@@ -184,7 +184,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
                         ? 'bg-gradient-to-r from-primary-600 to-orange-500 text-white' 
                         : 'bg-white text-slate-900 border border-slate-200'
                     }`}>
-                      <p className="text-sm leading-relaxed">{msg.message}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                     </div>
                     <span className="text-xs text-slate-400 px-2">
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
