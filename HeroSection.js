@@ -220,7 +220,7 @@ export default function HeroSection() {
           <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.12)' }} />
 
           <a
-            href="tel:4242392738"
+            href="tel:+919167714513"
             className="phone-link"
             style={{
               display: 'flex',
@@ -237,7 +237,7 @@ export default function HeroSection() {
             <svg style={{ width: '13px', height: '13px', flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
               <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.27c1.12.45 2.33.69 3.58.69a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.24 2.46.69 3.58a1 1 0 01-.27 1.11l-2.2 2.2z" />
             </svg>
-            (424) 239-2738
+            +91 91677 14513
           </a>
         </div>
 
