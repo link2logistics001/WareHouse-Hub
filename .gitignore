@@ -31,3 +31,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# firebase
+.firebase/
+
+# editor settings
+.vscode/
