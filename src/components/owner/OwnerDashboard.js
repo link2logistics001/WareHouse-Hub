@@ -188,11 +188,11 @@ export default function OwnerDashboard({ user, onLogout }) {
         {/* Dynamic Content Routing */}
         <div className={`flex-1 relative ${activeTab === 'dashboard' || activeTab === 'my-warehouses' || activeTab === 'availability' ? '' : 'p-6 sm:p-10'}`}>
           <AnimatePresence mode="wait">
-            {activeTab === 'dashboard' && <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><DashboardHome setActiveTab={setActiveTab} /></motion.div>}
-            {activeTab === 'my-warehouses' && <motion.div key="wh" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><MyWarehouses setActiveTab={setActiveTab} /></motion.div>}
+            {activeTab === 'dashboard' && <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><DashboardHome setActiveTab={setActiveTab} onOpenSidebar={() => setSidebarOpen(true)} /></motion.div>}
+            {activeTab === 'my-warehouses' && <motion.div key="wh" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><MyWarehouses setActiveTab={setActiveTab} onOpenSidebar={() => setSidebarOpen(true)} /></motion.div>}
             {activeTab === 'add-warehouse' && <motion.div key="add" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><AddWarehouse setActiveTab={setActiveTab} /></motion.div>}
             {activeTab === 'inquiries' && <motion.div key="inq" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Inquiries /></motion.div>}
-            {activeTab === 'calendar' && <motion.div key="cal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Availability /></motion.div>}
+            {activeTab === 'calendar' && <motion.div key="cal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Availability onOpenSidebar={() => setSidebarOpen(true)} /></motion.div>}
             
             {/* ════════════════════════════════════════════════════════════════════════
                 THE NEW PREMIUM SETTINGS TAB

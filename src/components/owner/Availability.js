@@ -19,9 +19,10 @@ const STATUS_OPTIONS = [
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map(s => [s.value, s]));
 const availDocId = (warehouseId, dateStr) => `${warehouseId}_${dateStr}`;
 
-export default function Availability() {
+export default function Availability({ onOpenSidebar }) {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
+  // ... rest of state remain the same
   const [warehouses, setWarehouses] = useState([]);
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(true);
@@ -183,12 +184,19 @@ export default function Availability() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-10 py-8 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-30 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-            Availability Calendar <Sparkles className="w-6 h-6 text-orange-500" />
-          </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">Manage schedules and blocks for your properties in real-time.</p>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-6 sm:px-10 py-6 sm:py-8 bg-white/90 backdrop-blur-sm border-b border-white sticky top-0 z-30 shadow-[0_4px_30px_rgba(0,0,0,0.02)] gap-4">
+        <div className="flex items-center gap-3">
+          {onOpenSidebar && (
+            <button className="lg:hidden p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 shadow-sm transition-all" onClick={onOpenSidebar}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+              Availability Calendar <Sparkles className="w-6 h-6 text-orange-500" />
+            </h1>
+            <p className="text-sm font-medium text-slate-500 mt-1">Manage schedules and blocks for your properties in real-time.</p>
+          </div>
         </div>
         
         {/* Premium Floating Stats */}
