@@ -300,7 +300,7 @@ function WarehouseCard({ warehouse: w, onDelete, variants }) {
           </h3>
           {(w.city || w.state) && (
             <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium">
-              <MapPin className="w-4 h-4 text-orange-400" />
+              <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
               <span className="line-clamp-1">{[w.city, w.state].filter(Boolean).join(', ')}</span>
             </div>
           )}

@@ -234,7 +234,7 @@ export default function DEDashboardHome({ setActiveTab }) {
                           {wh.warehouseName || 'Unnamed Facility'}
                         </h4>
                         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
-                          <MapPin size={14} className="text-slate-400"/> {wh.city || 'Location pending'}, {wh.state || ''}
+                          <MapPin size={14} className="text-slate-400 shrink-0"/> {wh.city || 'Location pending'}, {wh.state || ''}
                         </div>
                       </div>
                     </div>

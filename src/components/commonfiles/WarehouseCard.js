@@ -39,7 +39,7 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
             {title}
           </h3>
           <div className="flex items-center text-gray-500 text-sm mt-1">
-            <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+            <MapPin className="w-4 h-4 mr-1 text-gray-400 shrink-0" />
             <span className="truncate">{location}</span>
           </div>
           {/* Owner Name */}

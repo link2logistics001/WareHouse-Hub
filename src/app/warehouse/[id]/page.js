@@ -207,7 +207,7 @@ export default function WarehouseDetailPage({ params }) {
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-orange-50 rounded-full opacity-50 blur-3xl" />
               
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="bg-orange-50 text-orange-600 px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-orange-100">
                       {warehouse.warehouseCategory}
@@ -216,16 +216,16 @@ export default function WarehouseDetailPage({ params }) {
                       <BadgeCheck className="w-3.5 h-3.5" /> Verified
                     </span>
                   </div>
-                  <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                  <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-[1.1] break-words">
                     {warehouse.warehouseName}
                   </h1>
-                  <div className="flex items-center text-slate-500 font-semibold bg-slate-50 self-start px-4 py-2 rounded-2xl border border-slate-100">
-                    <MapPin className="w-5 h-5 text-orange-500 mr-2 shrink-0" />
-                    <span className="truncate">{warehouse.addressWithZip}, {warehouse.city}, {warehouse.state}</span>
+                  <div className="flex items-start text-slate-500 font-semibold bg-slate-50 self-start px-4 py-2 rounded-2xl border border-slate-100 max-w-full">
+                    <MapPin className="w-5 h-5 text-orange-500 mr-2 mt-0.5 shrink-0" />
+                    <span className="break-words font-medium">{warehouse.addressWithZip}, {warehouse.city}, {warehouse.state}</span>
                   </div>
                 </div>
                 
-                <div className="bg-slate-900 p-6 rounded-3xl min-w-[220px] shadow-2xl shadow-slate-900/20 group hover:scale-[1.02] transition-transform duration-300">
+                <div className="bg-slate-900 p-6 rounded-3xl shrink-0 min-w-[220px] shadow-2xl shadow-slate-900/20 group hover:scale-[1.02] transition-transform duration-300">
                   <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" /> Starting Price
                   </div>
@@ -438,18 +438,18 @@ function ModernStat({ icon: Icon, label, value, delay }) {
 function SidebarInfoBox({ icon: Icon, label, value, isLocked }) {
   return (
     <div className="flex items-center gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 hover:border-orange-200 hover:bg-white transition-all group">
-      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-orange-100">
+      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-orange-100 shrink-0">
         <Icon className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{label}</p>
         {isLocked ? (
           <div className="flex items-center gap-1.5 text-slate-400">
-            <Lock className="w-3.5 h-3.5" />
-            <p className="text-xs font-bold italic">Locked by Owner</p>
+            <Lock className="w-3.5 h-3.5 shrink-0" />
+            <p className="text-xs font-bold italic truncate">Locked by Owner</p>
           </div>
         ) : (
-          <p className="text-sm font-black text-slate-800 truncate">{value || 'N/A'}</p>
+          <p className="text-sm font-black text-slate-800 break-words line-clamp-2">{value || 'N/A'}</p>
         )}
       </div>
     </div>

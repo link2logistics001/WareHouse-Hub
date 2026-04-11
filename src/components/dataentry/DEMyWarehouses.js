@@ -181,7 +181,7 @@ function DEWarehouseCard({ w, onDelete }) {
           <div className="min-w-0">
             <h3 className="font-bold text-slate-800 text-lg truncate">{w.warehouseName || 'Unnamed'}</h3>
             <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || '—'}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3 h-3 shrink-0" />{[w.city, w.state].filter(Boolean).join(', ') || '—'}</span>
               {w.totalArea && <span className="flex items-center gap-1"><Layers className="w-3 h-3" />{Number(w.totalArea).toLocaleString()} sq ft</span>}
             </div>
           </div>
