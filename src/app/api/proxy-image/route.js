@@ -48,9 +48,9 @@ export async function GET(request) {
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
 
-    // Only allow image content types
-    if (!contentType.startsWith('image/')) {
-      return new Response('Not an image', { status: 400 });
+    // Only allow image and PDF content types
+    if (!contentType.startsWith('image/') && contentType !== 'application/pdf') {
+      return new Response('Not an allowed file type', { status: 400 });
     }
 
     const buffer = await response.arrayBuffer();

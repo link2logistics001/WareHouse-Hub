@@ -301,7 +301,7 @@ export default function AddWarehouse({ setActiveTab }) {
       if (user.uid !== uid) { setSubmitError('Session mismatch detected. Please log out and log in again.'); setSubmitting(false); return; }
 
       const sanitizeForPath = (str) => str.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
-      const safeEmail = sanitizeForPath(ownerDetails.email);
+      const safeEmail = sanitizeForPath(user.email);
       const safeWHName = sanitizeForPath(warehouseDetails.warehouseName);
       const basePath = `warehouse_photos/${safeEmail}/${safeWHName}`;
 

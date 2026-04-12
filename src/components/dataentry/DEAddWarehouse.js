@@ -142,7 +142,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
       if (user.uid !== uid) { setSubmitError('Session mismatch.'); setSubmitting(false); return; }
 
       const safeWarehouseName = warehouseDetails.warehouseName.trim().replace(/[^a-zA-Z0-9-]/g, '_');
-      const basePath = `warehouse_photos/${ownerDetails.email.trim()}/${safeWarehouseName}`;
+      const basePath = `warehouse_photos/${user.email.trim()}/${safeWarehouseName}`;
 
       const filesToUpload = [photos.frontView, photos.insideView, photos.dockArea, photos.rateCard].filter(f => f !== null);
       if (filesToUpload.length === 0) setUploadProgress(100);
