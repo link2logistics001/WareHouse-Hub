@@ -186,13 +186,13 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.span
-                className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm"
+              <motion.div
+                className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-md p-0.5"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                L2L
-              </motion.span>
+                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
+              </motion.div>
               <span className="group-hover:text-orange-500 transition-colors">Link2Logistics</span>
             </motion.a>
 
@@ -271,13 +271,13 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.span
-                className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm"
+              <motion.div
+                className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-md p-0.5"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                L2L
-              </motion.span>
+                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
+              </motion.div>
               <span>Link2Logistics</span>
             </motion.a>
 
