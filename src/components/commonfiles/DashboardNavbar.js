@@ -13,8 +13,8 @@ export default function DashboardNavbar({ user, onLogout }) {
           
           {/* LEFT SIDE: Logo & Brand */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.reload()}>
-            <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white font-bold shadow-md">
-              L2L
+            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-md overflow-hidden p-0.5">
+              <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-xl font-bold text-slate-900 tracking-tight">Link2Logistics</span>
           </div>

@@ -22,8 +22,8 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDraw
       
       {/* Brand Logo Area */}
       <div className={`h-20 flex items-center border-b border-white/5 shrink-0 bg-white/[0.02] ${isDrawer ? 'px-8' : 'px-[1.375rem]'}`}>
-        <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-700 rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-orange-600/20">
-          L2L
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shrink-0 shadow-lg shadow-orange-600/20 overflow-hidden p-0.5">
+          <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
         </div>
         <span className={`ml-4 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 whitespace-nowrap ${containerClasses}`}>
           Link2Logistics

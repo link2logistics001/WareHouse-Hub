@@ -29,8 +29,8 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
         <div className="w-64 bg-white h-screen border-r border-slate-200 flex flex-col fixed left-0 top-0 z-50">
             {/* Brand */}
             <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    L2L
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white shadow-sm overflow-hidden border border-orange-100">
+                    <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain p-0.5" />
                 </div>
                 <div>
                     <span className="text-base font-bold text-slate-900 leading-none block">Link2Logistics</span>
