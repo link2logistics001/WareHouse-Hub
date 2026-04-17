@@ -14,7 +14,9 @@ import {
     MapPin, Shield, AlertTriangle, X, Wifi, WifiOff,
     Settings, Package, Building2, Tag, Loader2, Database,
     Image, Eye, ChevronLeft, ChevronRight, ZoomIn,
+    Users, UserX, Ban, UserSquare2
 } from 'lucide-react';
+import { blockUser } from '@/lib/auth';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -23,6 +25,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
+        { id: 'block-people', label: 'Block People', icon: Users },
     ];
 
     return (
@@ -90,7 +93,9 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
 // ─────────────────────────────────────────────────────────────────────
 export default function AdminDashboard({ user, onLogout }) {
     const [warehouses, setWarehouses] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [usersLoading, setUsersLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
@@ -147,6 +152,24 @@ export default function AdminDashboard({ user, onLogout }) {
         return () => unsub();
     }, []);
 
+    // Fetch all users for "Block People" view
+    useEffect(() => {
+        setUsersLoading(true);
+        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+        const unsub = onSnapshot(q,
+            (snap) => {
+                const allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                setUsers(allUsers);
+                setUsersLoading(false);
+            },
+            (err) => {
+                console.error('Admin user listener error:', err);
+                setUsersLoading(false);
+            }
+        );
+        return () => unsub();
+    }, []);
+
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
         setTimeout(() => setToast(null), 3500);
@@ -179,6 +202,16 @@ export default function AdminDashboard({ user, onLogout }) {
         }
     };
 
+    const handleBlockUser = async (uid, isBlocked) => {
+        try {
+            await blockUser(uid, isBlocked);
+            showToast(isBlocked ? 'User blocked.' : 'User unblocked.', isBlocked ? 'error' : 'success');
+        } catch (err) {
+            console.error('Failed to update user block status:', err);
+            showToast('Action failed. Please try again.', 'error');
+        }
+    };
+
     const handleLogout = async () => {
         try { await logoutUser(); } catch { /* non-critical */ }
         onLogout?.();
@@ -198,6 +231,7 @@ export default function AdminDashboard({ user, onLogout }) {
             w.warehouseName?.toLowerCase().includes(q) ||
             w.contactPerson?.toLowerCase().includes(q) ||
             w.email?.toLowerCase().includes(q) ||
+            w._email?.toLowerCase().includes(q) ||
             w.city?.toLowerCase().includes(q) ||
             w.state?.toLowerCase().includes(q);
         return matchFilter && matchSearch;
@@ -275,7 +309,7 @@ export default function AdminDashboard({ user, onLogout }) {
                                 exit={{ x: 20, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeView === 'overview' ? 'Overview' : 'Warehouse Listings'}
+                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -321,6 +355,25 @@ export default function AdminDashboard({ user, onLogout }) {
                                     actionLoading={actionLoading}
                                     expandedRow={expandedRow}
                                     setExpandedRow={setExpandedRow}
+                                />
+                            </motion.div>
+                        ) : activeView === 'block-people' ? (
+                            <motion.div
+                                key="block-people"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <BlockPeopleView 
+                                    users={users} 
+                                    loading={usersLoading} 
+                                    handleBlockUser={handleBlockUser}
+                                    onViewWarehouses={(email) => {
+                                        setSearch(email);
+                                        setFilter('all');
+                                        setActiveView('warehouses');
+                                    }}
                                 />
                             </motion.div>
                         ) : null}
@@ -739,6 +792,96 @@ function DetailGroup({ title, items }) {
 // Photo Thumbnail with skeleton loader
 // ─────────────────────────────────────────────────────────────────────
 const loadedImagesCache = new Set();
+
+function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
+    const [search, setSearch] = useState('');
+
+    const filtered = users.filter(u => {
+        const q = search.toLowerCase();
+        return !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
+    });
+
+    if (loading) return <LoadingState />;
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-4 justify-between">
+                <h3 className="text-xl font-bold text-slate-800">Community Safety</h3>
+                <div className="relative w-full sm:w-80">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by email or name…"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 italic">
+                    {['Name', 'Email', 'Role', 'Status / Actions'].map(h => (
+                        <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{h}</span>
+                    ))}
+                </div>
+
+                <div className="divide-y divide-slate-100">
+                    {filtered.map(u => (
+                        <div key={u.id} className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors">
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-slate-900 truncate">{u.name || 'Anonymous'}</p>
+                                <span className="text-[10px] text-slate-400 block mt-0.5">Joined {u.createdAt?.seconds ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}</span>
+                            </div>
+                            <p className="text-sm text-slate-600 truncate">{u.email}</p>
+                            <div>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                    u.userType === 'owner' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 
+                                    u.userType === 'merchant' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-500'
+                                }`}>
+                                    {u.userType || 'User'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {u.isBlocked ? (
+                                    <button 
+                                        onClick={() => handleBlockUser(u.id, false)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors"
+                                    >
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> Unblock
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={() => handleBlockUser(u.id, true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
+                                    >
+                                        <Ban className="w-3.5 h-3.5" /> Block
+                                    </button>
+                                )}
+                                
+                                {u.userType === 'owner' && (
+                                    <button 
+                                        onClick={() => onViewWarehouses(u.email)}
+                                        className="p-1.5 bg-slate-50 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                                        title="View Owner Warehouses"
+                                    >
+                                        <Building2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {filtered.length === 0 && (
+                    <div className="p-12 text-center text-slate-400">
+                        <UserX className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-medium">No users found matching your criteria</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 function PhotoThumb({ src, alt, onClick, className = '' }) {
     const [loaded, setLoaded] = useState(() => loadedImagesCache.has(src));

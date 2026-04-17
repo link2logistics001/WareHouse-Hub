@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useSpring, AnimatePresence, useMotionValueEvent } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, User, LayoutDashboard, ChevronDown } from 'lucide-react';
@@ -11,6 +11,7 @@ import { auth } from '@/lib/firebase';
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
@@ -22,21 +23,27 @@ export default function Navbar() {
   const isHome = pathname === '/';
   const navScrolled = !isHome || scrolled;
 
-  const { scrollYProgress } = useScroll()
+  const { scrollYProgress, scrollY } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   })
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+  // Smart Navbar Hide/Show based on scroll direction
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() || 0;
+    
+    // Check if scrolled past top buffer
+    setScrolled(latest > 20);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // Hide if scrolling down and past 150px, otherwise show
+    if (latest > previous && latest > 150) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+  });
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -166,12 +173,15 @@ export default function Navbar() {
       />
 
       <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-        className={`fixed w-full top-0 z-50 transition-all duration-300 border-b ${navScrolled
-          ? 'bg-white/90 backdrop-blur-xl border-slate-200 shadow-sm py-0'
-          : 'bg-transparent border-transparent py-2'
+        variants={{
+          visible: { y: 0 },
+          hidden: { y: "-100%" }
+        }}
+        animate={hidden ? "hidden" : "visible"}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className={`fixed w-full top-0 z-50 transition-all duration-500 border-b ${navScrolled
+          ? 'bg-white/95 backdrop-blur-md border-slate-200 shadow-sm'
+          : 'bg-transparent border-transparent'
           }`}
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -181,18 +191,23 @@ export default function Navbar() {
             <motion.a
               href="/"
               onClick={(e) => handleNavClick(e, '#')}
-              className={`font-display font-bold text-xl flex items-center gap-2 group transition-colors duration-300 ${navScrolled ? 'text-slate-900' : 'text-white'
+              className={`font-display font-bold text-xl flex items-center gap-3 group transition-colors duration-300 ${navScrolled ? 'text-slate-900' : 'text-white'
                 }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <motion.div
-                className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-md p-0.5"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
+              <div
+                className={`relative w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden border p-1 transition-all duration-500 ease-out ${
+                  navScrolled 
+                    ? 'bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border-slate-100 group-hover:shadow-[0_8px_16px_rgba(230,81,0,0.12)] group-hover:border-orange-200' 
+                    : 'bg-white/95 backdrop-blur-md shadow-[0_4px_20px_rgba(255,255,255,0.15)] border-white/60 group-hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)]'
+                }`}
               >
-                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
-              </motion.div>
+                {/* Sweeping Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -skew-x-12 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out z-20 pointer-events-none" />
+                
+                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain relative z-10 drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
+              </div>
               <span className="group-hover:text-orange-500 transition-colors">Link2Logistics</span>
             </motion.a>
 
@@ -266,18 +281,20 @@ export default function Navbar() {
             <motion.a
               href="/"
               onClick={(e) => handleNavClick(e, '#')}
-              className={`font-display font-bold text-xl flex items-center gap-2 group ${navScrolled ? 'text-slate-900' : 'text-white'
+              className={`font-display font-bold text-xl flex items-center gap-3 group ${navScrolled ? 'text-slate-900' : 'text-white'
                 }`}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.div
-                className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-md p-0.5"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
+              <div
+                className={`relative w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden border p-1 transition-all duration-500 ease-out ${
+                  navScrolled 
+                    ? 'bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] border-slate-100' 
+                    : 'bg-white/95 backdrop-blur-md shadow-[0_4px_20px_rgba(255,255,255,0.15)] border-white/60'
+                }`}
               >
-                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
-              </motion.div>
+                <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain relative z-10 drop-shadow-sm" />
+              </div>
               <span>Link2Logistics</span>
             </motion.a>
 
@@ -317,54 +334,56 @@ export default function Navbar() {
           </div>
 
           {/* Mobile dropdown menu */}
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-xl"
-            >
-              <div className="px-6 py-4 flex flex-col gap-1">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    href={`/${link.href}`}
-                    onClick={e => handleNavClick(e, link.href)}
-                    className="py-3 text-base font-semibold text-slate-700 hover:text-orange-500 border-b border-slate-100 last:border-0 transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-xl"
+              >
+                <div className="px-6 py-4 flex flex-col gap-1">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.label}
+                      href={`/${link.href}`}
+                      onClick={e => handleNavClick(e, link.href)}
+                      className="py-3 text-base font-semibold text-slate-700 hover:text-orange-500 border-b border-slate-100 last:border-0 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
 
-                {user ? (
-                  /* Logged-in mobile menu items */
-                  <>
-                    <button
-                      onClick={handleDashboard}
-                      className="py-3 text-base font-semibold text-slate-700 hover:text-orange-500 border-b border-slate-100 transition-colors text-left flex items-center gap-2"
+                  {user ? (
+                    /* Logged-in mobile menu items */
+                    <>
+                      <button
+                        onClick={handleDashboard}
+                        className="py-3 text-base font-semibold text-slate-700 hover:text-orange-500 border-b border-slate-100 transition-colors text-left flex items-center gap-2"
+                      >
+                        <LayoutDashboard className="w-4 h-4" /> Dashboard
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="mt-3 py-3 px-4 bg-red-50 text-red-600 font-semibold rounded-xl text-center hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" /> Sign out
+                      </button>
+                    </>
+                  ) : (
+                    <a
+                      href="/#login"
+                      onClick={(e) => handleNavClick(e, '#login')}
+                      className="mt-3 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl text-center hover:bg-orange-600 transition-colors"
                     >
-                      <LayoutDashboard className="w-4 h-4" /> Dashboard
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="mt-3 py-3 px-4 bg-red-50 text-red-600 font-semibold rounded-xl text-center hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" /> Sign out
-                    </button>
-                  </>
-                ) : (
-                  <a
-                    href="/#login"
-                    onClick={(e) => handleNavClick(e, '#login')}
-                    className="mt-3 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl text-center hover:bg-orange-600 transition-colors"
-                  >
-                    Login / SignUp
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          )}
+                      Login / SignUp
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </nav>
       </motion.header>
     </>

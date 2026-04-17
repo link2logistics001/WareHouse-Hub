@@ -16,6 +16,7 @@ import AdminDashboard from '@/components/admin/AdminDashboard'
 import ChatBox from '@/components/commonfiles/ChatBox'
 import FeedbackWidget from '@/components/commonfiles/FeedbackWidget'
 import VerificationBarrier from '@/components/commonfiles/VerificationBarrier'
+import AccountBlocked from '@/components/commonfiles/AccountBlocked'
 
 export default function Home() {
   const { user, loading, setUser } = useAuth()
@@ -58,6 +59,16 @@ export default function Home() {
     if (!user.emailVerified) {
       return (
         <VerificationBarrier 
+          user={user} 
+          onLogout={handleLogout} 
+        />
+      )
+    }
+
+    // ── Blocked Status Check ──
+    if (user.isBlocked) {
+      return (
+        <AccountBlocked 
           user={user} 
           onLogout={handleLogout} 
         />

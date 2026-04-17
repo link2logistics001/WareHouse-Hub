@@ -87,7 +87,8 @@ function WhAnimatedBox({ slot, isActive, onLanded }) {
   useEffect(() => {
     function step(ts) {
       if (!startRef.current) startRef.current = ts
-      const t = Math.min((ts - startRef.current) / 900, 1)
+      // Slowed down heavily as requested
+      const t = Math.min((ts - startRef.current) / 1800, 1)
       setProgress(1 - Math.pow(1 - t, 3))
       if (t < 1) frameRef.current = requestAnimationFrame(step)
       else onLanded && onLanded()
@@ -164,7 +165,7 @@ function WarehouseLeftPanel() {
       timerRef.current = setTimeout(() => {
         usedSlots.current.clear()
         setBoxes([]); setBeams([]); setLanding(null)
-        timerRef.current = setTimeout(spawnNext, 600)
+        timerRef.current = setTimeout(spawnNext, 1200)
       }, 2000)
       return
     }
@@ -182,7 +183,7 @@ function WarehouseLeftPanel() {
     setBeams(prev => [...prev, { slot: current.slot, id: beamId }])
     setTimeout(() => setBeams(prev => prev.filter(b => b.id !== beamId)), 900)
     setLanding(null)
-    timerRef.current = setTimeout(spawnNext, 1100 + Math.random() * 400)
+    timerRef.current = setTimeout(spawnNext, 1800 + Math.random() * 800)
   }
 
   useEffect(() => {
@@ -292,7 +293,7 @@ function RoleStep({ onSelect }) {
       id: 'merchant',
       label: 'Business Clients',
       icon: (
-        <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
+        <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
         </svg>
       ),
@@ -302,7 +303,7 @@ function RoleStep({ onSelect }) {
       id: 'owner',
       label: 'Warehouse Partners',
       icon: (
-        <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
+        <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
         </svg>
       ),
@@ -311,23 +312,34 @@ function RoleStep({ onSelect }) {
   ]
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[420px] w-full">
-      <div className="text-center mb-10">
-        <span className="px-4 py-1.5 bg-orange-50 text-[#E65100] rounded-full text-[10px] font-bold uppercase tracking-widest border border-orange-100">
-          Step 1 of 2
+    <div className="flex flex-col items-center justify-center min-h-[420px] w-full relative">
+      {/* Decorative Subdued Orange Background Elements */}
+      <div className="absolute top-4 left-8 w-16 h-16 rounded-full border border-orange-200/40 opacity-70 animate-pulse hidden sm:block" style={{ animationDuration: '4s' }}></div>
+      <div className="absolute bottom-12 right-6 w-24 h-24 rounded-full border border-orange-100/50 opacity-60 hidden sm:block" style={{ transform: 'scale(1.2)' }}></div>
+      
+      <div className="text-center mb-10 relative z-10">
+        <span className="px-4 py-1.5 bg-orange-50 text-[#E65100] rounded-full text-[10px] font-bold uppercase tracking-widest border border-orange-100/60 shadow-sm relative overflow-hidden group">
+          <span className="relative z-10">Step 1 of 2</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-[wh_lineGrow_2s_infinite]" />
         </span>
-        <h3 className="text-3xl font-bold text-slate-900 mt-6">Who are you?</h3>
-        <p className="text-slate-500 mt-2">Select your role to continue your journey</p>
+        <h3 className="text-3xl font-bold text-slate-900 mt-6 tracking-tight">Who are you?</h3>
+        <p className="text-slate-500 mt-2 font-medium">Select your role to continue your journey</p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mx-auto">
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-lg mx-auto relative z-10">
         {roles.map((role) => (
           <button key={role.id} type="button" onClick={() => onSelect(role.id)}
-            className="group flex flex-col items-center p-8 bg-white border border-slate-100 hover:border-[#E65100] rounded-2xl transition-all duration-300 text-center shadow-sm hover:shadow-xl">
-            <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 group-hover:bg-orange-50 transition-colors">
+            className="group relative flex flex-col items-center p-8 bg-white border border-slate-100 hover:border-[#E65100]/50 hover:ring-2 hover:ring-[#E65100]/10 rounded-[1.5rem] transition-all duration-300 text-center shadow-sm hover:shadow-[0_8px_30px_rgb(230,81,0,0.08)] overflow-hidden transform hover:-translate-y-1">
+            
+            {/* Subtle hover background splash */}
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-bl from-orange-50 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out z-0 mix-blend-multiply" />
+            
+            <div className="w-16 h-16 rounded-full bg-slate-50/80 backdrop-blur-sm flex items-center justify-center mb-5 group-hover:bg-white border border-transparent group-hover:border-orange-100/50 transition-all duration-300 relative z-10 shadow-sm group-hover:shadow">
               {role.icon}
             </div>
-            <span className="font-bold text-slate-900 text-lg">{role.label}</span>
-            <span className="text-xs text-slate-400 mt-1">{role.desc}</span>
+            
+            <span className="font-bold text-slate-900 text-lg relative z-10 group-hover:text-[#E65100] transition-colors duration-300">{role.label}</span>
+            <span className="text-xs text-slate-500 mt-1.5 font-medium relative z-10">{role.desc}</span>
           </button>
         ))}
       </div>
@@ -595,6 +607,71 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CURSOR TRACKER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CursorTracker() {
+  const trackerRef = useRef(null);
+
+  useEffect(() => {
+    let animationFrameId;
+    let currentX = 0, currentY = 0;
+    let targetX = 0, targetY = 0;
+    
+    // Slower, smoother trailing effect
+    const updateTracker = () => {
+      const dx = targetX - currentX;
+      const dy = targetY - currentY;
+      
+      // Kept at 0.08 for that premium heavy drag feel
+      currentX += dx * 0.08;
+      currentY += dy * 0.08;
+
+      if (trackerRef.current) {
+        trackerRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+      }
+      
+      animationFrameId = requestAnimationFrame(updateTracker);
+    };
+
+    const handleMouseMove = (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    };
+    
+    // Initial setup hidden until mouse move
+    currentX = window.innerWidth / 2;
+    currentY = window.innerHeight / 2;
+    targetX = currentX;
+    targetY = currentY;
+
+    window.addEventListener("mousemove", handleMouseMove);
+    animationFrameId = requestAnimationFrame(updateTracker);
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[100] hidden md:block overflow-hidden">
+      {/* Professional subtle warehouse scanner viewfinder */}
+      <div
+        ref={trackerRef}
+        className="absolute top-0 left-0 w-8 h-8 -ml-4 -mt-4 transition-opacity duration-300"
+        style={{ willChange: 'transform' }}
+      >
+        <div className="absolute top-0 left-0 w-2 h-2 border-t-[1.5px] border-l-[1.5px] border-[#E65100]/50" />
+        <div className="absolute top-0 right-0 w-2 h-2 border-t-[1.5px] border-r-[1.5px] border-[#E65100]/50" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-[1.5px] border-l-[1.5px] border-[#E65100]/50" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-[1.5px] border-r-[1.5px] border-[#E65100]/50" />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -609,34 +686,37 @@ export default function Login({ onLoginSuccess }) {
   const slideVariants = makeSlideVariants(direction)
 
   return (
-    <section ref={sectionRef} id="login" className="w-full bg-white py-24 md:py-36 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid md:grid-cols-12 gap-12 items-center">
+    <>
+      <CursorTracker />
+      <section ref={sectionRef} id="login" className="w-full bg-white py-24 md:py-36 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-12 gap-12 items-center">
 
-          {/* LEFT — visible on tablet and above */}
-          <div className="hidden md:flex md:col-span-5 h-full items-stretch">
-            <WarehouseLeftPanel />
-          </div>
-
-          {/* RIGHT — auth card */}
-          <div className="md:col-span-7 relative">
-            <div className="bg-slate-50 rounded-[3rem] shadow-2xl shadow-slate-200/50 p-8 md:p-16 border border-slate-100 min-h-[550px] overflow-hidden">
-              <AnimatePresence mode="wait" initial={false}>
-                {step === 1 ? (
-                  <motion.div key="step1" variants={slideVariants} initial="initial" animate="animate" exit="exit">
-                    <RoleStep onSelect={handleRoleSelect} />
-                  </motion.div>
-                ) : (
-                  <motion.div key="step2" variants={slideVariants} initial="initial" animate="animate" exit="exit">
-                    <AuthFormStep userType={userType} onBack={handleBack} onLoginSuccess={onLoginSuccess} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* LEFT — visible on tablet and above */}
+            <div className="hidden md:flex md:col-span-5 h-full items-stretch">
+              <WarehouseLeftPanel />
             </div>
-          </div>
 
+            {/* RIGHT — auth card */}
+            <div className="md:col-span-7 relative">
+              <div className="bg-slate-50 rounded-[3rem] shadow-2xl shadow-slate-200/50 p-8 md:p-16 border border-slate-100 min-h-[550px] overflow-hidden">
+                <AnimatePresence mode="wait" initial={false}>
+                  {step === 1 ? (
+                    <motion.div key="step1" variants={slideVariants} initial="initial" animate="animate" exit="exit">
+                      <RoleStep onSelect={handleRoleSelect} />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="step2" variants={slideVariants} initial="initial" animate="animate" exit="exit">
+                      <AuthFormStep userType={userType} onBack={handleBack} onLoginSuccess={onLoginSuccess} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

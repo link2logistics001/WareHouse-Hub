@@ -84,16 +84,17 @@ export const AuthProvider = ({ children }) => {
                 }
               }, 800);
             } else {
-              setUser({
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                name: userData.name || firebaseUser.displayName || '',
-                company: userData.company || '',
-                userType: userData.userType,
-                verified: userData.verified || false,
-                emailVerified: firebaseUser.emailVerified,
-                phone: userData.phone || userData.mobile || ''
-              });
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: userData.name || firebaseUser.displayName || '',
+              company: userData.company || '',
+              userType: userData.userType,
+              verified: userData.verified || false,
+              emailVerified: firebaseUser.emailVerified,
+              phone: userData.phone || userData.mobile || '',
+              isBlocked: userData.isBlocked || false
+            });
             }
           } catch (err) {
 

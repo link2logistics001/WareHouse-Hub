@@ -1,5 +1,52 @@
 import React from 'react';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HOW IT WORKS ILLUSTRATION (ISOMETRIC BOXES)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const WH_ORANGE = "#e65100"
+const WH_SLATE_LIGHT = "#e2e8f0"
+
+function whIso(gx, gy, gz) {
+  return { x: 100 + (gx - gy) * 35, y: 100 + (gx + gy) * 18 - gz * 22 }
+}
+
+function WhIsoBox({ gx, gy, gz, topColor, leftColor, rightColor, delay=0 }) {
+  const w = 0.9, d = 0.9, h = 0.55
+  const p = (pt) => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`
+  const tl = whIso(gx, gy, gz + h); const tr = whIso(gx + w, gy, gz + h); 
+  const tb = whIso(gx + w, gy + d, gz + h); const tbl = whIso(gx, gy + d, gz + h);
+  const fl = whIso(gx, gy + d, gz); const fr = whIso(gx + w, gy + d, gz); 
+  const br = whIso(gx + w, gy, gz)
+  
+  return (
+    <g style={{ animation: `how_float 4s ease-in-out ${delay}s infinite alternate` }}>
+      <polygon points={[tl, tr, tb, tbl].map(p).join(" ")} fill={topColor} stroke={WH_SLATE_LIGHT} strokeWidth="0.5" strokeLinejoin="round" />
+      <polygon points={[tbl, tb, fr, fl].map(p).join(" ")} fill={leftColor} stroke={WH_SLATE_LIGHT} strokeWidth="0.5" strokeLinejoin="round" />
+      <polygon points={[tr, br, fr, tb].map(p).join(" ")} fill={rightColor} stroke={WH_SLATE_LIGHT} strokeWidth="0.5" strokeLinejoin="round" />
+    </g>
+  )
+}
+
+function HowItWorksIllustration() {
+  return (
+    <div className="absolute top-0 right-[-5%] w-[350px] h-[350px] pointer-events-none opacity-30 hidden md:block z-0" style={{ transform: 'translate(15%, -45%)' }}>
+      <style>{`@keyframes how_float { 0% { transform: translateY(0px); } 100% { transform: translateY(-12px); } }`}</style>
+      <svg viewBox="0 -50 250 250" width="100%" height="100%">
+        {/* Floating Stack of Boxes */}
+        <WhIsoBox gx={3} gy={1} gz={0} topColor="rgba(241,245,249,0.9)" leftColor="rgba(226,232,240,0.9)" rightColor="rgba(203,213,225,0.9)" delay={0} />
+        <WhIsoBox gx={2} gy={1} gz={0} topColor={`${WH_ORANGE}aa`} leftColor={`${WH_ORANGE}88`} rightColor={`${WH_ORANGE}99`} delay={0.2} />
+        <WhIsoBox gx={2} gy={2} gz={0} topColor="rgba(241,245,249,0.9)" leftColor="rgba(226,232,240,0.9)" rightColor="rgba(203,213,225,0.9)" delay={0.4} />
+        <WhIsoBox gx={2} gy={1} gz={1} topColor={`${WH_ORANGE}cc`} leftColor={`${WH_ORANGE}ee`} rightColor={`${WH_ORANGE}bb`} delay={0.6} />
+      </svg>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN TEMPLATE
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function HowItWorks() {
   const steps = [
     {
@@ -35,12 +82,14 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="how-link2logistics-works" className="py-24 bg-white w-full">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="how-link2logistics-works" className="py-24 bg-white w-full relative overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        <HowItWorksIllustration />
 
         {/* Section Header */}
         <div className="text-center mb-16 relative z-10">
-          <h2 className="text-sm font-bold tracking-widest text-orange-500 uppercase mb-3">
+          <h2 className="text-sm font-bold tracking-widest text-orange-500 uppercase mb-3 drop-shadow-sm">
             How it Works
           </h2>
           <h3 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight">
@@ -49,11 +98,11 @@ export default function HowItWorks() {
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 relative z-20">
           {steps.map((step) => (
             <div
               key={step.id}
-              className="relative flex flex-col items-start p-8 bg-slate-50 rounded-2xl border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 group overflow-hidden"
+              className="relative flex flex-col items-start p-8 bg-slate-50/90 backdrop-blur-sm rounded-2xl border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50 group overflow-hidden"
             >
               {/* Step Number Background Watermark */}
               <span className="absolute top-4 right-6 text-7xl font-extrabold text-slate-200/50 transition-colors duration-300 group-hover:text-orange-500/10 z-0 select-none">

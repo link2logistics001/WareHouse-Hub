@@ -296,6 +296,13 @@ export const loginUser = async (email, password, userType) => {
         throw err;
       }
 
+      if (userData.isBlocked) {
+        await signOut(auth);
+        const err = new Error('This account has been disabled. Please contact support.');
+        err.code = 'auth/user-disabled';
+        throw err;
+      }
+
       return {
         uid: user.uid,
         email: user.email,
@@ -306,7 +313,8 @@ export const loginUser = async (email, password, userType) => {
         emailVerified: userData.emailVerified || user.emailVerified || false,
         phone: userData.phone || userData.mobile || '',
         photoURL: userData.photoURL || user.photoURL || null,
-        nameChanged: userData.nameChanged || false
+        nameChanged: userData.nameChanged || false,
+        isBlocked: userData.isBlocked || false
       };
     } else {
       // Firebase auth succeeded but no Firestore doc — treat as unregistered
@@ -417,6 +425,13 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
       throw err;
     }
 
+    if (existingUserData.isBlocked) {
+      await signOut(auth);
+      const err = new Error('This account has been disabled. Please contact support.');
+      err.code = 'auth/user-disabled';
+      throw err;
+    }
+
     return {
       uid: user.uid,
       email: user.email,
@@ -427,7 +442,8 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
       emailVerified: existingUserData.emailVerified || user.emailVerified || false,
       phone: existingUserData.phone || existingUserData.mobile || '',
       photoURL: existingUserData.photoURL || user.photoURL || null,
-      nameChanged: existingUserData.nameChanged || false
+      nameChanged: existingUserData.nameChanged || false,
+      isBlocked: existingUserData.isBlocked || false
     };
   } catch (error) {
     if (!error.code || !['auth/user-not-registered', 'auth/popup-closed-by-user', 'auth/wrong-user-type'].includes(error.code)) {
@@ -615,6 +631,26 @@ export const uploadProfileImage = async (uid, file) => {
     } else {
       throw error;
     }
+  }
+};
+
+/**
+ * Set user blocked status in Firestore
+ * @param {string} uid - User ID
+ * @param {boolean} isBlocked - Blocked status
+ * @returns {Promise<void>}
+ */
+export const blockUser = async (uid, isBlocked) => {
+  try {
+    const userResult = await getUserDocParams(uid);
+    if (!userResult) throw new Error('User not found');
+    await updateDoc(userResult.ref, {
+      isBlocked,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    throw error;
   }
 };
 

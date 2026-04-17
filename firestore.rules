@@ -3,103 +3,76 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // --- HELPER FUNCTIONS ---
-    function isAdmin(uid) {
-      return exists(/databases/$(database)/documents/users/admin/accounts/$(uid)) ||
-             (exists(/databases/$(database)/documents/users/$(uid)) && 
-              get(/databases/$(database)/documents/users/$(uid)).data.userType == 'admin');
+    function isAnyAdmin() {
+      // Optimized check: checks the requester's own doc once
+      return request.auth != null && 
+             (exists(/databases/$(database)/documents/users/admin/accounts/$(request.auth.uid)) || 
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin');
     }
 
-    // --- OLD USER PROFILES (For backward compatibility during migration) ---
+    function isNotBlocked() {
+      // Allow if the document exists and isBlocked is NOT true
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid)) || 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked != true;
+    }
+
+    // --- USER PROFILES ---
     match /users/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Users can always read their own doc (needed to see they are blocked)
+      // Admins can list and read all users
+      allow read: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
+      allow write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
     }
 
-    // --- NEW USER PROFILES (Categorized) ---
     match /users/{userType}/accounts/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-      allow write: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
     }
 
-    // --- COLLECTIONGROUP RULE FOR 'warehouses' ---
-    // Required for collectionGroup queries used by Admin, Merchant browse, and Search page.
-    // This rule matches ANY subcollection named 'warehouses' anywhere in the DB.
+    // --- WAREHOUSES ---
     match /{path=**}/warehouses/{warehouseId} {
-      allow read: if true;  // Public read for approved warehouses; app filters by status
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      // Public read remains allowed
+      allow read: if true;
+      // Deny creation/updates if user is blocked
+      allow create, update, delete: if request.auth != null && isNotBlocked();
     }
     
-    // --- APP ACCOUNTS FOR 'accounts' COLLECTIONGROUP QUERY ---
-    // Allows auth service to query accounts by email across all roles.
+    // --- MESSAGING ---
+    match /conversations/{convId} {
+      // Deny access to conversations if user is blocked
+      allow read, write: if request.auth != null && isNotBlocked() && (
+        resource == null || 
+        request.auth.uid == resource.data.merchantId || 
+        request.auth.uid == resource.data.ownerId ||
+        isAnyAdmin()
+      );
+         
+      match /messages/{msgId} {
+        allow read, write: if request.auth != null && isNotBlocked();
+      }
+    }
+
+    // --- PRESERVED RULES ---
     match /{path=**}/accounts/{userId} {
       allow read: if request.auth != null || true; // Needed for pre-auth email check
     }
 
-    // --- VISITORS ---
     match /visitors/{docId} {
       allow read, write: if true;
     }
 
-    // --- FEEDBACKS ---
     match /feedbacks/{docId} {
       allow read: if request.auth != null;
       allow create: if true;
-      allow update, delete: if request.auth != null;
+      allow update, delete: if request.auth != null && isNotBlocked();
     }
 
-    // --- WAREHOUSE AVAILABILITY ---
     match /warehouse_availability/{monthKey}/entries/{entryId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null
-        && request.resource.data.owner_id == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.owner_id == request.auth.uid
-        && request.resource.data.owner_id == request.auth.uid;
-      allow delete: if request.auth != null
-        && resource.data.owner_id == request.auth.uid;
+      allow create, update, delete: if request.auth != null && isNotBlocked();
     }
 
-    // --- CONTACT DETAILS ---
-    // Structure: contact_details/{role}/users/{userId}
-    // Each user can read/write only their own contact document.
     match /contact_details/{role}/users/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-      allow create: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-      allow update: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-      allow delete: if request.auth != null && (
-        request.auth.uid == userId || isAdmin(request.auth.uid)
-      );
-    }
-
-    // --- SECURE & ORGANIZED MESSAGING ---
-    match /conversations/{convId} {
-      allow read: if request.auth != null && (
-        resource == null || 
-        request.auth.uid == resource.data.merchantId || 
-        request.auth.uid == resource.data.ownerId
-      );
-      
-      allow write: if request.auth != null && (
-        (resource == null && request.auth.uid == request.resource.data.merchantId) ||
-        (resource != null && (request.auth.uid == resource.data.merchantId || request.auth.uid == resource.data.ownerId))
-      );
-         
-      match /messages/{msgId} {
-        allow read, write: if request.auth != null;
-      }
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
     }
   }
 }

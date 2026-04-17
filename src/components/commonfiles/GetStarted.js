@@ -98,6 +98,49 @@ export default function HowItWorks() {
     <section ref={containerRef} className="relative bg-white min-h-[300vh]">
       <div className="sticky top-0 h-screen flex items-center overflow-hidden px-4 md:px-24">
 
+        {/* Subtle Background Elements */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {/* Top Left Breathing Blob */}
+          <motion.div
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0],
+              x: [-10, 10, -10],
+              y: [-10, 10, -10]
+            }}
+            transition={{ 
+              duration: 20, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="absolute -top-40 -left-20 w-[600px] h-[600px] text-[#E65100]/[0.04]"
+          >
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-current">
+              <path d="M44.7,-76.4C58.1,-69.2,69.5,-57.4,76.4,-43.8C83.3,-30.2,85.7,-15.1,84.1,-0.9C82.5,13.2,76.9,26.5,69.1,38.6C61.3,50.7,51.3,61.6,39.1,69.1C26.9,76.6,13.5,80.7,-0.7,81.9C-14.8,83.1,-29.6,81.3,-43.1,74.5C-56.6,67.7,-68.8,55.9,-76.6,42.1C-84.4,28.3,-87.8,12.5,-85.2,-2.1C-82.6,-16.7,-74,-30.1,-64.1,-42.2C-54.2,-54.3,-43.1,-65.1,-30.4,-72.7C-17.7,-80.3,-3.4,-84.7,44.7,-76.4Z" transform="translate(100 100)" />
+            </svg>
+          </motion.div>
+
+          {/* Bottom Right Floating Blob */}
+          <motion.div
+            animate={{ 
+              scale: [1.1, 1, 1.1],
+              rotate: [0, -8, 8, 0],
+              x: [20, -20, 20],
+              y: [20, -20, 20]
+            }}
+            transition={{ 
+              duration: 25, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="absolute -bottom-20 -right-20 w-[500px] h-[500px] text-[#E65100]/[0.03]"
+          >
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-current">
+              <path d="M38.1,-65.7C50,-58.4,60.8,-49.1,68.9,-37.8C77,-26.5,82.4,-13.2,82.8,0.2C83.2,13.7,78.6,27.3,70.5,38.6C62.4,49.9,50.8,58.8,38.1,66.1C25.4,73.4,11.7,78.9,-1.4,81.4C-14.5,83.8,-29,83.2,-41.7,76.8C-54.4,70.4,-65.3,58.3,-72.1,44.6C-78.9,30.9,-81.6,15.5,-80.8,0.5C-80,-14.5,-75.7,-29.1,-67.2,-41.4C-58.7,-53.7,-46,-63.7,-32.8,-70.3C-19.6,-76.9,-5.8,-80.1,38.1,-65.7Z" transform="translate(100 100)" />
+            </svg>
+          </motion.div>
+        </div>
+
         {/* Subtle Background Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
