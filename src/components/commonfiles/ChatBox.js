@@ -12,18 +12,24 @@ export default function ChatBox({ warehouse, user, onClose }) {
 
   // Initialize/Fetch conversation and listen for messages
   useEffect(() => {
-    let unsubscribe = () => {}
+    let unsubscribe = () => { }
 
     const initChat = async () => {
       try {
+        const targetOwnerId = warehouse.ownerId || warehouse.owner_id || warehouse.userId;
+        const targetWarehouseId = warehouse.id || warehouse.warehouseId;
+        const currentUserId = user.id || user.uid;
+        
         // IMPORTANT: The merchantId is either the logged-in user (if they are a merchant)
         // or the specific merchant who sent the inquiry (if the owner is viewing)
-        const merchantId = ['owner', 'admin', 'dataentry'].includes(user.userType) ? warehouse.merchantId : (user.id || user.uid);
-        
+        const merchantId = ['owner', 'admin', 'dataentry', 'warehousepartner'].includes(user.userType?.toLowerCase()) 
+          ? (warehouse.merchantId || warehouse.userId) 
+          : currentUserId;
+
         const conv = await getOrCreateConversation(
-          warehouse.id || warehouse.warehouseId, 
-          merchantId, 
-          warehouse.ownerId,
+          targetWarehouseId,
+          merchantId,
+          targetOwnerId,
           {
             warehouseName: warehouse.warehouseName || warehouse.name,
             merchantName: warehouse.merchantName || user.name || user.displayName || 'Business Clients',
@@ -43,12 +49,15 @@ export default function ChatBox({ warehouse, user, onClose }) {
         )
 
         unsubscribe = onSnapshot(q, (snapshot) => {
-          const msgs = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate().toISOString() || new Date().toISOString()
-          }))
-          
+          const msgs = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              timestamp: data.timestamp ? data.timestamp.toDate().toISOString() : new Date().toISOString()
+            };
+          })
+
           if (msgs.length === 0) {
             setMessages([{
               id: 'INTRO',
@@ -63,7 +72,8 @@ export default function ChatBox({ warehouse, user, onClose }) {
           }
         })
       } catch (error) {
-
+        console.error('Error initializing chat:', error);
+        alert('Chat error: ' + error.message);
       }
     }
 
@@ -83,8 +93,8 @@ export default function ChatBox({ warehouse, user, onClose }) {
       const text = newMessage.trim()
       setNewMessage('') // Clear input immediately for UX
       await sendMessage(
-        conversation.id, 
-        user.id || user.uid, 
+        conversation.id,
+        user.id || user.uid,
         text,
         user.userType || 'merchant'
       )
@@ -179,11 +189,10 @@ export default function ChatBox({ warehouse, user, onClose }) {
                   transition={{ duration: 0.3 }}
                 >
                   <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                    <div className={`px-4 py-3 rounded-2xl ${
-                      isOwn 
-                        ? 'bg-gradient-to-r from-primary-600 to-orange-500 text-white' 
+                    <div className={`px-4 py-3 rounded-2xl ${isOwn
+                        ? 'bg-gradient-to-r from-primary-600 to-orange-500 text-white'
                         : 'bg-white text-slate-900 border border-slate-200'
-                    }`}>
+                      }`}>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                     </div>
                     <span className="text-xs text-slate-400 px-2">
@@ -239,7 +248,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
             </motion.button>
-            
+
             <div className="flex-1">
               <textarea
                 value={newMessage}

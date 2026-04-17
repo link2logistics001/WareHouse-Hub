@@ -1,78 +1,117 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // --- HELPER FUNCTIONS ---
+    function isAdmin(uid) {
+      return exists(/databases/$(database)/documents/users/admin/accounts/$(uid)) ||
+             (exists(/databases/$(database)/documents/users/$(uid)) &&
+              get(/databases/$(database)/documents/users/$(uid)).data.userType == 'admin');
+    }
+
     function isAnyAdmin() {
-      // Optimized check: checks the requester's own doc once
-      return request.auth != null && 
-             (exists(/databases/$(database)/documents/users/admin/accounts/$(request.auth.uid)) || 
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin');
+      return request.auth != null && isAdmin(request.auth.uid);
     }
 
     function isNotBlocked() {
-      // Allow if the document exists and isBlocked is NOT true
-      return !exists(/databases/$(database)/documents/users/$(request.auth.uid)) || 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked != true;
+      // Robust check: ensures we don't crash if isBlocked is missing
+      return request.auth != null && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        !('isBlocked' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked != true
+      );
     }
 
-    // --- USER PROFILES ---
+    // --- OLD USER PROFILES ---
     match /users/{userId} {
-      // Users can always read their own doc (needed to see they are blocked)
-      // Admins can list and read all users
-      allow read: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
-      allow write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
+      allow read: if request.auth != null &&
+        (request.auth.uid == userId || isAnyAdmin());
+
+      allow write: if request.auth != null &&
+        (request.auth.uid == userId || isAnyAdmin());
     }
 
+    // --- NEW USER PROFILES ---
     match /users/{userType}/accounts/{userId} {
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || isAnyAdmin());
     }
 
-    // --- WAREHOUSES ---
+    // --- WAREHOUSES (COLLECTION GROUP SUPPORT) ---
     match /{path=**}/warehouses/{warehouseId} {
-      // Public read remains allowed
-      allow read: if true;
-      // Deny creation/updates if user is blocked
+      allow read: if true; // public
       allow create, update, delete: if request.auth != null && isNotBlocked();
     }
-    
-    // --- MESSAGING ---
-    match /conversations/{convId} {
-      // Deny access to conversations if user is blocked
-      allow read, write: if request.auth != null && isNotBlocked() && (
-        resource == null || 
-        request.auth.uid == resource.data.merchantId || 
-        request.auth.uid == resource.data.ownerId ||
-        isAnyAdmin()
-      );
-         
-      match /messages/{msgId} {
-        allow read, write: if request.auth != null && isNotBlocked();
-      }
-    }
 
-    // --- PRESERVED RULES ---
+    // --- ACCOUNTS (COLLECTION GROUP QUERY SUPPORT) ---
     match /{path=**}/accounts/{userId} {
-      allow read: if request.auth != null || true; // Needed for pre-auth email check
+      allow read: if true; // needed for auth/email lookup
     }
 
+    // --- VISITORS ---
     match /visitors/{docId} {
       allow read, write: if true;
     }
 
+    // --- FEEDBACKS ---
     match /feedbacks/{docId} {
       allow read: if request.auth != null;
       allow create: if true;
       allow update, delete: if request.auth != null && isNotBlocked();
     }
 
+    // --- WAREHOUSE AVAILABILITY ---
     match /warehouse_availability/{monthKey}/entries/{entryId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && isNotBlocked();
+
+      allow create: if request.auth != null &&
+        isNotBlocked() &&
+        request.resource.data.owner_id == request.auth.uid;
+
+      allow update: if request.auth != null &&
+        isNotBlocked() &&
+        resource.data.owner_id == request.auth.uid &&
+        request.resource.data.owner_id == request.auth.uid;
+
+      allow delete: if request.auth != null &&
+        isNotBlocked() &&
+        resource.data.owner_id == request.auth.uid;
     }
 
+    // --- CONTACT DETAILS ---
     match /contact_details/{role}/users/{userId} {
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAnyAdmin());
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || isAnyAdmin());
+    }
+
+    // --- MESSAGING ---
+    match /conversations/{convId} {
+
+      allow read: if request.auth != null &&
+        isNotBlocked() &&
+        (
+          resource == null ||
+          request.auth.uid == resource.data.merchantId ||
+          request.auth.uid == resource.data.ownerId ||
+          isAnyAdmin()
+        );
+
+      allow write: if request.auth != null &&
+        isNotBlocked() &&
+        (
+          (resource == null && request.auth.uid == request.resource.data.merchantId) ||
+          (resource != null &&
+            (
+              request.auth.uid == resource.data.merchantId ||
+              request.auth.uid == resource.data.ownerId ||
+              isAnyAdmin()
+            )
+          )
+        );
+
+      match /messages/{msgId} {
+        allow read, write: if request.auth != null && isNotBlocked();
+      }
     }
   }
 }

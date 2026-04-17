@@ -11,6 +11,11 @@ import { filterAbusiveWords } from './wordFilter';
  * We store redundant info (names, titles) so dashboards load fast and are organized.
  */
 export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, metadata = {}) => {
+  if (!warehouseId || !merchantId || !ownerId) {
+    console.error('Missing IDs for conversation:', { warehouseId, merchantId, ownerId });
+    throw new Error('Could not initialize chat: Missing required identifiers (Warehouse, Merchant, or Owner).');
+  }
+
   const convId = `${warehouseId}_${merchantId}`;
   const convRef = doc(db, 'conversations', convId);
   const convSnap = await getDoc(convRef);
