@@ -290,7 +290,7 @@ const makeSlideVariants = (direction) => ({
 function RoleStep({ onSelect }) {
   const roles = [
     {
-      id: 'merchant',
+      id: 'business_client',
       label: 'Business Clients',
       icon: (
         <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
@@ -300,7 +300,7 @@ function RoleStep({ onSelect }) {
       desc: 'I need storage space',
     },
     {
-      id: 'owner',
+      id: 'warehouse_partner',
       label: 'Warehouse Partners',
       icon: (
         <svg className="w-10 h-10 text-slate-400 group-hover:text-[#E65100] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.4}>
@@ -352,8 +352,8 @@ function RoleStep({ onSelect }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AuthFormStep({ userType, onBack, onLoginSuccess }) {
-  const displayRole = userType === 'owner' ? 'Warehouse Partners' : userType === 'dataentry' ? 'Data Entry' : 'Business Clients'
-  const roleColor = userType === 'owner' ? 'text-slate-700 bg-slate-100' : userType === 'dataentry' ? 'text-cyan-700 bg-cyan-50' : 'text-[#E65100] bg-orange-50'
+  const displayRole = userType === 'warehouse_partner' ? 'Warehouse Partners' : userType === 'dataentry' ? 'Data Entry' : 'Business Clients'
+  const roleColor = userType === 'warehouse_partner' ? 'text-slate-700 bg-slate-100' : userType === 'dataentry' ? 'text-cyan-700 bg-cyan-50' : 'text-[#E65100] bg-orange-50'
 
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '' })
@@ -544,7 +544,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
       <div className="flex items-center justify-between mb-8">
         <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${roleColor}`}>
 
-          {userType === 'owner' ? '🏛️' : '🏢'} {displayRole}
+          {userType === 'warehouse_partner' ? '🏛️' : '🏢'} {displayRole}
         </span>
         <button type="button" onClick={onBack} className="text-xs text-slate-400 hover:text-[#E65100] transition-colors font-bold uppercase tracking-widest">
           ← Change

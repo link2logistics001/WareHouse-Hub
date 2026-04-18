@@ -203,7 +203,7 @@ export const conversations = [
             {
                 id: 'MSG001',
                 senderId: 'MERCHANT001',
-                senderType: 'merchant',
+                senderType: 'business_client',
                 message: 'Hi! I am interested in your Prime Logistics Hub. Is space available from next month?',
                 timestamp: '2024-05-01T10:00:00Z',
                 read: true,
@@ -211,7 +211,7 @@ export const conversations = [
             {
                 id: 'MSG002',
                 senderId: 'OWNER001',
-                senderType: 'owner',
+                senderType: 'warehouse_partner',
                 message: 'Hello! Yes, we have 10,000 sq ft available from June 1st. What are your storage requirements?',
                 timestamp: '2024-05-01T10:15:00Z',
                 read: true,
@@ -219,7 +219,7 @@ export const conversations = [
             {
                 id: 'MSG003',
                 senderId: 'MERCHANT001',
-                senderType: 'merchant',
+                senderType: 'business_client',
                 message: 'We deal in pharma products, so we need temperature-controlled storage for 8,000 sq ft.',
                 timestamp: '2024-05-01T10:30:00Z',
                 read: true,
@@ -235,7 +235,7 @@ export const conversations = [
             {
                 id: 'MSG004',
                 senderId: 'MERCHANT001',
-                senderType: 'merchant',
+                senderType: 'business_client',
                 message: 'Do you provide pick & pack services? We need fulfillment for our e-commerce brand.',
                 timestamp: '2024-05-02T11:00:00Z',
                 read: true,
@@ -243,7 +243,7 @@ export const conversations = [
             {
                 id: 'MSG005',
                 senderId: 'OWNER002',
-                senderType: 'owner',
+                senderType: 'warehouse_partner',
                 message: 'Absolutely! We have a dedicated pick & pack team handling up to 2,000 orders per day.',
                 timestamp: '2024-05-02T11:20:00Z',
                 read: false,

@@ -52,7 +52,7 @@ export default function Availability({ onOpenSidebar }) {
   const fetchWarehouses = useCallback(async () => {
     if (!user?.uid || !user?.email) return;
     try {
-      const data = await fetchUserWarehouses('owner', user.email, user.uid);
+      const data = await fetchUserWarehouses('warehouse_partner', user.email, user.uid);
       setWarehouses(data);
     } catch (err) { console.error(err); }
   }, [user?.uid, user?.email]);
@@ -130,7 +130,7 @@ export default function Availability({ onOpenSidebar }) {
 
       for (const w of updated) {
         const payload = {
-          warehouse_id: w.id, owner_id: user.uid, owner_name: ownerName, owner_type: user.userType || 'owner',
+          warehouse_id: w.id, owner_id: user.uid, owner_name: ownerName, owner_type: user.userType || 'warehouse_partner',
           date: modalDate, month: saveMonth, status: modalStatuses[w.id],
           warehouse_name: w.warehouseName || w.name || 'Warehouse', updated_at: new Date().toISOString(),
         };

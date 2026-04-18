@@ -12,6 +12,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
 
   // Initialize/Fetch conversation and listen for messages
   useEffect(() => {
+    if (!user) return;
     let unsubscribe = () => { }
 
     const initChat = async () => {
@@ -20,9 +21,9 @@ export default function ChatBox({ warehouse, user, onClose }) {
         const targetWarehouseId = warehouse.id || warehouse.warehouseId;
         const currentUserId = user.id || user.uid;
         
-        // IMPORTANT: The merchantId is either the logged-in user (if they are a merchant)
-        // or the specific merchant who sent the inquiry (if the owner is viewing)
-        const merchantId = ['owner', 'admin', 'dataentry', 'warehousepartner'].includes(user.userType?.toLowerCase()) 
+        // IMPORTANT: The merchantId is either the logged-in user (if they are a business client)
+        // or the specific business client who sent the inquiry (if the warehouse partner is viewing)
+        const merchantId = ['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase()) 
           ? (warehouse.merchantId || warehouse.userId) 
           : currentUserId;
 
@@ -63,7 +64,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
               id: 'INTRO',
               senderId: 'SYSTEM',
               senderType: 'system',
-              message: `You're now connected with ${user.userType === 'merchant' ? warehouse.ownerName : 'the Business Clients'}. Start your conversation about ${warehouse.name}.`,
+              message: `You're now connected with ${user.userType === 'business_client' ? warehouse.ownerName : 'the Business Client'}. Start your conversation about ${warehouse.name}.`,
               timestamp: new Date().toISOString(),
               read: true
             }])
@@ -96,7 +97,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
         conversation.id,
         user.id || user.uid,
         text,
-        user.userType || 'merchant'
+        user.userType || 'business_client'
       )
     } catch (error) {
 
@@ -134,7 +135,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">{warehouse.name || warehouse.warehouseName}</h3>
                 <div className="flex items-center gap-2 mt-0.5">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    {user.userType === 'merchant' ? warehouse.ownerName : 'Business Clients Inquiry'}
+                    {user.userType === 'business_client' ? warehouse.ownerName : 'Business Client Inquiry'}
                   </p>
                   <span className="w-1 h-1 bg-slate-300 rounded-full" />
                   <p className="text-xs font-black text-orange-500">

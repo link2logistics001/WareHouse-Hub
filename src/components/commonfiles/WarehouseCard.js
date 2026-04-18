@@ -11,7 +11,7 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
   const { user } = useAuth();
   const { toggleWishlist, isWishlisted } = useWishlist();
   
-  const isMerchant = user?.userType === 'merchant';
+  const isBusinessClient = user?.userType === 'business_client';
   const saved = isWishlisted(id);
 
   return (
@@ -35,7 +35,7 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
           <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 shadow-sm">
             {type || category || "General"}
           </div>
-          {isMerchant && (
+          {isBusinessClient && (
             <button
               onClick={(e) => toggleWishlist(id, e)}
               className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform focus:outline-none"

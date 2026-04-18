@@ -86,7 +86,7 @@ export default function DashboardHome({ setActiveTab, onOpenSidebar }) {
       if (!user?.uid || !user?.email) return;
       try {
         setLoading(true);
-        const fetchedWarehouses = await fetchUserWarehouses('owner', user.email, user.uid);
+        const fetchedWarehouses = await fetchUserWarehouses('warehouse_partner', user.email, user.uid);
         
         let calcTotalArea = 0;
         let calcActive = 0;
@@ -107,7 +107,7 @@ export default function DashboardHome({ setActiveTab, onOpenSidebar }) {
     fetchMyWarehouses();
   }, [user]);
 
-  const firstName = (user?.name || user?.displayName || 'Owner').split(' ')[0];
+  const firstName = (user?.name || user?.displayName || 'Partner').split(' ')[0];
 
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const cardVariants = { hidden: { opacity: 0, y: 20, scale: 0.95 }, show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 200, damping: 20 } } };

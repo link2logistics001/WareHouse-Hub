@@ -21,7 +21,26 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 import { saveContactDetails } from './contactDetails';
 
-const USER_ROLES = ['owner', 'merchant', 'admin', 'dataentry'];
+const USER_ROLES = ['warehouse_partner', 'business_client', 'admin', 'dataentry'];
+
+/**
+ * Maps role names to the Firestore collection keys used in paths.
+ * e.g. contact_details/warehouse_partner/..., warehouse_details/warehouse_partner/...
+ */
+export const ROLE_TO_COLLECTION_KEY = {
+  warehouse_partner: 'warehouse_partner',
+  business_client: 'business_client',
+  admin: 'admin',
+  dataentry: 'dataentry',
+};
+
+/** User-facing display labels for each role */
+export const ROLE_DISPLAY_LABELS = {
+  warehouse_partner: 'Warehouse Partners',
+  business_client: 'Business Clients',
+  admin: 'Admin',
+  dataentry: 'Data Entry',
+};
 
 export const getUserDocParams = async (uid) => {
   // Check the flat structure first: users/{uid}
@@ -138,7 +157,7 @@ export const checkEmailExists = async (email) => {
  * @param {string} email - User's email address
  * @param {string} password - User's password
  * @param {string} name - User's full name
- * @param {string} userType - 'merchant' or 'owner'
+ * @param {string} userType - 'business_client' or 'warehouse_partner'
  * @param {string} company - Company name (optional)
  * @returns {Promise<Object>} User data with userType
  */
@@ -170,7 +189,9 @@ export const registerUser = async (email, password, name, userType, company = ''
         const existingUserType = existingUserData.userType;
 
         if (existingUserType !== userType) {
-          throw new Error(`This email is already registered as ${existingUserType}. Please sign in as ${existingUserType} or use a different email.`);
+          const { ROLE_DISPLAY_LABELS } = await import('./auth');
+          const displayLabel = ROLE_DISPLAY_LABELS[existingUserType] || existingUserType;
+          throw new Error(`This email is already registered as ${displayLabel}. Please sign in as ${displayLabel} or use a different email.`);
         }
       }
 
@@ -210,8 +231,9 @@ export const registerUser = async (email, password, name, userType, company = ''
       updatedAt: serverTimestamp()
     });
 
-    // Also save to contact_details/{userType}/users/{uid}
-    await saveContactDetails(userType, user.uid, {
+    // Also save to contact_details/{collectionKey}/users/{uid}
+    const collectionKey = ROLE_TO_COLLECTION_KEY[userType] || userType;
+    await saveContactDetails(collectionKey, user.uid, {
       name,
       email: user.email,
       company,
@@ -240,7 +262,7 @@ export const registerUser = async (email, password, name, userType, company = ''
  * Sign in user with email and password
  * @param {string} email - User's email address
  * @param {string} password - User's password
- * @param {string} userType - Selected account type ('merchant' or 'owner')
+ * @param {string} userType - Selected account type ('business_client' or 'warehouse_partner')
  * @returns {Promise<Object>} User data with userType
  */
 export const loginUser = async (email, password, userType) => {
@@ -270,7 +292,7 @@ export const loginUser = async (email, password, userType) => {
 
       // ── Admin & Data Entry override: can log in from any portal ────
       // If this email is an admin or data entry, redirect them to their panel
-      // regardless of which role (merchant/owner) they selected.
+      // regardless of which role (business_client/warehouse_partner) they selected.
       if (userData.userType === 'admin' || userData.userType === 'dataentry') {
         return {
           uid: user.uid,
@@ -336,7 +358,7 @@ export const loginUser = async (email, password, userType) => {
 
 /**
  * Sign in with Google
- * @param {string} userType - 'merchant' or 'owner'
+ * @param {string} userType - 'business_client' or 'warehouse_partner'
  * @returns {Promise<Object>} User data
  */
 export const loginWithGoogle = async (userType, isSignIn = false) => {
@@ -377,8 +399,9 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
         updatedAt: serverTimestamp()
       });
 
-      // Also save to contact_details/{userType}/users/{uid}
-      await saveContactDetails(userType, user.uid, {
+      // Also save to contact_details/{collectionKey}/users/{uid}
+      const collectionKey = ROLE_TO_COLLECTION_KEY[userType] || userType;
+      await saveContactDetails(collectionKey, user.uid, {
         name: user.displayName || '',
         email: user.email,
         company: '',
@@ -551,7 +574,8 @@ export const updateUserProfile = async (uid, updates) => {
       if (Object.keys(contactSync).length > 0) {
         try {
           const { updateContactDetails } = await import('./contactDetails');
-          await updateContactDetails(finalData.userType, uid, contactSync);
+          const collectionKey = ROLE_TO_COLLECTION_KEY[finalData.userType] || finalData.userType;
+          await updateContactDetails(collectionKey, uid, contactSync);
         } catch {
           // contact_details doc may not exist yet — ignore gracefully
         }

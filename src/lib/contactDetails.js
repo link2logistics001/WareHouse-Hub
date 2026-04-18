@@ -3,9 +3,9 @@
  *
  * Firestore collection structure:
  *   contact_details/
- *     ├── owner/
+ *     ├── warehouse_partner/
  *     │     └── users/{userId}  → { name, email, phone, company }
- *     └── merchant/
+ *     └── business_client/
  *           └── users/{userId}  → { name, email, phone, company }
  *
  * Only 4 essential fields are stored per user.
@@ -27,7 +27,7 @@ import { db } from './firebase';
 // ──────────────────────────────────────────────────────────────────
 
 function assertRole(userType) {
-  const allowed = ['owner', 'merchant', 'admin', 'dataentry'];
+  const allowed = ['warehouse_partner', 'business_client', 'admin', 'dataentry'];
   if (!allowed.includes(userType)) {
     throw new Error(`Invalid userType "${userType}". Must be one of: ${allowed.join(', ')}`);
   }
@@ -35,7 +35,7 @@ function assertRole(userType) {
 
 /**
  * Get the Firestore document reference for a user's contact details.
- * Path: contact_details/{owner|merchant}/users/{userId}
+ * Path: contact_details/{warehouse_partner|business_client}/users/{userId}
  */
 export function getContactDetailsRef(userType, userId) {
   assertRole(userType);
@@ -58,7 +58,7 @@ export function getContactDetailsCollection(userType) {
 /**
  * Save (create or merge) a user's contact details.
  *
- * @param {'owner'|'merchant'} userType
+ * @param {'warehouse_partner'|'business_client'} userType
  * @param {string} userId
  * @param {Object} data
  * @param {string} data.name
@@ -119,8 +119,8 @@ export async function fetchAllContactDetails(userType) {
  */
 export async function fetchAllContactDetailsBoth() {
   const [owners, merchants] = await Promise.all([
-    fetchAllContactDetails('owner'),
-    fetchAllContactDetails('merchant'),
+    fetchAllContactDetails('warehouse_partner'),
+    fetchAllContactDetails('business_client'),
   ]);
   return { owners, merchants };
 }

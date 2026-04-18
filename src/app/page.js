@@ -87,7 +87,7 @@ export default function Home() {
 
     return (
       <>
-        {user.userType === 'merchant' ? (
+        {user.userType === 'business_client' ? (
           <MerchantDashboard
             user={user}
             onLogout={handleLogout}

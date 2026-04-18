@@ -7,13 +7,13 @@ import { filterAbusiveWords } from './wordFilter';
 
 
 /**
- * Get or create a conversation between a merchant and an owner for a specific warehouse
+ * Get or create a conversation between a business client and a warehouse partner for a specific warehouse
  * We store redundant info (names, titles) so dashboards load fast and are organized.
  */
 export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, metadata = {}) => {
   if (!warehouseId || !merchantId || !ownerId) {
     console.error('Missing IDs for conversation:', { warehouseId, merchantId, ownerId });
-    throw new Error('Could not initialize chat: Missing required identifiers (Warehouse, Merchant, or Owner).');
+    throw new Error('Could not initialize chat: Missing required identifiers (Warehouse, Business Client, or Warehouse Partner).');
   }
 
   const convId = `${warehouseId}_${merchantId}`;
@@ -30,8 +30,8 @@ export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, 
     merchantId,
     ownerId,
     warehouseName: metadata.warehouseName || 'Warehouse',
-    merchantName: metadata.merchantName || 'Merchant',
-    ownerName: metadata.ownerName || 'Owner',
+    merchantName: metadata.merchantName || 'Business Client',
+    ownerName: metadata.ownerName || 'Warehouse Partner',
     totalArea: metadata.totalArea || 0,
     pricingAmount: metadata.pricingAmount || 0,
     city: metadata.city || 'Location',
@@ -51,13 +51,13 @@ export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, 
 /**
  * Send a message in a conversation
  */
-export const sendMessage = async (conversationId, senderId, text, senderType = 'merchant') => {
+export const sendMessage = async (conversationId, senderId, text, senderType = 'business_client') => {
   const filteredText = filterAbusiveWords(text);
 
   const msgRef = collection(db, 'conversations', conversationId, 'messages');
   await addDoc(msgRef, {
     senderId,
-    senderType, // 'merchant' or 'owner'
+    senderType, // 'business_client' or 'warehouse_partner'
     text: filteredText,
     message: filteredText, // redundant field for compatibility
     timestamp: serverTimestamp(),
@@ -74,7 +74,7 @@ export const sendMessage = async (conversationId, senderId, text, senderType = '
 };
 
 /**
- * Grant contact access to a merchant
+ * Grant contact access to a business client
  */
 export const grantContactAccess = async (conversationId) => {
   const convRef = doc(db, 'conversations', conversationId);

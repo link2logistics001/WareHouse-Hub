@@ -9,8 +9,8 @@ export function useWishlist() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only merchants have wishlists
-    if (!user || user.userType !== 'merchant') {
+    // Only business clients have wishlists
+    if (!user || user.userType !== 'business_client') {
       setWishlistedWarehouses([]);
       setLoading(false);
       return;
@@ -46,7 +46,7 @@ export function useWishlist() {
       e.preventDefault();
     }
 
-    if (!user || user.userType !== 'merchant') return;
+    if (!user || user.userType !== 'business_client') return;
 
     try {
       const docRef = doc(db, 'users', user.uid);

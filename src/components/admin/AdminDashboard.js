@@ -26,6 +26,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'block-people', label: 'Block People', icon: Users },
+        { id: 'migration', label: 'Data Migration', icon: Database },
     ];
 
     return (
@@ -121,6 +122,7 @@ export default function AdminDashboard({ user, onLogout }) {
     // Real-time Firestore subscription — listen to collectionGroup 'warehouses'
     // which pulls docs from warehouse_details/owner/emails/*/warehouses AND warehouse_details/dataentry/emails/*/warehouses
     useEffect(() => {
+        if (!user) return;
         setLoading(true);
         const cg = collectionGroup(db, 'warehouses');
         const unsub = onSnapshot(cg,
@@ -150,10 +152,11 @@ export default function AdminDashboard({ user, onLogout }) {
             }
         );
         return () => unsub();
-    }, []);
+    }, [user]);
 
     // Fetch all users for "Block People" view
     useEffect(() => {
+        if (!user || user.userType !== 'admin') return;
         setUsersLoading(true);
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
         const unsub = onSnapshot(q,
@@ -168,7 +171,7 @@ export default function AdminDashboard({ user, onLogout }) {
             }
         );
         return () => unsub();
-    }, []);
+    }, [user]);
 
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
@@ -309,7 +312,7 @@ export default function AdminDashboard({ user, onLogout }) {
                                 exit={{ x: 20, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : 'User Management'}
+                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'migration' ? 'Data Migration' : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -375,6 +378,16 @@ export default function AdminDashboard({ user, onLogout }) {
                                         setActiveView('warehouses');
                                     }}
                                 />
+                                </motion.div>
+                        ) : activeView === 'migration' ? (
+                            <motion.div
+                                key="migration"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <MigrationView showToast={showToast} />
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
@@ -835,10 +848,10 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                             <p className="text-sm text-slate-600 truncate">{u.email}</p>
                             <div>
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                    u.userType === 'owner' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 
-                                    u.userType === 'merchant' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-500'
+                                    u.userType === 'warehouse_partner' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 
+                                    u.userType === 'business_client' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-500'
                                 }`}>
-                                    {u.userType || 'User'}
+                                    {u.userType === 'warehouse_partner' ? 'Warehouse Partner' : u.userType === 'business_client' ? 'Business Client' : u.userType || 'User'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3">
@@ -858,11 +871,11 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                                     </button>
                                 )}
                                 
-                                {u.userType === 'owner' && (
+                                {u.userType === 'warehouse_partner' && (
                                     <button 
                                         onClick={() => onViewWarehouses(u.email)}
                                         className="p-1.5 bg-slate-50 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
-                                        title="View Owner Warehouses"
+                                        title="View Partner Warehouses"
                                     >
                                         <Building2 className="w-4 h-4" />
                                     </button>
@@ -959,7 +972,7 @@ function PhotoGallery({ photos }) {
                 <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-2">Photos</p>
                 <div className="flex items-center gap-2 text-slate-400 text-xs">
                     <Image className="w-4 h-4" />
-                    <span>No photos uploaded by the owner</span>
+                    <span>No photos uploaded by the partner</span>
                 </div>
             </div>
         );
@@ -1097,6 +1110,300 @@ function PhotoGallery({ photos }) {
                 )}
             </AnimatePresence>
         </>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Migration View — Migrate legacy owner/merchant → warehouse_partner/business_client
+// ─────────────────────────────────────────────────────────────────────
+function MigrationView({ showToast }) {
+    const [migrating, setMigrating] = useState(false);
+    const [migrationLog, setMigrationLog] = useState([]);
+    const [migrationDone, setMigrationDone] = useState(false);
+    const [stats, setStats] = useState({ scanned: 0, updated: 0, skipped: 0, errors: 0 });
+
+    const addLog = (msg, type = 'info') => {
+        setMigrationLog(prev => [...prev, { msg, type, ts: Date.now() }]);
+    };
+
+    const runMigration = async () => {
+        if (migrating) return;
+        if (!window.confirm(
+            'This will update all existing users with userType "owner" → "warehouse_partner" and "merchant" → "business_client" in the database.\n\nThis cannot be undone. Are you sure?'
+        )) return;
+
+        setMigrating(true);
+        setMigrationLog([]);
+        setMigrationDone(false);
+        setStats({ scanned: 0, updated: 0, skipped: 0, errors: 0 });
+
+        const { collection: col, getDocs: gd, doc: dc, updateDoc: ud, serverTimestamp: st, setDoc: sd, getDoc: gdc } = await import('firebase/firestore');
+
+        try {
+            // Step 1: Migrate users collection
+            addLog('🔍 Scanning users collection...', 'info');
+            const usersSnap = await gd(col(db, 'users'));
+            let scanned = 0, updated = 0, skipped = 0, errors = 0;
+
+            for (const userDoc of usersSnap.docs) {
+                scanned++;
+                const data = userDoc.data();
+                const oldType = data.userType;
+
+                if (oldType === 'owner') {
+                    try {
+                        await ud(dc(db, 'users', userDoc.id), {
+                            userType: 'warehouse_partner',
+                            _migratedFrom: 'owner',
+                            _migratedAt: st()
+                        });
+                        updated++;
+                        addLog(`✅ ${data.email || userDoc.id}: owner → warehouse_partner`, 'success');
+                    } catch (e) {
+                        errors++;
+                        addLog(`❌ Failed to migrate ${data.email || userDoc.id}: ${e.message}`, 'error');
+                    }
+                } else if (oldType === 'merchant') {
+                    try {
+                        await ud(dc(db, 'users', userDoc.id), {
+                            userType: 'business_client',
+                            _migratedFrom: 'merchant',
+                            _migratedAt: st()
+                        });
+                        updated++;
+                        addLog(`✅ ${data.email || userDoc.id}: merchant → business_client`, 'success');
+                    } catch (e) {
+                        errors++;
+                        addLog(`❌ Failed to migrate ${data.email || userDoc.id}: ${e.message}`, 'error');
+                    }
+                } else {
+                    skipped++;
+                }
+                setStats({ scanned, updated, skipped, errors });
+            }
+
+            addLog(`\n📊 Users migration complete: ${updated} updated, ${skipped} skipped, ${errors} errors`, updated > 0 ? 'success' : 'info');
+
+            // Step 2: Migrate contact_details — copy owner → warehouse_partner, merchant → business_client
+            addLog('\n🔍 Scanning contact_details collections...', 'info');
+
+            const roleMappings = [
+                { oldRole: 'owner', newRole: 'warehouse_partner' },
+                { oldRole: 'merchant', newRole: 'business_client' }
+            ];
+
+            let contactUpdated = 0;
+            for (const { oldRole, newRole } of roleMappings) {
+                try {
+                    const oldColRef = col(db, 'contact_details', oldRole, 'users');
+                    const oldSnap = await gd(oldColRef);
+
+                    for (const contactDoc of oldSnap.docs) {
+                        try {
+                            const contactData = contactDoc.data();
+                            // Write to new path: contact_details/{newRole}/users/{id}
+                            const newRef = dc(db, 'contact_details', newRole, 'users', contactDoc.id);
+                            await sd(newRef, {
+                                ...contactData,
+                                userType: newRole,
+                                _migratedFrom: oldRole,
+                                _migratedAt: st()
+                            }, { merge: true });
+                            contactUpdated++;
+                            addLog(`✅ contact_details: ${contactDoc.id} (${oldRole} → ${newRole})`, 'success');
+                        } catch (e) {
+                            addLog(`❌ contact_details migration failed for ${contactDoc.id}: ${e.message}`, 'error');
+                        }
+                    }
+                } catch (e) {
+                    addLog(`⚠️ Could not read contact_details/${oldRole}: ${e.message}`, 'warn');
+                }
+            }
+
+            addLog(`\n📊 Contact details migration: ${contactUpdated} records copied`, contactUpdated > 0 ? 'success' : 'info');
+
+            // Step 3: Migrate warehouse_details
+            addLog('\n🔍 Scanning warehouse_details...', 'info');
+            let whUpdated = 0, whSkipped = 0, whErrors = 0;
+            try {
+                const { collectionGroup } = await import('firebase/firestore');
+                const cg = collectionGroup(db, 'warehouses');
+                const snap = await gd(cg);
+
+                for (const d of snap.docs) {
+                    const pathSegments = d.ref.path.split('/');
+                    // Format: warehouse_details/{role}/emails/{email}/warehouses/{id}
+                    if (pathSegments[0] === 'warehouse_details' && pathSegments[1] === 'owner') {
+                        const email = pathSegments.includes('emails') ? pathSegments[3] : pathSegments[2];
+                        const whId = d.id;
+                        const data = d.data();
+                        
+                        try {
+                            const newRef = dc(db, 'warehouse_details', 'warehouse_partner', 'emails', email, 'warehouses', whId);
+                            await sd(newRef, {
+                                ...data,
+                                source: data.source === 'owner' ? 'warehouse_partner' : (data.source || 'warehouse_partner'),
+                                _migratedFrom: 'owner',
+                                _migratedAt: st()
+                            }, { merge: true });
+                            whUpdated++;
+                            addLog(`✅ warehouse_details: ${whId} (${email}) → warehouse_partner`, 'success');
+                        } catch (e) {
+                            whErrors++;
+                            addLog(`❌ warehouse_details migration failed for ${whId}: ${e.message}`, 'error');
+                        }
+                    } else {
+                        whSkipped++;
+                    }
+                }
+                addLog(`\n📊 Warehouse details migration: ${whUpdated} records copied`, whUpdated > 0 ? 'success' : 'info');
+            } catch (e) {
+                addLog(`❌ Failed to scan warehouses: ${e.message}`, 'error');
+            }
+
+            addLog('\n🎉 Migration complete!', 'success');
+            showToast(`Migration complete! ${updated} users, ${contactUpdated} contacts, ${whUpdated} warehouses updated.`, 'success');
+
+        } catch (err) {
+            addLog(`❌ Migration failed: ${err.message}`, 'error');
+            showToast('Migration failed. Check the log for details.', 'error');
+        } finally {
+            setMigrating(false);
+            setMigrationDone(true);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <div className="flex items-start gap-5 mb-6">
+                    <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <Database className="w-7 h-7 text-orange-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-1">Migrate User Roles</h2>
+                        <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
+                            This tool updates all existing database records to use the new role naming convention.
+                            Users with <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700">owner</code> will become 
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700 ml-1">warehouse_partner</code>, and 
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">merchant</code> will become 
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">business_client</code>.
+                        </p>
+                    </div>
+                </div>
+
+                {/* What gets migrated */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
+                        <h4 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3">Warehouse Partners</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-sm font-mono text-orange-700 line-through">owner</span>
+                            <span className="text-orange-400">→</span>
+                            <span className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-mono font-bold">warehouse_partner</span>
+                        </div>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+                        <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Business Clients</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-sm font-mono text-blue-700 line-through">merchant</span>
+                            <span className="text-blue-400">→</span>
+                            <span className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-mono font-bold">business_client</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Affected collections info */}
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                        <span className="text-sm font-bold text-amber-800">Collections that will be updated:</span>
+                    </div>
+                    <ul className="text-sm text-amber-700 space-y-1 ml-6 list-disc">
+                        <li><code className="bg-white/80 px-1 rounded text-xs">users</code> — userType field</li>
+                        <li><code className="bg-white/80 px-1 rounded text-xs">contact_details</code> — documents copied to new role subcollections</li>
+                    </ul>
+                </div>
+
+                <button
+                    onClick={runMigration}
+                    disabled={migrating}
+                    className={`px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center gap-3 shadow-lg ${
+                        migrating
+                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                            : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5'
+                    }`}
+                >
+                    {migrating ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Migrating...
+                        </>
+                    ) : (
+                        <>
+                            <Database className="w-5 h-5" />
+                            Run Migration
+                        </>
+                    )}
+                </button>
+            </div>
+
+            {/* Progress Stats */}
+            {(migrating || migrationDone) && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+                        <p className="text-3xl font-bold text-slate-900">{stats.scanned}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Scanned</p>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-emerald-200 p-5 text-center">
+                        <p className="text-3xl font-bold text-emerald-600">{stats.updated}</p>
+                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mt-1">Updated</p>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+                        <p className="text-3xl font-bold text-slate-500">{stats.skipped}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Skipped</p>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-red-200 p-5 text-center">
+                        <p className="text-3xl font-bold text-red-600">{stats.errors}</p>
+                        <p className="text-xs font-bold text-red-400 uppercase tracking-widest mt-1">Errors</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Migration Log */}
+            {migrationLog.length > 0 && (
+                <div className="bg-slate-900 rounded-3xl border border-slate-700 p-6 shadow-xl">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Migration Log
+                        </h3>
+                        <span className="text-xs text-slate-500">{migrationLog.length} entries</span>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto space-y-1 font-mono text-sm pr-2 scrollbar-thin scrollbar-thumb-slate-700">
+                        {migrationLog.map((log, i) => (
+                            <div
+                                key={i}
+                                className={`px-3 py-1.5 rounded-lg ${
+                                    log.type === 'success' ? 'text-emerald-400' :
+                                    log.type === 'error' ? 'text-red-400' :
+                                    log.type === 'warn' ? 'text-amber-400' :
+                                    'text-slate-400'
+                                }`}
+                            >
+                                {log.msg}
+                            </div>
+                        ))}
+                        {migrating && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 text-orange-400">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Processing...
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

@@ -502,7 +502,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
         mobile: ownerDetails.mobile.trim(), email: ownerDetails.email.trim(), ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
         // Meta
         ownerId: uid, status: 'pending', createdAt: serverTimestamp(),
-        source: 'owner',
+        source: 'warehouse_partner',
       };
 
       const ownerEmail = user.email.toLowerCase().trim();
@@ -514,7 +514,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
         await updateDoc(docRef, docData);
       } else {
         // Otherwise add new doc
-        await addDoc(getWarehouseCollection('owner', ownerEmail), docData);
+        await addDoc(getWarehouseCollection('warehouse_partner', ownerEmail), docData);
       }
 
       // Update user profile with verified phone number
@@ -526,7 +526,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
           phone: ownerDetails.mobile.trim(), // for compatibility
           updatedAt: serverTimestamp()
         });
-        await updateContactDetails('owner', uid, {
+        await updateContactDetails('warehouse_partner', uid, {
           phone: ownerDetails.mobile.trim()
         });
       } catch (err) {

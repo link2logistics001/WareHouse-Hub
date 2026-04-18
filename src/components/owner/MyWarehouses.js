@@ -26,6 +26,7 @@ const SkeletonPulse = ({ className }) => (
 
 export default function MyWarehouses({ setActiveTab, onOpenSidebar, onEdit }) {
   const { user } = useAuth();
+  const firstName = (user?.name || user?.displayName || 'Partner').split(' ')[0];
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,7 +37,7 @@ export default function MyWarehouses({ setActiveTab, onOpenSidebar, onEdit }) {
     const fetchWarehouses = async () => {
       try {
         setLoading(true);
-        const data = await fetchUserWarehouses('owner', user.email, user.uid);
+        const data = await fetchUserWarehouses('warehouse_partner', user.email, user.uid);
         data.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
         setWarehouses(data);
       } catch (err) {

@@ -32,13 +32,13 @@ export default function WarehouseDetailPage({ params }) {
       if (!user || !warehouse) return;
       
       // Admins and the owner of the warehouse always have access
-      if (user.userType === 'admin' || user.uid === warehouse.ownerId) {
+      if (user.userType === 'admin' || user.uid === warehouse.ownerId || user.userType === 'warehouse_partner') {
         setHasAccess(true);
         return;
       }
 
-      // Merchants check for granted access
-      if (user.userType === 'merchant') {
+      // Business clients check for granted access
+      if (user.userType === 'business_client') {
         try {
           const access = await checkAccessStatus(id, user.uid);
           setHasAccess(access);
@@ -322,7 +322,7 @@ export default function WarehouseDetailPage({ params }) {
                   <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 leading-tight">Property Owner</h3>
+                  <h3 className="text-lg font-black text-slate-900 leading-tight">Warehouse Partner</h3>
                   <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-1">Verified Partner</p>
                 </div>
               </div>
@@ -432,7 +432,7 @@ function SidebarInfoBox({ icon: Icon, label, value, isLocked }) {
         {isLocked ? (
           <div className="flex items-center gap-1.5 text-slate-400">
             <Lock className="w-3.5 h-3.5 shrink-0" />
-            <p className="text-xs font-bold italic truncate">Locked by Owner</p>
+            <p className="text-xs font-bold italic truncate">Locked by Partner</p>
           </div>
         ) : (
           <p className="text-sm font-black text-slate-800 break-words line-clamp-2">{value || 'N/A'}</p>

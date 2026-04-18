@@ -16,9 +16,9 @@ import { getOrCreateConversation, grantContactAccess, deleteConversation, sendMe
 import { getContactDetails } from '@/lib/contactDetails';
 
 // ─────────────────────────────────────────────────────────────
-// Firestore inquiry schema (when a merchant submits an inquiry):
+// Firestore inquiry schema (when a business client submits an inquiry):
 // {
-//   ownerId:       string,   // the warehouse owner's uid
+//   ownerId:       string,   // the warehouse partner's uid
 //   warehouseId:   string,   // Firestore doc id of the warehouse
 //   warehouseName: string,
 //   merchantName:  string,
@@ -57,7 +57,7 @@ export default function Inquiries() {
         id: d.id, 
         ...d.data(), 
         // fallback for older records or missing fields
-        merchantName: d.data().merchantName || 'Merchant',
+        merchantName: d.data().merchantName || 'Business Client',
         warehouseName: d.data().warehouseName || 'Warehouse',
         stage: d.data().stage || 'new' // Ensures old chats show up in 'New Leads'
       }));
@@ -114,7 +114,7 @@ export default function Inquiries() {
       let ownerEmail = user.email;
 
       // Check contact_details collection
-      const ownerDetails = await getContactDetails('owner', user.uid);
+      const ownerDetails = await getContactDetails('warehouse_partner', user.uid);
       if (ownerDetails) {
         ownerPhone = ownerPhone || ownerDetails.phone || ownerDetails.mobile || '';
       }
@@ -123,7 +123,7 @@ export default function Inquiries() {
       if (!ownerPhone && conv.warehouseId) {
         try {
           const { fetchUserWarehouses } = await import('@/lib/warehouseCollections');
-          const myWarehouses = await fetchUserWarehouses('owner', user.email, user.uid);
+          const myWarehouses = await fetchUserWarehouses('warehouse_partner', user.email, user.uid);
           const thisWh = myWarehouses.find(w => w.id === conv.warehouseId);
           if (thisWh) {
             ownerPhone = thisWh.mobile || thisWh.phone || '';
@@ -139,9 +139,9 @@ export default function Inquiries() {
       const finalPhone = ownerPhone || 'Check dashboard profile';
       const autoMessage = `I've given you access to my contact information:\n\nPhone: ${finalPhone}\nEmail: ${ownerEmail}`;
       
-      await sendMessage(conv.id, user.uid, autoMessage, 'owner');
+      await sendMessage(conv.id, user.uid, autoMessage, 'warehouse_partner');
       
-      // alert('Contact access granted to ' + (conv.merchantName || 'Merchant'));
+      // alert('Contact access granted to ' + (conv.merchantName || 'Business Client'));
     } catch (e) {
       console.error('Failed to grant access or send message:', e);
     } finally {
@@ -179,7 +179,7 @@ export default function Inquiries() {
   // ── Export to CSV ──────────────────────────────────────────
   const handleExport = () => {
     const stageLabel = { new: 'New Lead', negotiating: 'In Discussion', booked: 'Closed' };
-    let csv = 'Stage,Merchant,Warehouse,Space Required,Message\n';
+    let csv = 'Stage,Business Client,Warehouse,Space Required,Message\n';
     inquiries.forEach(i => {
       csv += `"${stageLabel[i.stage] ?? i.stage}","${i.merchantName}","${i.warehouseName}","${i.spaceRequired}","${(i.message || '').replace(/"/g, "'")}"\n`;
     });
@@ -259,7 +259,7 @@ export default function Inquiries() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 mb-2">No Inquiries Yet</h2>
           <p className="text-slate-400 max-w-xs text-sm">
-            When merchants send inquiries for your warehouses, they will appear here.
+            When business clients send inquiries for your warehouses, they will appear here.
           </p>
         </div>
       )}

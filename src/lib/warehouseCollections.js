@@ -6,8 +6,10 @@
  * Structure (5 segments = valid collection):
  *   warehouse_details/{role}/emails/{email}/warehouses/{docId}
  * 
+ * The {role} segment uses: 'warehouse_partner' or 'dataentry'.
+ * 
  * Examples:
- *   warehouse_details/owner/emails/john@x.com/warehouses/abc123
+ *   warehouse_details/warehouse_partner/emails/john@x.com/warehouses/abc123
  *   warehouse_details/dataentry/emails/jane@x.com/warehouses/def456
  */
 
@@ -16,19 +18,18 @@ import { db } from './firebase';
 
 /**
  * Get the Firestore collection reference for saving a warehouse.
- * @param {'owner'|'dataentry'} role
+ * @param {'warehouse_partner'|'dataentry'} role
  * @param {string} email
  * @returns {import('firebase/firestore').CollectionReference}
  */
 export function getWarehouseCollection(role, email) {
   const safeEmail = email.toLowerCase().trim();
-  // 5 segments: warehouse_details / {role} / emails / {email} / warehouses
   return collection(db, 'warehouse_details', role, 'emails', safeEmail, 'warehouses');
 }
 
 /**
  * Get the Firestore collection path string for a specific user's warehouses.
- * @param {'owner'|'dataentry'} role
+ * @param {'warehouse_partner'|'dataentry'} role
  * @param {string} email
  * @returns {string}
  */
@@ -40,7 +41,7 @@ export function getWarehouseCollectionPath(role, email) {
 /**
  * Fetch all warehouses for a specific user (by uid).
  * Searches across ALL email subcollections using collectionGroup.
- * @param {'owner'|'dataentry'} role
+ * @param {'warehouse_partner'|'dataentry'} role
  * @param {string} email
  * @param {string} uid
  * @returns {Promise<Array>}
@@ -81,7 +82,7 @@ export async function fetchUserWarehouses(role, email, uid) {
 }
 
 /**
- * Fetch ALL warehouses across all owners/dataentry users.
+ * Fetch ALL warehouses across all warehouse_partner/dataentry users.
  * Used by admin dashboard. Uses collectionGroup query on 'warehouses'.
  * @returns {Promise<Array>}  
  */
@@ -95,7 +96,7 @@ export async function fetchAllWarehouses() {
     return {
       id: d.id,
       ...data,
-      _role: pathSegments[1],   // 'owner' or 'dataentry'
+      _role: pathSegments[1],   // 'warehouse_partner' or 'dataentry'
       _email: pathSegments[3],  // user email (index 3 because of 'emails' at index 2)
       _docPath: d.ref.path,     // full path for updates
     };
@@ -104,7 +105,7 @@ export async function fetchAllWarehouses() {
 
 /**
  * Get the full doc path for a warehouse given its metadata.
- * @param {'owner'|'dataentry'} role
+ * @param {'warehouse_partner'|'dataentry'} role
  * @param {string} email
  * @param {string} docId
  * @returns {string}

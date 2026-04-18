@@ -56,8 +56,8 @@ export const AuthProvider = ({ children }) => {
 
             // If Firestore doc doesn't exist yet (race condition on first sign-up),
             // don't set the user — retry after a short delay so loading stays true.
-            // We must NEVER fall back to 'merchant' as the default userType, because a new
-            // owner would end up in the merchant portal on their very first login.
+            // We must NEVER fall back to 'business_client' as the default userType, because a new
+            // warehouse_partner would end up in the business_client portal on their very first login.
             if (!userData || !userData.userType) {
               pendingRetry = true;
               // Keep loading=true and retry once to handle Firestore propagation lag

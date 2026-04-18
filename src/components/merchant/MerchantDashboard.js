@@ -92,6 +92,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
 
     // Real-time listener for approved warehouses (from both owner & dataentry subcollections)
     useEffect(() => {
+        if (!user) return;
         const cg = collectionGroup(db, 'warehouses');
 
         const unsubscribe = onSnapshot(cg, (snapshot) => {
@@ -106,7 +107,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -234,8 +235,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     actualOwnerId, 
                     {
                         warehouseName: warehouse.warehouseName || warehouse.name,
-                        merchantName: localUser.name || 'Merchant',
-                        ownerName: warehouse.ownerName || 'Owner',
+                        merchantName: localUser.name || 'Business Client',
+                        ownerName: warehouse.ownerName || 'Warehouse Partner',
                         totalArea: warehouse.totalArea || 0,
                         pricingAmount: warehouse.pricingAmount || 0,
                         city: warehouse.city || warehouse.location?.city || '',
@@ -247,14 +248,14 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     conv.id, 
                     localUser.uid, 
                     bulkEnquiryText.trim(),
-                    'merchant'
+                    'business_client'
                 );
                 
                 sentCount++;
             }
             
             if (sentCount > 0) {
-                setMessage({ type: 'success', text: `Enquiry successfully sent to ${sentCount} warehouse owner(s)!` });
+                setMessage({ type: 'success', text: `Enquiry successfully sent to ${sentCount} warehouse partner(s)!` });
                 setShowBulkEnquiry(false);
                 setBulkEnquiryText('');
                 setActiveTab('chats'); // Redirect to chats to see outgoing messages
@@ -342,7 +343,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     </div>
                     <div className="flex items-center gap-2 xs:gap-4 w-full xs:w-auto justify-between xs:justify-end">
                         <span className="text-sm text-slate-500 truncate max-w-[120px] xs:max-w-none">
-                            Welcome, {(localUser?.name || 'Merchant').split(' ')[0]}
+                            Welcome, {(localUser?.name || 'Business Client').split(' ')[0]}
                         </span>
                         {localUser?.photoURL ? (
                             <img
@@ -563,10 +564,10 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                                     />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h3 className="text-xl font-bold text-slate-900">{localUser?.name || 'Merchant'}</h3>
+                                                    <h3 className="text-xl font-bold text-slate-900">{localUser?.name || 'Business Client'}</h3>
                                                     <p className="text-slate-500">{localUser?.email}</p>
                                                     <span className="inline-block mt-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                                                        Merchant Account
+                                                        Business Client Account
                                                     </span>
                                                     {uploading && <p className="text-xs text-blue-600 mt-1">Uploading image...</p>}
                                                 </div>
@@ -650,7 +651,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                                             </button>
                                                         </div>
                                                     )}
-                                                    <InfoField label="Account Type" value="Merchant" />
+                                                    <InfoField label="Account Type" value="Business Client" />
                                                     <div className="p-4 bg-slate-50 rounded-xl">
                                                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Email Verified</p>
                                                         <p className="text-base font-medium text-slate-900 mb-2">
@@ -742,7 +743,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                             </div>
                                             <h3 className="text-lg font-bold text-slate-900 mb-2">No active chats</h3>
                                             <p className="text-slate-500 max-w-sm mx-auto mb-8">
-                                                Messages you send to warehouse owners will appear here. Start a conversation to inquire about a space.
+                                                Messages you send to warehouse partners will appear here. Start a conversation to inquire about a space.
                                             </p>
                                             <button 
                                                 onClick={() => setActiveTab('browse')}
@@ -783,7 +784,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                                                 </div>
                                                             </div>
                                                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                                                Owner: {chat.ownerName || 'Contact Person'}
+                                                                Partner: {chat.ownerName || 'Contact Person'}
                                                             </p>
                                                             <p className="text-sm text-slate-500 truncate mb-2">
                                                                 {chat.lastMessage || 'Click to continue conversation'}
