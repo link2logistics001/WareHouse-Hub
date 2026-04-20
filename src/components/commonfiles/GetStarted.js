@@ -50,12 +50,33 @@ function PhaseCard({ phase, scrollYProgress, index, total }) {
   const start = index / total;
   const end = (index + 1) / total;
 
-  const opacity = useTransform(scrollYProgress, [start, start + 0.1, end - 0.1, end], [0, 1, 1, 0]);
-  const y = useTransform(scrollYProgress, [start, end], [80, -80]);
+  // Use a slight overlap (0.05) to ensure no flicker between phases
+  const fadeStart = Math.max(0, start - 0.05);
+  const fadeEnd = Math.min(1, end + 0.05);
+
+  const opacity = useTransform(
+    scrollYProgress,
+    index === 0 
+      ? [0, end - 0.1, end] 
+      : index === total - 1 
+        ? [start, start + 0.1, 1] 
+        : [start, start + 0.1, end - 0.1, end],
+    index === 0 
+      ? [1, 1, 0] 
+      : index === total - 1 
+        ? [0, 1, 1] 
+        : [0, 1, 1, 0]
+  );
+  
+  // Subtle vertical movement
+  const y = useTransform(scrollYProgress, [start, end], [30, -30]);
+  
+  // Higher z-index for later phases ensures they stack naturally during transitions
+  const zIndex = index + 10;
 
   return (
     <motion.div
-      style={{ opacity, y }}
+      style={{ opacity, y, zIndex }}
       className="absolute inset-0 flex items-center"
     >
       <div className="w-full bg-white/80 backdrop-blur-md border border-slate-100 rounded-[2.5rem] p-10 md:p-14 shadow-2xl shadow-blue-900/5 flex flex-col md:flex-row gap-12 items-center group">
