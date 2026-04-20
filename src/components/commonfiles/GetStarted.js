@@ -50,26 +50,44 @@ function PhaseCard({ phase, scrollYProgress, index, total }) {
   const start = index / total;
   const end = (index + 1) / total;
 
-  // Use a slight overlap (0.05) to ensure no flicker between phases
-  const fadeStart = Math.max(0, start - 0.05);
-  const fadeEnd = Math.min(1, end + 0.05);
+  // Incresed from 0.05 to 0.12 for a longer, smoother fade effect
+  const fade = 0.12;
 
-  const opacity = useTransform(
-    scrollYProgress,
-    index === 0 
-      ? [0, end - 0.1, end] 
-      : index === total - 1 
-        ? [start, start + 0.1, 1] 
-        : [start, start + 0.1, end - 0.1, end],
-    index === 0 
-      ? [1, 1, 0] 
-      : index === total - 1 
-        ? [0, 1, 1] 
-        : [0, 1, 1, 0]
-  );
-  
-  // Subtle vertical movement
-  const y = useTransform(scrollYProgress, [start, end], [30, -30]);
+  const opacity = useTransform(scrollYProgress, (v) => {
+    if (index === 0) {
+      if (v < end - fade) return 1;
+      if (v < end) return 1 - (v - (end - fade)) / fade;
+      return 0;
+    } else if (index === total - 1) {
+      if (v < start) return 0;
+      if (v < start + fade) return (v - start) / fade;
+      return 1;
+    } else {
+      if (v < start) return 0;
+      if (v < start + fade) return (v - start) / fade;
+      if (v < end - fade) return 1;
+      if (v < end) return 1 - (v - (end - fade)) / fade;
+      return 0;
+    }
+  });
+
+  const y = useTransform(scrollYProgress, (v) => {
+    if (index === 0) {
+      if (v < end - fade) return 0;
+      if (v < end) return -30 * ((v - (end - fade)) / fade);
+      return -30;
+    } else if (index === total - 1) {
+      if (v < start) return 30;
+      if (v < start + fade) return 30 - 30 * ((v - start) / fade);
+      return 0;
+    } else {
+      if (v < start) return 30;
+      if (v < start + fade) return 30 - 30 * ((v - start) / fade);
+      if (v < end - fade) return 0;
+      if (v < end) return -30 * ((v - (end - fade)) / fade);
+      return -30;
+    }
+  });
   
   // Higher z-index for later phases ensures they stack naturally during transitions
   const zIndex = index + 10;

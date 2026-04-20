@@ -422,10 +422,10 @@ function OverviewView({ counts, warehouses }) {
     const recentPending = warehouses.filter(w => w.status === 'pending').slice(0, 5);
 
     const stats = [
-        { label: 'Total Listings', value: counts.all, icon: '🏭', color: 'blue' },
-        { label: 'Pending Review', value: counts.pending, icon: '⏳', color: 'amber' },
-        { label: 'Approved', value: counts.approved, icon: '✅', color: 'emerald' },
-        { label: 'Rejected', value: counts.rejected, icon: '❌', color: 'red' },
+        { label: 'Total Listings', value: counts.all, icon: <Building2 className="w-6 h-6" />, color: 'blue' },
+        { label: 'Pending Review', value: counts.pending, icon: <Clock className="w-6 h-6" />, color: 'amber' },
+        { label: 'Approved', value: counts.approved, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald' },
+        { label: 'Rejected', value: counts.rejected, icon: <XCircle className="w-6 h-6" />, color: 'red' },
     ];
 
     const colorMap = {
@@ -442,7 +442,7 @@ function OverviewView({ counts, warehouses }) {
                 {stats.map(s => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
                         <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl">{s.icon}</span>
+                            <span className="flex items-center justify-center opacity-80">{s.icon}</span>
                             <span className="font-semibold text-slate-600 text-sm">{s.label}</span>
                         </div>
                         <div className="text-3xl font-bold text-slate-900">{s.value}</div>
