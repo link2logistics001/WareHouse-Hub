@@ -29,7 +29,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'block-people', label: 'Block People', icon: Users },
         { id: 'migration', label: 'Data Migration', icon: Database },
-        { id: 'analytics', label: 'Analytics', icon: Activity, isExternal: true, href: 'https://vercel.com/dashboard' },
+        { id: 'analytics', label: 'Analytics', icon: Activity, isExternal: true, href: 'https://vercel.com/link2logistics001-7602s-projects/ware-house-hub/analytics' },
     ];
 
     return (
