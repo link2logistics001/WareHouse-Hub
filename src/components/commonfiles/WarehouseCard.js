@@ -77,7 +77,7 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
           <div>
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price</p>
             <p className="text-lg font-bold text-gray-900">
-              {fmtPrice(price)} <span className="text-xs text-gray-400 font-normal">/mo</span>
+              {isNaN(Number(price)) ? price : fmtPrice(price)} <span className="text-xs text-gray-400 font-normal">/mo</span>
             </p>
           </div>
           <div className="text-right">

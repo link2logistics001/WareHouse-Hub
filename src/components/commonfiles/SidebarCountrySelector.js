@@ -5,22 +5,27 @@ import { Globe, ChevronDown, Check } from 'lucide-react';
 import { useCountry } from '@/contexts/CountryContext';
 import { COUNTRY_CONFIG, SUPPORTED_COUNTRIES } from '@/lib/locale';
 
+// Static class map — Tailwind cannot resolve dynamic class names like `bg-${color}-50`
+// so we define concrete class strings per accent color.
+const ACCENT_CLASSES = {
+  orange: { activeBg: 'bg-orange-50 text-orange-600', check: 'text-orange-500' },
+  blue:   { activeBg: 'bg-blue-50 text-blue-600',     check: 'text-blue-500' },
+  cyan:   { activeBg: 'bg-cyan-50 text-cyan-600',     check: 'text-cyan-500' },
+};
+
 /**
  * SidebarCountrySelector — compact country picker for sidebar layouts.
  *
- * Supports both dark (default) and light themes via the `theme` prop.
- *
  * @param {Object}  props
  * @param {string}  props.containerClasses  — CSS for text visibility toggling
- * @param {string}  [props.accentColor]     — Tailwind color token for active highlight (default "orange")
- * @param {'dark'|'light'} [props.theme]    — "dark" for dark sidebars, "light" for admin-style white sidebars
+ * @param {string}  [props.accentColor]     — "orange" | "blue" | "cyan" (default "orange")
+ * @param {'dark'|'light'} [props.theme]    — "dark" for dark sidebars, "light" for admin white sidebars
  */
 export default function SidebarCountrySelector({ containerClasses = '', accentColor = 'orange', theme = 'dark' }) {
   const { country, setCountry, config: countryConfig } = useCountry();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -30,8 +35,8 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
   }, []);
 
   const isLight = theme === 'light';
+  const accent = ACCENT_CLASSES[accentColor] || ACCENT_CLASSES.orange;
 
-  // Theme-aware styles
   const btnClasses = isLight
     ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
     : 'text-slate-400 hover:bg-white/5 hover:text-white';
@@ -40,9 +45,7 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
     ? 'bg-white border-slate-200 shadow-[0_10px_40px_rgba(0,0,0,0.12)]'
     : 'bg-[#1e293b] border-white/10 shadow-2xl';
 
-  const labelClasses = isLight
-    ? 'text-slate-400'
-    : 'text-slate-500';
+  const labelClasses = isLight ? 'text-slate-400' : 'text-slate-500';
 
   const itemDefault = isLight
     ? 'text-slate-700 hover:bg-slate-50'
@@ -77,14 +80,12 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
                 key={code}
                 onClick={() => { setCountry(code); setOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                  isActive
-                    ? `bg-${accentColor}-50 text-${accentColor}-600 font-bold`
-                    : itemDefault
+                  isActive ? `${accent.activeBg} font-bold` : itemDefault
                 }`}
               >
                 <span className="text-base">{cfg.flag}</span>
                 <span className="flex-1 text-left">{cfg.name}</span>
-                {isActive && <Check className={`w-4 h-4 text-${accentColor}-500`} />}
+                {isActive && <Check className={`w-4 h-4 ${accent.check}`} />}
                 <span className={`text-xs ${currencyClasses}`}>{cfg.currency}</span>
               </button>
             );
