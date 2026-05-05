@@ -6,6 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { getWarehouseCollection } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -32,7 +33,7 @@ const VALUE_ADDED_SERVICES = [
   'Cross Docking', 'Transportation Support', 'Others',
 ];
 
-const PRICING_UNITS = ['Per sq ft', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
+const PRICING_UNITS = ['Per unit', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
 const MIN_COMMITMENT_OPTIONS = ['No Minimum', '1 Month', '3 Months', '6 Months', '12 Months'];
 const SHORT_TERM_OPTIONS = ['Yes (1-3 months)', 'Yes (3-6 months)', 'No (Only Long-Term)'];
 
@@ -101,6 +102,7 @@ const STEP_LABELS = {
 // ─────────────────────────────────────────────────────────────
 export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
   const { user } = useAuth();
+  const { config: countryConfig, country } = useCountry();
   const [step, setStep] = useState(1);
   const totalSteps = 4;
 
@@ -297,8 +299,8 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
     if (!warehouseDetails.state.trim()) e.state = 'State is required';
     if (!warehouseDetails.city.trim()) e.city = 'City is required';
     if (!warehouseDetails.address.trim()) e.address = 'Address is required';
-    if (!warehouseDetails.zipCode.trim()) e.zipCode = 'Zip code is required';
-    else if (!/^\d{6}$/.test(warehouseDetails.zipCode.trim())) e.zipCode = 'Enter a valid 6-digit zip code';
+    if (!warehouseDetails.zipCode.trim()) e.zipCode = `${countryConfig.postalLabel} is required`;
+    else if (!countryConfig.postalRegex.test(warehouseDetails.zipCode.trim())) e.zipCode = `Enter a valid ${countryConfig.postalLabel}`;
     return e;
   };
 
@@ -355,7 +357,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
     setOtpError('');
     setSendingOtp(true);
     try {
-      const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile;
+      const formatted = mobile.startsWith('+') ? mobile : countryConfig.phonePrefix + mobile;
       await sendPhoneOtp(formatted);
       setOtpSent(true);
       setOtp('');
@@ -637,7 +639,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                       <Field label="Contact Person" id="contactPerson" placeholder="e.g. Vikram Singh" value={ownerDetails.contactPerson} onChange={v => handleOwnerChange('contactPerson', v)} mandatory errors={errors} />
 
                       <div className="flex flex-col relative w-full">
-                        <Field label="Mobile" id="mobile" type="tel" placeholder="+91 98765 XXXXX" value={ownerDetails.mobile} onChange={v => {
+                        <Field label="Mobile" id="mobile" type="tel" placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`} value={ownerDetails.mobile} onChange={v => {
                           handleOwnerChange('mobile', v);
                           if (otpVerified) setOtpVerified(false);
                           if (otpSent) { setOtpSent(false); setResendCountdown(0); }
@@ -690,7 +692,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                       </div>
 
                       <Field label="Email" id="email" type="email" placeholder="contact@company.com" value={ownerDetails.email} onChange={v => handleOwnerChange('email', v)} mandatory errors={errors} />
-                      <Field label="GST / PAN (Optional)" id="ownerGstPan" placeholder="e.g. ABCDE1234F" value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
+                      <Field label={`${countryConfig.taxLabel} (Optional)`} id="ownerGstPan" placeholder="e.g. ABCDE1234F" value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
                     </div>
                   </div>
                 )}
@@ -737,14 +739,14 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                         </motion.div>
                       )}
 
-                      <Field label="Total Area (sq ft)" id="totalArea" type="number" placeholder="e.g. 25000" value={warehouseDetails.totalArea} onChange={v => {
+                      <Field label={`Total Area (${countryConfig.unit})`} id="totalArea" type="number" placeholder="e.g. 25000" value={warehouseDetails.totalArea} onChange={v => {
                         handleWarehouseChange('totalArea', v);
                         const available = Number(warehouseDetails.availableArea);
                         if (available && Number(v) > 0 && available > Number(v)) setErrors(prev => ({ ...prev, availableArea: 'Cannot exceed Total Area' }));
                         else setErrors(prev => ({ ...prev, availableArea: '' }));
                       }} mandatory errors={errors} />
 
-                      <Field label="Available Area (sq ft)" id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => {
+                      <Field label={`Available Area (${countryConfig.unit})`} id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => {
                         handleWarehouseChange('availableArea', v);
                         const total = Number(warehouseDetails.totalArea);
                         if (total > 0 && Number(v) > total) setErrors(prev => ({ ...prev, availableArea: 'Cannot exceed Total Area' }));
@@ -758,7 +760,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                       <Field label="Type of Construction" id="typeOfConstruction" placeholder="e.g. RCC, PEB, Shed, Mixed" value={warehouseDetails.typeOfConstruction} onChange={v => handleWarehouseChange('typeOfConstruction', v)} errors={errors} />
 
                       <SelectField label="Warehouse Age" id="warehouseAge" options={WAREHOUSE_AGES} placeholder="Select age (optional)" value={warehouseDetails.warehouseAge} onChange={v => handleWarehouseChange('warehouseAge', v)} errors={errors} />
-                      <Field label="GST / PAN (Optional)" id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
+                      <Field label={`${countryConfig.taxLabel} (Optional)`} id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
                       {/* State autocomplete */}
                       <AutocompleteField
                         label="State"
@@ -914,8 +916,8 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                             </motion.div>
                           )}
                         </div>
-                        <Field label="Storage Rate (₹)" id="storageRate" type="number" placeholder="Approximate value allowed" value={pricingDetails.storageRate} onChange={v => handlePricingChange('storageRate', v)} mandatory errors={errors} />
-                        <Field label="Handling Fees — Optional (₹)" id="handlingFees" type="number" placeholder="Leave blank if not applicable" value={pricingDetails.handlingFees} onChange={v => handlePricingChange('handlingFees', v)} errors={errors} />
+                        <Field label={`Storage Rate (${countryConfig.currency})`} id="storageRate" type="number" placeholder="Approximate value allowed" value={pricingDetails.storageRate} onChange={v => handlePricingChange('storageRate', v)} mandatory errors={errors} />
+                        <Field label={`Handling Fees — Optional (${countryConfig.currency})`} id="handlingFees" type="number" placeholder="Leave blank if not applicable" value={pricingDetails.handlingFees} onChange={v => handlePricingChange('handlingFees', v)} errors={errors} />
                         <SelectField label="Minimum Commitment Duration" id="minCommitment" options={MIN_COMMITMENT_OPTIONS} placeholder="Select duration" value={pricingDetails.minCommitment} onChange={v => handlePricingChange('minCommitment', v)} mandatory errors={errors} />
 
                         {/* Short-Term Storage — Yes/No + sub-options */}
@@ -956,7 +958,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                   <input
                                     type="text"
                                     inputMode="numeric"
-                                    placeholder="Amount (₹)"
+                                    placeholder={`Amount (${countryConfig.currency})`}
                                     value={charge.amount}
                                     onChange={e => {
                                       const val = e.target.value.replace(/[^0-9.]/g, '');

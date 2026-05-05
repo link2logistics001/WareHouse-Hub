@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchCities } from '@/lib/locationService';
 
-// Curated list for instant priority matches
+// Curated list for instant priority matches (India only — other countries use API)
 const INDIAN_CITIES = [
   "Mumbai, Maharashtra", "Navi Mumbai, Maharashtra", "Bhiwandi, Maharashtra", "Thane, Maharashtra", "Pune, Maharashtra",
   "Nagpur, Maharashtra", "Nashik, Maharashtra", "New Delhi, Delhi", "Gurgaon, Haryana", "Noida, Uttar Pradesh",
@@ -10,11 +10,17 @@ const INDIAN_CITIES = [
   "Aurangabad, Maharashtra", "Vadodara, Gujarat", "Rajkot, Gujarat", "Chandigarh", "Ludhiana, Punjab", "Kochi, Kerala"
 ];
 
-export function useCityAutocomplete(initialValue = '') {
+/**
+ * @param {string} initialValue
+ * @param {string} [countryCode] — ISO 3166-1 alpha-2 (e.g. 'IN', 'US'). Defaults to '' (global).
+ */
+export function useCityAutocomplete(initialValue = '', countryCode = '') {
   const [searchQuery, setSearchQuery] = useState(initialValue);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+
+  const isIndia = !countryCode || countryCode.toUpperCase() === 'IN';
 
   useEffect(() => {
     if (searchQuery.length < 3) {
@@ -24,15 +30,17 @@ export function useCityAutocomplete(initialValue = '') {
     }
 
     const timer = setTimeout(async () => {
-      // 1. Get static matches first
-      const staticMatches = INDIAN_CITIES.filter(city => {
-        const query = searchQuery.toLowerCase();
-        const cityLower = city.toLowerCase();
-        return cityLower.startsWith(query) || cityLower.split(' ').some(word => word.startsWith(query));
-      });
+      // 1. Get static matches first (India only)
+      const staticMatches = isIndia
+        ? INDIAN_CITIES.filter(city => {
+            const query = searchQuery.toLowerCase();
+            const cityLower = city.toLowerCase();
+            return cityLower.startsWith(query) || cityLower.split(' ').some(word => word.startsWith(query));
+          })
+        : [];
 
-      // 2. Fetch from API
-      const apiResults = await fetchCities(searchQuery);
+      // 2. Fetch from API — pass country code for scoped results
+      const apiResults = await fetchCities(searchQuery, countryCode);
       
       // 3. Filter API results
       const filteredApi = apiResults.filter(item => {
@@ -51,7 +59,7 @@ export function useCityAutocomplete(initialValue = '') {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, showSuggestions]);
+  }, [searchQuery, showSuggestions, countryCode, isIndia]);
 
   const handleSearchChange = (value) => {
     setSearchQuery(value);

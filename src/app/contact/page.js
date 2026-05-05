@@ -4,15 +4,18 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Navbar from '@/components/commonfiles/Navbar'
 import Footer from '@/components/commonfiles/Footer'
+import { useCountry } from '@/contexts/CountryContext'
 import { Phone, Mail, MessageCircle, ArrowRight } from 'lucide-react'
 
 export default function ContactPage() {
+  const { config } = useCountry()
+
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6" />,
       label: 'Phone Support',
-      value: '+919167714513',
-      href: 'tel:+919167714513',
+      value: config.phone,
+      href: `tel:${config.phone}`,
       description: 'Immediate assistance for urgent inquiries',
       color: 'from-orange-400 to-orange-600',
       shadow: 'shadow-orange-200'

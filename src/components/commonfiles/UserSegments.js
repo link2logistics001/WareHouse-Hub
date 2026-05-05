@@ -165,7 +165,7 @@ export default function UserSegments() {
                 For Cargo Businesses
               </h3>
               <p className="text-base md:text-lg text-slate-600 mb-8 leading-relaxed">
-                <span className="font-bold text-slate-900">Manufacturers, 3PLs, e-commerce, & forwarders</span> — anyone moving cargo across India and needing reliable warehouse space.
+                <span className="font-bold text-slate-900">Manufacturers, 3PLs, e-commerce, & forwarders</span> — anyone moving cargo and needing reliable warehouse space.
               </p>
 
               <div className="bg-white border-l-4 border-[#E65100] p-6 mb-8 rounded-r-2xl shadow-sm border-y border-r border-slate-100">

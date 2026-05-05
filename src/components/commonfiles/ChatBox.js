@@ -3,12 +3,14 @@ import { useState, useEffect, useRef } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore'
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging'
+import { useCountry } from '@/contexts/CountryContext'
 
 export default function ChatBox({ warehouse, user, onClose }) {
   const [conversation, setConversation] = useState(null)
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const messagesEndRef = useRef(null)
+  const { fmtPrice, config } = useCountry()
 
   // Initialize/Fetch conversation and listen for messages
   useEffect(() => {
@@ -214,13 +216,13 @@ export default function ChatBox({ warehouse, user, onClose }) {
             <div className="flex-shrink-0 px-5 py-3 bg-slate-50 rounded-2xl border border-slate-100">
               <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Area</p>
               <p className="text-sm font-black text-slate-900">
-                {warehouse.totalArea || warehouse.size?.area || 'N/A'} sq ft
+                {warehouse.totalArea || warehouse.size?.area || 'N/A'} {config.unit}
               </p>
             </div>
             <div className="flex-shrink-0 px-5 py-3 bg-orange-50/50 rounded-2xl border border-orange-100/50">
               <p className="text-[10px] text-orange-400 font-black uppercase tracking-widest mb-0.5">Monthly Rent</p>
               <p className="text-xs text-slate-500">
-                📍 {warehouse.city || warehouse.location?.city || 'Location'} • ₹{(warehouse.pricingAmount || 0).toLocaleString()}/month
+                📍 {warehouse.city || warehouse.location?.city || 'Location'} • {fmtPrice(warehouse.pricingAmount || 0)}/month
               </p>
             </div>
             <div className="flex-shrink-0 px-5 py-3 bg-slate-50 rounded-2xl border border-slate-100">

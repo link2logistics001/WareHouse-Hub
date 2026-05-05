@@ -1,13 +1,17 @@
 /**
  * Fetch city suggestions from Nominatim (OpenStreetMap)
  * @param {string} query 
- * @returns {Promise<Array<string>>}
+ * @param {string} [countryCode] — ISO 3166-1 alpha-2 (e.g. 'in', 'us', 'ae'). Pass '' for global search.
+ * @returns {Promise<Array<{display:string, name:string, type:string, class:string, importance:number}>>}
  */
-export async function fetchCities(query) {
+export async function fetchCities(query, countryCode = '') {
   if (!query || query.length < 3) return [];
 
-  // Use Nominatim API (Free and Open Source)
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1&countrycodes=in`;
+  // Build URL — only add countrycodes param if a specific country is selected
+  let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`;
+  if (countryCode) {
+    url += `&countrycodes=${countryCode.toLowerCase()}`;
+  }
   
   try {
     const response = await fetch(url, {

@@ -4,6 +4,7 @@ import {
   Building2, MessageSquare, Star, FileText, 
   LogOut, Settings, Sparkles 
 } from 'lucide-react';
+import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 
 export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
   const menuItems = [
@@ -79,7 +80,8 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, isD
       </nav>
 
       {/* ── Bottom Actions ── */}
-      <div className="p-4 border-t border-white/10 bg-black/20 relative z-10">
+      <div className="p-4 border-t border-white/10 bg-black/20 relative z-10 space-y-1">
+        <SidebarCountrySelector containerClasses={containerClasses} accentColor="blue" />
         
         <button 
           onClick={() => setActiveTab && setActiveTab('settings')}
