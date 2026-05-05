@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { fetchUserWarehouses, getWarehouseCollectionPath } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -153,6 +154,7 @@ export default function MyWarehouses({ setActiveTab, onOpenSidebar, onEdit }) {
 // WarehouseCard — Magic Animated Card
 // ─────────────────────────────────────────────────────────────
 function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
+  const { fmtPrice, config } = useCountry();
   const frontPhoto = w.photos?.frontView || null;
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOnline, setIsOnline] = useState(w.isOnline !== false);
@@ -318,8 +320,8 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
 
         {/* Premium Stat Glass Grid */}
         <div className="grid grid-cols-2 gap-3 mb-6 z-10">
-          <StatChip icon={<Layers className="w-4 h-4 text-orange-500" />} label="Total Area" value={w.totalArea ? `${Number(w.totalArea).toLocaleString()} sq ft` : '—'} />
-          <StatChip icon={<Package className="w-4 h-4 text-blue-500" />} label="Available" value={w.availableArea ? `${Number(w.availableArea).toLocaleString()} sq ft` : '—'} />
+          <StatChip icon={<Layers className="w-4 h-4 text-orange-500" />} label="Total Area" value={w.totalArea ? `${Number(w.totalArea).toLocaleString()} ${config.unit}` : '—'} />
+          <StatChip icon={<Package className="w-4 h-4 text-blue-500" />} label="Available" value={w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—'} />
           <StatChip icon={<Building2 className="w-4 h-4 text-slate-500" />} label="Clear Height" value={w.clearHeight ? `${w.clearHeight} ft` : '—'} />
           <StatChip icon={<DoorOpen className="w-4 h-4 text-purple-500" />} label="Dock Doors" value={w.numberOfDockDoors ?? '—'} />
         </div>
@@ -332,7 +334,7 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Rate</span>
             </div>
             <p className="text-sm font-black text-slate-800">
-              {w.storageRate ? `₹${Number(w.storageRate).toLocaleString()}` : ''}
+              {w.storageRate ? fmtPrice(w.storageRate) : ''}
               <span className="text-slate-400 font-medium text-xs ml-1">{(w.pricingUnit || w.pricingModel) ? `/ ${w.pricingUnit || w.pricingModel}` : ''}</span>
             </p>
           </div>

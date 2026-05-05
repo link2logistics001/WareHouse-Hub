@@ -1,5 +1,6 @@
 'use client'
 import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
+import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 
 export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout }) {
   const menuItems = [
@@ -45,7 +46,8 @@ export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout }) 
       </nav>
 
       {/* Bottom Actions */}
-      <div className="p-3 border-t border-white/10">
+      <div className="p-3 border-t border-white/10 space-y-1">
+        <SidebarCountrySelector containerClasses="opacity-0 group-hover:opacity-100 transition-opacity duration-300" accentColor="cyan" />
         <button 
           onClick={onLogout}
           className="w-full flex items-center px-3 py-3.5 text-slate-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all whitespace-nowrap" 

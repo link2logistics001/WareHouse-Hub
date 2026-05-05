@@ -5,11 +5,13 @@ import OptimizedImage from './OptimizedImage';
 import { encodeWarehouseId } from '@/lib/warehouseId';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 
 const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner, facilities, amenities, category }) => {
   const router = useRouter();
   const { user } = useAuth();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { fmtPrice, config } = useCountry();
   
   const isBusinessClient = user?.userType === 'business_client';
   const saved = isWishlisted(id);
@@ -75,14 +77,14 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
           <div>
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price</p>
             <p className="text-lg font-bold text-gray-900">
-              ₹{price} <span className="text-xs text-gray-400 font-normal">/mo</span>
+              {fmtPrice(price)} <span className="text-xs text-gray-400 font-normal">/mo</span>
             </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Area</p>
             <div className="flex items-center justify-end text-gray-700 font-semibold">
               <Ruler className="w-4 h-4 mr-1 text-gray-400" />
-              {area} sq ft
+              {area} {config.unit}
             </div>
           </div>
         </div>

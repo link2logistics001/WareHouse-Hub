@@ -1,10 +1,12 @@
 'use client'
 import { Search, MapPin, Grid, Ruler, Wallet, Filter } from 'lucide-react';
 import { useCityAutocomplete } from '@/hooks/useCityAutocomplete';
+import { useCountry } from '@/contexts/CountryContext';
 import CityDropdown from './CityDropdown';
 import { useEffect } from 'react';
 
 export default function SearchFilters({ filters, setFilters }) {
+  const { config, country } = useCountry();
   
   const handleChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -21,7 +23,7 @@ export default function SearchFilters({ filters, setFilters }) {
     handleKeyDown,
     setShowSuggestions,
     setActiveSuggestionIndex
-  } = useCityAutocomplete(filters.city || '');
+  } = useCityAutocomplete(filters.city || '', country);
 
   // Sync internal search query to parent filter
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function SearchFilters({ filters, setFilters }) {
           <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
           <input
             type="number"
-            placeholder="Min Area (sq ft)"
+            placeholder={`Min Area (${config.unit})`}
             value={filters.minArea}
             onChange={(e) => handleChange('minArea', e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
@@ -114,7 +116,7 @@ export default function SearchFilters({ filters, setFilters }) {
           <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
           <input
             type="number"
-            placeholder="Max Budget (₹/month)"
+            placeholder={`Max Budget (${config.currency}/month)`}
             value={filters.maxBudget}
             onChange={(e) => handleChange('maxBudget', e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"

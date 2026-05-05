@@ -15,6 +15,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { getWarehouseCollection } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -36,7 +37,7 @@ const VALUE_ADDED_SERVICES = [
   'Repacking', 'Quality Inspection', 'E-commerce Fulfillment',
   'Cross Docking', 'Transportation Support', 'Others',
 ];
-const PRICING_UNITS = ['Per sq ft', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
+const PRICING_UNITS = ['Per unit', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
 const MIN_COMMITMENT_OPTIONS = ['No Minimum', '1 Month', '3 Months', '6 Months', '12 Months'];
 const SHORT_TERM_OPTIONS = ['Yes (1-3 months)', 'Yes (3-6 months)', 'No (Only Long-Term)'];
 const BUSINESS_TYPES = ['Warehouse Owner', '3PL Service Provider', 'Both'];
@@ -48,6 +49,7 @@ const ACCENT = 'cyan';
 
 export default function DEAddWarehouse({ setActiveTab }) {
   const { user } = useAuth();
+  const { config: countryConfig } = useCountry();
   const [step, setStep] = useState(1);
   const totalSteps = 4;
 
@@ -103,7 +105,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
   // ── OTP handlers ──
   const startCountdown = () => { if (countdownRef.current) clearInterval(countdownRef.current); setResendCountdown(60); countdownRef.current = setInterval(() => { setResendCountdown(prev => { if (prev <= 1) { clearInterval(countdownRef.current); countdownRef.current = null; return 0; } return prev - 1; }); }, 1000); };
   useEffect(() => { return () => { if (countdownRef.current) clearInterval(countdownRef.current); }; }, []);
-  const handleSendOtp = async () => { const mobile = ownerDetails.mobile.trim(); if (!mobile || mobile.length < 10) { setOtpError('Enter a valid mobile number.'); return; } setOtpError(''); setSendingOtp(true); try { const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile; await sendPhoneOtp(formatted); setOtpSent(true); setOtp(''); startCountdown(); } catch (error) { setOtpError(error.message); } finally { setSendingOtp(false); } };
+  const handleSendOtp = async () => { const mobile = ownerDetails.mobile.trim(); if (!mobile || mobile.length < 10) { setOtpError('Enter a valid mobile number.'); return; } setOtpError(''); setSendingOtp(true); try { const formatted = mobile.startsWith('+') ? mobile : countryConfig.phonePrefix + mobile; await sendPhoneOtp(formatted); setOtpSent(true); setOtp(''); startCountdown(); } catch (error) { setOtpError(error.message); } finally { setSendingOtp(false); } };
   const handleVerifyOtp = async () => { if (!otp || otp.trim().length < 6) { setOtpError('Enter the 6-digit OTP.'); return; } setOtpError(''); setVerifyingOtp(true); try { await verifyPhoneOtp(otp.trim()); setOtpVerified(true); setOtpSent(false); setOtp(''); if (countdownRef.current) clearInterval(countdownRef.current); setResendCountdown(0); } catch (error) { setOtpError(error.message); } finally { setVerifyingOtp(false); } };
 
   const handleNext = () => { const validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 }; const errs = validators[step](); if (Object.keys(errs).length > 0) { setErrors(errs); return; } setErrors({}); setStep(s => s + 1); };
@@ -273,7 +275,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
                       <Field label="Company Name" id="companyName" placeholder="e.g. MetroStore Pvt Ltd" value={ownerDetails.companyName} onChange={v => handleOwnerChange('companyName', v)} mandatory errors={errors} />
                       <Field label="Contact Person" id="contactPerson" placeholder="e.g. Vikram Singh" value={ownerDetails.contactPerson} onChange={v => handleOwnerChange('contactPerson', v)} mandatory errors={errors} />
                       <div className="flex flex-col relative w-full">
-                        <Field label="Mobile" id="mobile" type="tel" placeholder="+91 98765 XXXXX" value={ownerDetails.mobile} onChange={v => { handleOwnerChange('mobile', v); if (otpVerified) setOtpVerified(false); if (otpSent) { setOtpSent(false); setResendCountdown(0); } }} mandatory errors={errors} />
+                        <Field label="Mobile" id="mobile" type="tel" placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`} value={ownerDetails.mobile} onChange={v => { handleOwnerChange('mobile', v); if (otpVerified) setOtpVerified(false); if (otpSent) { setOtpSent(false); setResendCountdown(0); } }} mandatory errors={errors} />
                         <div className="mt-2">
                           {otpVerified ? (
                             <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit border border-emerald-100"><CheckCircle className="w-4 h-4" /> Phone Verified</span>
@@ -311,7 +313,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
                         </div>
                       </div>
                       <Field label="Email" id="email" type="email" placeholder="contact@company.com" value={ownerDetails.email} onChange={v => handleOwnerChange('email', v)} mandatory errors={errors} />
-                      <Field label="GST / PAN (Optional)" id="ownerGstPan" placeholder="e.g. ABCDE1234F" value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
+                      <Field label={`${countryConfig.taxLabel} (Optional)`} id="ownerGstPan" placeholder="e.g. ABCDE1234F" value={ownerDetails.ownerGstPan} onChange={v => handleOwnerChange('ownerGstPan', v)} errors={errors} />
                     </div>
                   </div>
                 )}
@@ -328,14 +330,14 @@ export default function DEAddWarehouse({ setActiveTab }) {
                           <MultiChips label="Storage Type" id="storageTypes" options={STORAGE_TYPES} mandatory hint="Select all that apply" selected={warehouseDetails.storageTypes} onToggle={item => toggleItem('storageTypes', item, setWarehouseDetails)} errors={errors} />
                         </motion.div>
                       )}
-                      <Field label="Total Area (sq ft)" id="totalArea" type="number" placeholder="e.g. 25000" value={warehouseDetails.totalArea} onChange={v => handleWarehouseChange('totalArea', v)} mandatory errors={errors} />
-                      <Field label="Available Area (sq ft)" id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => handleWarehouseChange('availableArea', v)} mandatory errors={errors} />
+                      <Field label={`Total Area (${countryConfig.unit})`} id="totalArea" type="number" placeholder="e.g. 25000" value={warehouseDetails.totalArea} onChange={v => handleWarehouseChange('totalArea', v)} mandatory errors={errors} />
+                      <Field label={`Available Area (${countryConfig.unit})`} id="availableArea" type="number" placeholder="e.g. 20000" value={warehouseDetails.availableArea} onChange={v => handleWarehouseChange('availableArea', v)} mandatory errors={errors} />
                       <Field label="Clear Height (ft)" id="clearHeight" type="number" placeholder="e.g. 30" value={warehouseDetails.clearHeight} onChange={v => handleWarehouseChange('clearHeight', v)} errors={errors} />
                       <Field label="Number of Dock Doors" id="numberOfDockDoors" type="number" placeholder="e.g. 4" value={warehouseDetails.numberOfDockDoors} onChange={v => handleWarehouseChange('numberOfDockDoors', v)} errors={errors} />
                       <YesNoField label="40 ft Container Handling" id="containerHandling" value={warehouseDetails.containerHandling} onChange={v => handleWarehouseChange('containerHandling', v)} errors={errors} />
                       <SelectField label="Type of Construction" id="typeOfConstruction" options={CONSTRUCTION_TYPES} placeholder="Select type (optional)" value={warehouseDetails.typeOfConstruction} onChange={v => handleWarehouseChange('typeOfConstruction', v)} errors={errors} />
                       <SelectField label="Warehouse Age" id="warehouseAge" options={WAREHOUSE_AGES} placeholder="Select age (optional)" value={warehouseDetails.warehouseAge} onChange={v => handleWarehouseChange('warehouseAge', v)} errors={errors} />
-                      <Field label="GST / PAN (Optional)" id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
+                      <Field label={`${countryConfig.taxLabel} (Optional)`} id="warehouseGstPan" placeholder="e.g. 27AABC1234..." value={warehouseDetails.warehouseGstPan} onChange={v => handleWarehouseChange('warehouseGstPan', v)} errors={errors} />
                       <Field label="State" id="state" placeholder="e.g. Maharashtra" value={warehouseDetails.state} onChange={v => handleWarehouseChange('state', v)} mandatory errors={errors} />
                       <Field label="City" id="city" placeholder="e.g. Mumbai" value={warehouseDetails.city} onChange={v => handleWarehouseChange('city', v)} mandatory errors={errors} />
                       <div className="md:col-span-2">
@@ -424,8 +426,8 @@ export default function DEAddWarehouse({ setActiveTab }) {
                       <SectionHeading icon={<DollarSign className="w-6 h-6 text-emerald-500 drop-shadow-md" />} title="Pricing Details" />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <SelectField label="Pricing Unit" id="pricingUnit" options={PRICING_UNITS} placeholder="Select unit" value={pricingDetails.pricingUnit} onChange={v => handlePricingChange('pricingUnit', v)} mandatory errors={errors} />
-                        <Field label="Storage Rate (₹)" id="storageRate" type="number" placeholder="Approximate value" value={pricingDetails.storageRate} onChange={v => handlePricingChange('storageRate', v)} mandatory errors={errors} />
-                        <Field label="Handling Fees — Optional (₹)" id="handlingFees" type="number" placeholder="Leave blank if N/A" value={pricingDetails.handlingFees} onChange={v => handlePricingChange('handlingFees', v)} errors={errors} />
+                        <Field label={`Storage Rate (${countryConfig.currency})`} id="storageRate" type="number" placeholder="Approximate value" value={pricingDetails.storageRate} onChange={v => handlePricingChange('storageRate', v)} mandatory errors={errors} />
+                        <Field label={`Handling Fees — Optional (${countryConfig.currency})`} id="handlingFees" type="number" placeholder="Leave blank if N/A" value={pricingDetails.handlingFees} onChange={v => handlePricingChange('handlingFees', v)} errors={errors} />
                         <SelectField label="Minimum Commitment" id="minCommitment" options={MIN_COMMITMENT_OPTIONS} placeholder="Select duration" value={pricingDetails.minCommitment} onChange={v => handlePricingChange('minCommitment', v)} mandatory errors={errors} />
                         <div className="md:col-span-2">
                           <SelectField label="Short-Term Storage Available" id="shortTermStorage" options={SHORT_TERM_OPTIONS} placeholder="Select option" value={pricingDetails.shortTermStorage} onChange={v => handlePricingChange('shortTermStorage', v)} mandatory errors={errors} />

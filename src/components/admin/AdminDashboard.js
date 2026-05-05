@@ -6,6 +6,7 @@ import {
     serverTimestamp, orderBy, onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { formatPrice } from '@/lib/locale';
 import { logoutUser } from '@/lib/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +18,7 @@ import {
     Users, UserX, Ban, UserSquare2
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
+import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -66,6 +68,8 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
 
             {/* Bottom */}
             <div className="p-4 border-t border-slate-100 space-y-1">
+                {/* Country selector */}
+                <SidebarCountrySelector containerClasses="opacity-100" accentColor="orange" theme="light" />
                 {/* Admin info */}
                 <div className="flex items-center gap-3 px-4 py-3 mb-1">
                     <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -722,7 +726,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                                 ]} />
                                 <DetailGroup title="Pricing & Contact" items={[
                                     ['Pricing Unit', w.pricingUnit || w.pricingModel],
-                                    ['Storage Rate', w.storageRate ? `₹${w.storageRate}` : null],
+                                    ['Storage Rate', w.storageRate ? formatPrice(w.storageRate) : null],
                                     ['Min Commitment', w.minCommitment],
                                     ['Mobile', w.mobile],
                                     ['Company', w.companyName],

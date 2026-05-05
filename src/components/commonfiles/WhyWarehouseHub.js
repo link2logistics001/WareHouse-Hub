@@ -29,11 +29,11 @@ const features = [
     icon: Handshake,
   },
   {
-    title: "Built for India",
+    title: "Localized Expertise",
     label: "LOCALIZED",
-    desc: "Understand Indian logistics ecosystem, infrastructure realities, operational nuances. Designed for how business actually works here.",
-    stat: "Pan",
-    statLabel: "India Focus",
+    desc: "We understand local logistics ecosystems, infrastructure realities, and operational nuances. Designed for how business actually works in your region.",
+    stat: "Global",
+    statLabel: "Regional Focus",
     icon: MapPin,
   },
 ];

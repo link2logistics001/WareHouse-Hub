@@ -11,6 +11,7 @@ import { useEffect, useState, useRef } from 'react';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { fetchUserWarehouses } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -127,6 +128,7 @@ function DEWarehouseCard({ w, onDelete }) {
   const [isOnline, setIsOnline] = useState(w.isOnline !== undefined ? w.isOnline : true);
   const [toggling, setToggling] = useState(false);
   const { user } = useAuth();
+  const { fmtPrice, config } = useCountry();
 
   const statusConfig = {
     approved: { icon: <CheckCircle className="w-3 h-3" />, label: 'Approved', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -174,7 +176,7 @@ function DEWarehouseCard({ w, onDelete }) {
             <h3 className="font-bold text-slate-800 text-lg truncate">{w.warehouseName || 'Unnamed'}</h3>
             <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
               <span className="flex items-center gap-1"><MapPin className="w-3 h-3 shrink-0" />{[w.city, w.state].filter(Boolean).join(', ') || '—'}</span>
-              {w.totalArea && <span className="flex items-center gap-1"><Layers className="w-3 h-3" />{Number(w.totalArea).toLocaleString()} sq ft</span>}
+              {w.totalArea && <span className="flex items-center gap-1"><Layers className="w-3 h-3" />{Number(w.totalArea).toLocaleString()} {config.unit}</span>}
             </div>
           </div>
         </div>
@@ -208,11 +210,11 @@ function DEWarehouseCard({ w, onDelete }) {
                 {[
                   { label: 'Category', value: w.warehouseCategory },
                   { label: 'Construction', value: w.typeOfConstruction },
-                  { label: 'Available', value: w.availableArea ? `${Number(w.availableArea).toLocaleString()} sq ft` : '—' },
+                  { label: 'Available', value: w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—' },
                   { label: 'Dock Doors', value: w.numberOfDockDoors || '—' },
                   { label: 'Days', value: w.daysOfOperation || '—' },
                   { label: 'Hours', value: w.operationTime || '—' },
-                  { label: 'Pricing', value: w.storageRate ? `₹${Number(w.storageRate).toLocaleString()} / ${w.pricingUnit || 'sq ft'}` : '—' },
+                  { label: 'Pricing', value: w.storageRate ? `${fmtPrice(w.storageRate)} / ${w.pricingUnit || config.unit}` : '—' },
                   { label: 'Contact', value: w.contactPerson || '—' },
                 ].map((item, i) => (
                   <div key={i} className="bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">

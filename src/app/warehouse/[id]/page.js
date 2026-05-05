@@ -12,6 +12,7 @@ import {
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { checkAccessStatus } from '@/lib/messaging';
 import { decodeWarehouseId } from '@/lib/warehouseId';
 import ChatBox from '@/components/commonfiles/ChatBox';
@@ -21,6 +22,7 @@ export default function WarehouseDetailPage({ params }) {
   const { id: encodedId } = use(params);
   const id = decodeWarehouseId(encodedId);
   const { user } = useAuth();
+  const { fmtPrice, config } = useCountry();
   const [warehouse, setWarehouse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState('frontView');
@@ -238,18 +240,18 @@ export default function WarehouseDetailPage({ params }) {
                     <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" /> Starting Price
                   </div>
                   <div className="text-3xl font-black text-white flex items-baseline gap-1">
-                    <span className="text-orange-400">₹</span>
-                    {warehouse.pricingAmount ? warehouse.pricingAmount.toLocaleString('en-IN') : 'Contact'}
+                    <span className="text-orange-400">{config.currency}</span>
+                    {warehouse.pricingAmount ? warehouse.pricingAmount.toLocaleString(config.locale) : 'Contact'}
                   </div>
                   <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">
-                    per {warehouse.pricingUnit || 'sq ft'} / month
+                    per {warehouse.pricingUnit || config.unit} / month
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-y border-slate-100 my-8">
-                <ModernStat icon={Ruler} label="Total Area" value={`${warehouse.totalArea} sq ft`} delay={0.1} />
-                <ModernStat icon={CheckCircle2} label="Available" value={`${warehouse.availableArea} sq ft`} delay={0.2} />
+                <ModernStat icon={Ruler} label="Total Area" value={`${warehouse.totalArea} ${config.unit}`} delay={0.1} />
+                <ModernStat icon={CheckCircle2} label="Available" value={`${warehouse.availableArea} ${config.unit}`} delay={0.2} />
                 <ModernStat icon={Layers} label="Clear Height" value={`${warehouse.clearHeight} ft`} delay={0.3} />
                 <ModernStat icon={Clock} label="Warehouse Age" value={warehouse.warehouseAge || 'N/A'} delay={0.4} />
               </div>

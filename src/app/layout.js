@@ -3,6 +3,7 @@
 import { Fira_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { CountryProvider } from '@/contexts/CountryContext'
 
 const firaSans = Fira_Sans({
   subsets: ['latin'],
@@ -40,7 +41,9 @@ export default function RootLayout({ children }) {
     <html lang="en" className={firaSans.variable} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <CountryProvider>
+            {children}
+          </CountryProvider>
         </AuthProvider>
       </body>
     </html>

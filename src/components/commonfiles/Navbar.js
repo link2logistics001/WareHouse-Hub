@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useSpring, AnimatePresence, useMotionValueEvent } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { useCountry } from '@/contexts/CountryContext';
+import { COUNTRY_CONFIG, SUPPORTED_COUNTRIES } from '@/lib/locale';
+import { LogOut, User, LayoutDashboard, ChevronDown, Globe } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -13,11 +15,14 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const profileRef = useRef(null);
+  const countryRef = useRef(null);
 
   const pathname = usePathname();
   const router = useRouter();
   const { user, setUser } = useAuth();
+  const { country, setCountry, config: countryConfig } = useCountry();
   
   // Always use solid styling on non-home pages
   const isHome = pathname === '/';
@@ -45,11 +50,14 @@ export default function Navbar() {
     }
   });
 
-  // Close profile dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (countryRef.current && !countryRef.current.contains(e.target)) {
+        setCountryDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -231,6 +239,49 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Country Selector */}
+              <div className="relative" ref={countryRef}>
+                <button
+                  onClick={() => setCountryDropdownOpen(prev => !prev)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                    navScrolled
+                      ? 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                      : 'border-white/20 hover:border-white/40 text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>{countryConfig.flag} {country}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {countryDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 z-[100]"
+                    >
+                      {SUPPORTED_COUNTRIES.map(code => {
+                        const cfg = COUNTRY_CONFIG[code];
+                        return (
+                          <button
+                            key={code}
+                            onClick={() => { setCountry(code); setCountryDropdownOpen(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                              country === code ? 'bg-orange-50 text-orange-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="text-base">{cfg.flag}</span>
+                            <span>{cfg.name}</span>
+                            <span className="ml-auto text-xs text-slate-400">{cfg.currency}</span>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               {user ? (
                 /* ── Logged-in: Profile avatar + dropdown ── */
                 <div className="relative" ref={profileRef}>
