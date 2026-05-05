@@ -12,9 +12,9 @@ const INDIAN_CITIES = [
 
 /**
  * @param {string} initialValue
- * @param {string} [countryCode] — ISO 3166-1 alpha-2 (e.g. 'IN', 'US'). Defaults to '' (global).
+ * @param {string} [countryCode] — ISO 3166-1 alpha-2 (e.g. 'IN', 'US'). Defaults to India when empty.
  */
-export function useCityAutocomplete(initialValue = '', countryCode = '') {
+export function useCityAutocomplete(initialValue = '', countryCode = 'IN') {
   const [searchQuery, setSearchQuery] = useState(initialValue);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
