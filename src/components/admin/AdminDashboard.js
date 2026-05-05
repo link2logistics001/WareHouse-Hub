@@ -15,7 +15,7 @@ import {
     MapPin, Shield, AlertTriangle, X, Wifi, WifiOff,
     Settings, Package, Building2, Tag, Loader2, Database,
     Image, Eye, ChevronLeft, ChevronRight, ZoomIn,
-    Users, UserX, Ban, UserSquare2
+    Users, UserX, Ban, UserSquare2, Activity
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
@@ -29,6 +29,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'block-people', label: 'Block People', icon: Users },
         { id: 'migration', label: 'Data Migration', icon: Database },
+        { id: 'analytics', label: 'Analytics', icon: Activity, isExternal: true, href: 'https://vercel.com/dashboard' },
     ];
 
     return (
@@ -47,22 +48,38 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
             {/* Nav */}
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => setActiveView(item.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeView === item.id
-                            ? 'bg-orange-50 text-orange-700 shadow-sm'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                            }`}
-                    >
-                        <item.icon className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`} />
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {item.badge ? (
-                            <span className="bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                                {item.badge}
-                            </span>
-                        ) : null}
-                    </button>
+                    item.isExternal ? (
+                        <a
+                            key={item.id}
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        >
+                            <item.icon className="w-5 h-5 text-slate-400" />
+                            <span className="flex-1 text-left">{item.label}</span>
+                            <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    ) : (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveView(item.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeView === item.id
+                                ? 'bg-orange-50 text-orange-700 shadow-sm'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                }`}
+                        >
+                            <item.icon className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`} />
+                            <span className="flex-1 text-left">{item.label}</span>
+                            {item.badge ? (
+                                <span className="bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                    {item.badge}
+                                </span>
+                            ) : null}
+                        </button>
+                    )
                 ))}
             </nav>
 
