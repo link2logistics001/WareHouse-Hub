@@ -255,7 +255,10 @@ export default function Navbar() {
                   }`}
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>{countryConfig.flag} {country}</span>
+                  <span className="flex items-center gap-1.5">
+                    <img src={`https://flagcdn.com/w20/${country.toLowerCase()}.png`} alt={country} className="w-4 h-3 rounded-sm object-cover shrink-0" />
+                    {country}
+                  </span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
@@ -277,7 +280,7 @@ export default function Navbar() {
                               country === code ? 'bg-orange-50 text-orange-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
                             }`}
                           >
-                            <span className="text-base">{cfg.flag}</span>
+                            <img src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`} alt={code} className="w-5 h-3.5 rounded-sm object-cover shrink-0" />
                             <span>{cfg.name}</span>
                             <span className="ml-auto text-xs text-slate-400">{cfg.currency}</span>
                           </button>
@@ -366,7 +369,10 @@ export default function Navbar() {
                   }`}
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>{countryConfig.flag} {country}</span>
+                  <span className="flex items-center gap-1.5">
+                    <img src={`https://flagcdn.com/w20/${country.toLowerCase()}.png`} alt={country} className="w-4 h-3 rounded-sm object-cover shrink-0" />
+                    {country}
+                  </span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${countryDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
@@ -388,7 +394,7 @@ export default function Navbar() {
                               country === code ? 'bg-orange-50 text-orange-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
                             }`}
                           >
-                            <span className="text-base">{cfg.flag}</span>
+                            <img src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`} alt={code} className="w-5 h-3.5 rounded-sm object-cover shrink-0" />
                             <span>{cfg.name}</span>
                             <span className="ml-auto text-xs text-slate-400">{cfg.currency}</span>
                           </button>

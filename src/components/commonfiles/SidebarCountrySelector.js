@@ -61,7 +61,7 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
       >
         <Globe className="w-5 h-5 shrink-0" />
         <span className={`ml-4 text-sm font-semibold flex items-center gap-2 ${containerClasses}`}>
-          <span className="text-base leading-none">{countryConfig.flag}</span>
+          <img src={`https://flagcdn.com/w20/${country.toLowerCase()}.png`} alt={country} className="w-5 h-3.5 rounded-sm object-cover shrink-0" />
           {countryConfig.name}
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </span>
@@ -83,7 +83,7 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
                   isActive ? `${accent.activeBg} font-bold` : itemDefault
                 }`}
               >
-                <span className="text-base">{cfg.flag}</span>
+                <img src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`} alt={code} className="w-5 h-3.5 rounded-sm object-cover shrink-0" />
                 <span className="flex-1 text-left">{cfg.name}</span>
                 {isActive && <Check className={`w-4 h-4 ${accent.check}`} />}
                 <span className={`text-xs ${currencyClasses}`}>{cfg.currency}</span>
