@@ -4,6 +4,7 @@ import { Fira_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CountryProvider } from '@/contexts/CountryContext'
+import { Analytics } from '@vercel/analytics/react'
 
 const firaSans = Fira_Sans({
   subsets: ['latin'],
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <CountryProvider>
             {children}
+            <Analytics />
           </CountryProvider>
         </AuthProvider>
       </body>
