@@ -46,7 +46,7 @@ export default function Footer() {
             </Link>
             
             <p className="text-sm text-slate-400 leading-relaxed font-light">
-              The structural backbone for modern warehouse management. Connect, secure, and streamline your logistics operation — available across India, UAE, US, UK & more.
+              The structural backbone for modern warehouse management. Connect, secure, and streamline your logistics operation. Available across India, UAE, US, UK, and more.
             </p>
 
             {/* Newsletter CTA */}

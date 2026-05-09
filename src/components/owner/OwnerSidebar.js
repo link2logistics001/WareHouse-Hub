@@ -1,5 +1,5 @@
 'use client'
-import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut, Monitor, MessageSquarePlus } from 'lucide-react';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 
 export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
@@ -7,7 +7,9 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDraw
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'my-warehouses', label: 'Manage Properties', icon: Building2 },
     { id: 'add-warehouse', label: 'Add New', icon: PlusCircle },
+    { id: 'console', label: 'Console', icon: Monitor },
     { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
+    { id: 'global-leads', label: 'Global Leads', icon: MessageSquarePlus },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

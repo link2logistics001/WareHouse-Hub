@@ -51,16 +51,21 @@ export const getUserDocParams = async (uid) => {
   }
 
   // Fallback: check the old nested structure users/{role}/accounts/{uid}
-  const docs = await Promise.all(USER_ROLES.map(role => 
-    getDoc(doc(db, 'users', role, 'accounts', uid))
-  ));
-  const found = docs.find(d => d.exists());
-  
-  if (found) {
-    const data = found.data();
-    // Auto-migrate to the flat structure
-    await setDoc(flatRef, data);
-    return { ref: flatRef, data };
+  // Use individual try-catch blocks to avoid "Missing or insufficient permissions" 
+  // errors from blocking the search for the correct account path.
+  for (const role of USER_ROLES) {
+    try {
+      const snap = await getDoc(doc(db, 'users', role, 'accounts', uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        // Auto-migrate to the flat structure
+        await setDoc(flatRef, data);
+        return { ref: flatRef, data };
+      }
+    } catch (e) {
+      // Permission denied or other error — move to the next role
+      continue;
+    }
   }
 
   return null;

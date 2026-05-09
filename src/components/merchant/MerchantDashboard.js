@@ -11,10 +11,11 @@ import SearchFilters from '../commonfiles/SearchFilters';
 import WarehouseCard from '../commonfiles/WarehouseCard';
 import MerchantSidebar from './MerchantSidebar';
 import ChatBox from '../commonfiles/ChatBox';
+import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../commonfiles/InquiryModals';
 
 import { 
     Building2, MessageSquare, Star, ClipboardList, Inbox, ExternalLink, Heart, 
-    Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Shield, LogOut, Mail, Plus, MapPin, Send, Search, X, User
+    Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Shield, LogOut, Mail, Plus, MapPin, Send, Search, X, User, Sparkles
 } from 'lucide-react';
 
 // --- CRISP NUMBER COUNTER ---
@@ -77,6 +78,11 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [showBulkEnquiry, setShowBulkEnquiry] = useState(false);
     const [bulkEnquiryText, setBulkEnquiryText] = useState('');
     const [sendingBulk, setSendingBulk] = useState(false);
+
+    // Inquiry Flow State
+    const [showSelectionModal, setShowSelectionModal] = useState(false);
+    const [showQuickModal, setShowQuickModal] = useState(false);
+    const [showDetailedModal, setShowDetailedModal] = useState(false);
 
     useEffect(() => {
         if (user) { setLocalUser(user); setProfileData({ name: user.name || '', company: user.company || '' }); }
@@ -193,14 +199,25 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden z-0">
             
             <div className="hidden lg:block z-40">
-                <MerchantSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+                <MerchantSidebar 
+                    activeTab={activeTab} 
+                    setActiveTab={setActiveTab} 
+                    onLogout={onLogout} 
+                    onSendEnquiry={() => setShowSelectionModal(true)}
+                />
             </div>
             
             <AnimatePresence>
                 {sidebarOpen && (
                     <motion.div className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}>
                         <motion.div className="absolute left-0 top-0 h-full w-72 bg-[#0B101E] shadow-2xl flex flex-col" initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} onClick={e => e.stopPropagation()}>
-                            <MerchantSidebar activeTab={activeTab} setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} onLogout={onLogout} isDrawer={true} />
+                            <MerchantSidebar 
+                                activeTab={activeTab} 
+                                setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} 
+                                onLogout={onLogout} 
+                                onSendEnquiry={() => setShowSelectionModal(true)}
+                                isDrawer={true} 
+                            />
                         </motion.div>
                     </motion.div>
                 )}
@@ -212,7 +229,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                 <main className="p-6 lg:p-10">
                     <div className="max-w-7xl mx-auto">
                         
-                        {/* ── REFINED HEADER (No overlap) ── */}
+                        {/* REFINED HEADER */}
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6">
                             <div className="flex items-center gap-4">
                                 <button className="lg:hidden p-3 rounded-2xl bg-white shadow-sm border border-slate-200 text-slate-600" onClick={() => setSidebarOpen(true)}>
@@ -228,18 +245,27 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                 </div>
                             </div>
 
-                            {/* Profile Pill */}
-                            <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-full shadow-sm border border-slate-200 w-fit">
-                                {localUser?.photoURL ? (
-                                    <img src={localUser.photoURL} alt="Profile" className="w-9 h-9 rounded-full object-cover border border-slate-100" />
-                                ) : (
-                                    <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-                                        {localUser?.name ? localUser.name[0].toUpperCase() : 'C'}
+                            <div className="flex items-center gap-4">
+                                <button 
+                                    onClick={() => setShowSelectionModal(true)}
+                                    className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-black text-xs shadow-lg shadow-orange-500/20 hover:scale-[1.05] transition-all"
+                                >
+                                    <Sparkles className="w-4 h-4" /> Send Enquiry
+                                </button>
+
+                                {/* Profile Pill */}
+                                <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-full shadow-sm border border-slate-200 w-fit">
+                                    {localUser?.photoURL ? (
+                                        <img src={localUser.photoURL} alt="Profile" className="w-9 h-9 rounded-full object-cover border border-slate-100" />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                                            {localUser?.name ? localUser.name[0].toUpperCase() : 'C'}
+                                        </div>
+                                    )}
+                                    <div className="pr-2">
+                                        <p className="text-xs font-black text-slate-800 leading-none mb-1">{(localUser?.name || 'Client').split(' ')[0]}</p>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-blue-500 leading-none">Business</p>
                                     </div>
-                                )}
-                                <div className="pr-2">
-                                    <p className="text-xs font-black text-slate-800 leading-none mb-1">{(localUser?.name || 'Client').split(' ')[0]}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-blue-500 leading-none">Business</p>
                                 </div>
                             </div>
                         </div>
@@ -346,7 +372,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                 </main>
             </div>
 
-            {/* ── MODALS (Outside of Main Scroll) ── */}
+            {/* MODALS (Outside of Main Scroll) */}
             <AnimatePresence>
                 {selectedConv && (
                     <motion.div key="chat-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100]">
@@ -372,6 +398,27 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* INQUIRY MODALS */}
+            <InquirySelectionModal 
+                isOpen={showSelectionModal} 
+                onClose={() => setShowSelectionModal(false)}
+                onSelect={(type) => {
+                    setShowSelectionModal(false);
+                    if (type === 'quick') setShowQuickModal(true);
+                    else setShowDetailedModal(true);
+                }}
+            />
+            <QuickInquiryModal 
+                isOpen={showQuickModal} 
+                onClose={() => setShowQuickModal(false)} 
+                user={localUser}
+            />
+            <DetailedInquiryModal 
+                isOpen={showDetailedModal} 
+                onClose={() => setShowDetailedModal(false)} 
+                user={localUser}
+            />
         </motion.div>
     );
 }

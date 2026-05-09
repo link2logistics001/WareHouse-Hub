@@ -4,6 +4,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 export default function FinalCTA() {
+  const scrollToLogin = () => {
+    document.getElementById('login')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="pb-20 pt-8 bg-white relative z-10">
       <div className="max-w-6xl mx-auto px-6">
@@ -29,7 +33,10 @@ export default function FinalCTA() {
           
           {/* Right Side: Streamlined Button */}
           <div className="relative z-10 shrink-0 w-full md:w-auto">
-            <button className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-[#E65100] hover:bg-[#ff7a00] text-white rounded-xl font-bold transition-all duration-300 shadow-[0_0_20px_-5px_rgba(230,81,0,0.4)] hover:-translate-y-0.5 group whitespace-nowrap">
+            <button 
+              onClick={scrollToLogin}
+              className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-[#E65100] hover:bg-[#ff7a00] text-white rounded-xl font-bold transition-all duration-300 shadow-[0_0_20px_-5px_rgba(230,81,0,0.4)] hover:-translate-y-0.5 group whitespace-nowrap"
+            >
               <span>Request Early Access</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>

@@ -8,6 +8,7 @@ import { collectionGroup, query, where, getDocs } from 'firebase/firestore';
 import { useCityAutocomplete } from '@/hooks/useCityAutocomplete';
 import { useCountry } from '@/contexts/CountryContext';
 import CityDropdown from '@/components/commonfiles/CityDropdown';
+import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '@/components/commonfiles/InquiryModals';
 
 export default function HeroSection() {
   const videoRef = useRef(null);
@@ -28,6 +29,9 @@ export default function HeroSection() {
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const [showQuickModal, setShowQuickModal] = useState(false);
+  const [showDetailedModal, setShowDetailedModal] = useState(false);
 
   const checkAvailability = async (text) => {
     if (!text.trim()) return false;
@@ -319,6 +323,35 @@ export default function HeroSection() {
           justifyContent: 'center',
         }}>
           <button
+            onClick={() => setShowSelectionModal(true)}
+            style={{
+              background: '#f97316',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#ffffff',
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '9px 24px',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(249, 115, 22, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(249, 115, 22, 0.3)';
+            }}
+          >
+            Send Enquiry
+          </button>
+
+          <button
             className="supplier-btn"
             style={{
               background: 'transparent',
@@ -363,6 +396,25 @@ export default function HeroSection() {
         </div>
 
       </div>
+
+      {/* Inquiry Flow Modals */}
+      <InquirySelectionModal 
+        isOpen={showSelectionModal} 
+        onClose={() => setShowSelectionModal(false)}
+        onSelect={(type) => {
+          setShowSelectionModal(false);
+          if (type === 'quick') setShowQuickModal(true);
+          else setShowDetailedModal(true);
+        }}
+      />
+      <QuickInquiryModal 
+        isOpen={showQuickModal} 
+        onClose={() => setShowQuickModal(false)} 
+      />
+      <DetailedInquiryModal 
+        isOpen={showDetailedModal} 
+        onClose={() => setShowDetailedModal(false)} 
+      />
     </section>
   );
 }

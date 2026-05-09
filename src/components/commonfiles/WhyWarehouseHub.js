@@ -23,7 +23,7 @@ const features = [
   {
     title: "Operational Support",
     label: "FACILITATION",
-    desc: "We don't just match—we facilitate, coordinate terms, manage handoffs. Stay involved to ensure partnerships work and scale.",
+    desc: "We don't just match, we facilitate, coordinate terms, and manage handoffs. We stay involved to ensure partnerships work and scale.",
     stat: "Active",
     statLabel: "Involvement",
     icon: Handshake,
