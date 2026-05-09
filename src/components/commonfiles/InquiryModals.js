@@ -186,10 +186,10 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                 <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Package size={12} /> What will you store? (Required)</label>
                 <input required value={formData.storageNeeds} onChange={e => setFormData({...formData, storageNeeds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. Electronics, Textiles, FMCG, Pharma" />
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid-cols-1 gap-6">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Scale size={12} /> Storage Space Required</label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <input required type="number" value={formData.storageSpace} onChange={e => setFormData({...formData, storageSpace: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Quantity" />
                     <select value={formData.storageUnit} onChange={e => setFormData({...formData, storageUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
                       {['CBM', 'MT', 'Sqm', 'Pallets'].map(u => <option key={u} value={u}>{u}</option>)}
@@ -198,7 +198,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Clock size={12} /> Contract Duration</label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <input required type="number" value={formData.contractDuration} onChange={e => setFormData({...formData, contractDuration: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Duration" />
                     <select value={formData.durationUnit} onChange={e => setFormData({...formData, durationUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
                       {['Months', 'Years'].map(u => <option key={u} value={u}>{u}</option>)}
