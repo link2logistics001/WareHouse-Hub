@@ -7,10 +7,12 @@ import DashboardHome from './DashboardHome';
 import AddWarehouse from './AddWarehouse';
 import MyWarehouses from './MyWarehouses';
 import Availability from './Availability';
+import Console from './Console';
+import GlobalLeads from './GlobalLeads';
 import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
 import { 
   LogOut, Plus, User, Mail, Building2, Shield, 
-  Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Sparkles 
+  Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Sparkles, Monitor
 } from 'lucide-react';
 
 export default function OwnerDashboard({ user, onLogout }) {
@@ -145,7 +147,7 @@ export default function OwnerDashboard({ user, onLogout }) {
         
         
         {/* Mobile Header (Global for phone/tablet, only on tabs without their own sticky header) */}
-        {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (
+        {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && activeTab !== 'console' && (
           <header className="lg:hidden bg-white/90 backdrop-blur-sm border-b border-white px-4 py-3 flex items-center justify-between sticky top-0 z-40">
             <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +165,7 @@ export default function OwnerDashboard({ user, onLogout }) {
         )}
 
         {/* Generic Header for non-dashboard tabs (Desktop only) */}
-        {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && (
+        {activeTab !== 'dashboard' && activeTab !== 'my-warehouses' && activeTab !== 'availability' && activeTab !== 'console' && (
           <header className="hidden lg:flex bg-white/90 backdrop-blur-sm h-auto min-h-16 border-b border-white sticky top-0 z-30 px-6 sm:px-10 flex-col xs:flex-row xs:items-center justify-between gap-4 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-3">
               <h2 className="font-bold text-slate-800 capitalize text-xl flex items-center gap-2">
@@ -193,7 +195,9 @@ export default function OwnerDashboard({ user, onLogout }) {
             {activeTab === 'my-warehouses' && <motion.div key="wh" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><MyWarehouses setActiveTab={setActiveTab} onOpenSidebar={() => setSidebarOpen(true)} onEdit={(w) => { setEditingWarehouse(w); setActiveTab('add-warehouse'); }} /></motion.div>}
             {activeTab === 'add-warehouse' && <motion.div key="add" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><AddWarehouse setActiveTab={setActiveTab} editingWarehouse={editingWarehouse} /></motion.div>}
             {activeTab === 'inquiries' && <motion.div key="inq" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Inquiries /></motion.div>}
+            {activeTab === 'global-leads' && <motion.div key="leads" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><GlobalLeads /></motion.div>}
             {activeTab === 'calendar' && <motion.div key="cal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Availability onOpenSidebar={() => setSidebarOpen(true)} /></motion.div>}
+            {activeTab === 'console' && <motion.div key="con" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><Console /></motion.div>}
             
             {/* ════════════════════════════════════════════════════════════════════════
                 THE NEW PREMIUM SETTINGS TAB

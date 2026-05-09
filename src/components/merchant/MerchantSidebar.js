@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 
-export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
+export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false }) {
   const menuItems = [
     { id: 'browse', label: 'Browse Directory', icon: Building2 },
     { id: 'chats', label: 'Active Chats', icon: MessageSquare },
@@ -77,6 +77,20 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, isD
             </button>
           );
         })}
+
+        {/* ── SPECIAL ENQUIRY BUTTON ── */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <button
+            onClick={() => onSendEnquiry && onSendEnquiry()}
+            className="w-full flex items-center px-3.5 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 hover:scale-[1.02] transition-all duration-300 group/enquiry relative overflow-hidden"
+          >
+            <Sparkles className="w-5 h-5 shrink-0 text-white animate-pulse" />
+            <span className={`ml-4 text-sm font-black tracking-wide ${containerClasses}`}>
+              Send Enquiry
+            </span>
+            <div className="absolute top-0 right-0 w-12 h-full bg-white/20 -skew-x-12 translate-x-12 group-hover:translate-x-[-150%] transition-transform duration-1000" />
+          </button>
+        </div>
       </nav>
 
       {/* ── Bottom Actions ── */}

@@ -1,0 +1,101 @@
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  doc, 
+  serverTimestamp, 
+  query, 
+  where, 
+  orderBy, 
+  getDocs,
+  onSnapshot
+} from 'firebase/firestore';
+import { db } from './firebase';
+
+/**
+ * Submits a new inquiry (Quick or Detailed)
+ * @param {string} type - 'quick' | 'detailed'
+ * @param {object} formData - The form data
+ * @param {string|null} userId - The ID of the logged-in user (optional)
+ */
+export const submitInquiry = async (type, formData, userId = null) => {
+  try {
+    const inquiryData = {
+      type,
+      data: formData,
+      status: 'pending',
+      submittedBy: userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    const docRef = await addDoc(collection(db, 'admin_inquiries'), inquiryData);
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error submitting inquiry:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates the status of an inquiry (Admin only)
+ * @param {string} inquiryId 
+ * @param {string} status - 'approved' | 'rejected' | 'pending'
+ */
+export const updateInquiryStatus = async (inquiryId, status) => {
+  try {
+    const docRef = doc(db, 'admin_inquiries', inquiryId);
+    await updateDoc(docRef, {
+      status,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating inquiry status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Listens for inquiries based on status (Real-time)
+ * @param {string|null} status - Optional filter
+ * @param {function} callback - Callback for data updates
+ */
+export const subscribeToInquiries = (status, callback) => {
+  let q = collection(db, 'admin_inquiries');
+  
+  if (status) {
+    q = query(q, where('status', '==', status), orderBy('createdAt', 'desc'));
+  } else {
+    q = query(q, orderBy('createdAt', 'desc'));
+  }
+  
+  return onSnapshot(q, (snapshot) => {
+    const inquiries = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+    }));
+    callback(inquiries);
+  });
+};
+
+/**
+ * Fetches approved inquiries for owners
+ */
+export const getApprovedInquiries = async () => {
+  try {
+    const q = query(
+      collection(db, 'admin_inquiries'), 
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+    }));
+  } catch (error) {
+    console.error('Error fetching approved inquiries:', error);
+    throw error;
+  }
+};
