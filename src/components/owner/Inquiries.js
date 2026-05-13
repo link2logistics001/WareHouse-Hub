@@ -1,3 +1,31 @@
+/**
+ * Inquiries.js — Owner Inquiry / Conversation Management (Kanban Board)
+ *
+ * Displays all business-client conversations for the current warehouse
+ * partner in a 3-column Kanban board layout: New → Negotiating → Booked.
+ *
+ * ── Kanban Stages ───────────────────────────────────────────────────
+ *  1. **New** — Fresh inquiries that haven't been responded to yet
+ *  2. **Negotiating** — Active conversations with ongoing discussions
+ *  3. **Booked** — Confirmed deals (triggers confetti celebration animation)
+ *
+ * ── Card Actions ────────────────────────────────────────────────────
+ *  - **Move Stage** — Drag-like button to advance to the next stage
+ *  - **Open Chat** — Opens ChatBox modal for real-time messaging
+ *  - **Grant Access** — Shares owner's contact details with the merchant
+ *  - **Delete** — Removes the conversation from Firestore
+ *  - **Call** — Direct phone call link (if merchant phone is available)
+ *
+ * ── Data Flow ───────────────────────────────────────────────────────
+ *  - Conversations fetched via Firestore query where `ownerId == user.uid`
+ *  - Real-time updates via `onSnapshot` listener
+ *  - Stage changes update the `stage` field in the conversation document
+ *  - Contact access is managed via `grantContactAccess()` from messaging.js
+ *
+ * ── Celebration Feature ─────────────────────────────────────────────
+ *  When a conversation moves to "Booked" stage, a full-screen confetti
+ *  animation with a trophy icon and deal details overlay appears.
+ */
 'use client';
 
 import { useEffect, useState } from 'react';

@@ -1,3 +1,23 @@
+/**
+ * TheProblem.js — "The Problem" Landing Page Section
+ *
+ * A scroll-driven storytelling section that highlights 3 key industry problems:
+ *  1. Finding Capacity is Hard — No organized discovery mechanism
+ *  2. Sourcing Takes Time — Manual coordination, high friction
+ *  3. Terms Lack Clarity — No standardization or verification
+ *
+ * Scroll Animation:
+ *  - The section is 300vh tall, creating a "sticky scroll" effect
+ *  - As the user scrolls, problem cards fade in/out and slide up/down
+ *  - A vertical orange progress bar tracks the scroll position
+ *  - Each card has a geometric SVG logo that changes color on hover
+ *  - Background has animated breathing SVG blobs and dot grid pattern
+ *
+ * Architecture:
+ *  - `ProblemCard`: Individual card with scroll-driven opacity and Y transforms
+ *  - `TheProblem` (default): Container with sticky positioning and progress indicator
+ */
+
 "use client";
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';

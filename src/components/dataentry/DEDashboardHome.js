@@ -1,3 +1,18 @@
+/**
+ * DEDashboardHome.js — Data Entry Dashboard Home / Overview Tab
+ *
+ * Data Entry variant of the Owner's DashboardHome.js component.
+ * Displays the same overview stats (total entries, total area, cities,
+ * rating) but fetches from the 'dataentry' role path.
+ *
+ * ── Key Differences from Owner DashboardHome ────────────────────────
+ *  - Fetches warehouses with role='dataentry' instead of 'warehouse_partner'
+ *  - Uses cyan accent color in subtle UI touches
+ *  - Quick action labels say "entries" instead of "properties"
+ *
+ * See DashboardHome.js (owner) for full documentation of the stats
+ * cards, animated counters, and recent warehouse display.
+ */
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';

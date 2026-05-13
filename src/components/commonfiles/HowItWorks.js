@@ -1,3 +1,18 @@
+/**
+ * HowItWorks.js — "How Link2Logistics Works" Landing Page Section
+ *
+ * A 3-step process explainer displayed on the landing page with:
+ *  - Section header with orange accent text
+ *  - Three cards: "Post Your Needs" → "Get Matched" → "Scale & Operate"
+ *  - Each card has a step number watermark, icon, title, and description
+ *  - Hover effects: lift, shadow increase, orange border highlight
+ *  - Decorative isometric box illustration (desktop only, top-right corner)
+ *    with floating animation and orange/slate color scheme
+ *
+ * The isometric illustration is built with SVG polygons using a custom
+ * isometric projection function (whIso) for 3D-like appearance.
+ */
+
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";

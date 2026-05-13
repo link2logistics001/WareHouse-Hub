@@ -1,71 +1,113 @@
+/**
+ * globals.css — Global Styles for Link2Logistics
+ *
+ * This stylesheet is imported once in layout.js and applies to the entire application.
+ * It contains:
+ *  1. Tailwind CSS directives (base, components, utilities)
+ *  2. CSS custom properties (design tokens)
+ *  3. Base element styles (html, body)
+ *  4. Custom scrollbar styling (WebKit browsers)
+ *  5. Performance optimizations (layout containment)
+ *  6. Focus and selection styles for accessibility
+ */
+
+/* ── Tailwind Directives ─────────────────────────────────────────
+   These inject Tailwind's base reset, component classes, and
+   utility classes into the stylesheet at build time.
+   ─────────────────────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design Tokens (CSS Custom Properties) ───────────────────────
+   Centralized color and typography values used across the app.
+   Change these to update the entire design system.
+   ─────────────────────────────────────────────────────────────── */
 :root {
-  --foreground: #0f172a;
-  --background: #ffffff;
-  --font-size-base: 17px;
-  --line-height-base: 1.65;
+  --foreground: #0f172a;       /* Slate-900 — primary text color */
+  --background: #ffffff;        /* White — page background */
+  --font-size-base: 17px;       /* Slightly larger than default 16px for readability */
+  --line-height-base: 1.65;     /* Generous line height for comfortable reading */
 }
 
-/* ── Base ──────────────────────────────────────────────────────── */
+/* ── Base Element Styles ─────────────────────────────────────────
+   Applied to html and body to establish global typography
+   and smooth scrolling behavior.
+   ─────────────────────────────────────────────────────────────── */
 
 html {
-  scroll-behavior: smooth;
-  font-size: var(--font-size-base);
+  scroll-behavior: smooth;              /* Enables smooth scrolling for anchor links (#login, #features, etc.) */
+  font-size: var(--font-size-base);     /* Sets the base font size for rem calculations */
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  line-height: var(--line-height-base);
+  color: var(--foreground);             /* Default text color (dark slate) */
+  background: var(--background);        /* Page background color (white) */
+  line-height: var(--line-height-base); /* Default line height for body text */
 }
 
+/* ── Tailwind Utility Extensions ─────────────────────────────────
+   Custom utility classes that extend Tailwind's built-in set.
+   ─────────────────────────────────────────────────────────────── */
 @layer utilities {
+  /* text-balance: Improves text wrapping to avoid orphaned words */
   .text-balance {
     text-wrap: balance;
   }
 }
 
-/* ── Custom scrollbar ─────────────────────────────────────────── */
+/* ── Custom Scrollbar (WebKit browsers: Chrome, Edge, Safari) ────
+   Replaces the default browser scrollbar with a styled version
+   that matches the brand theme. Scrollbar thumb turns orange on hover.
+   ─────────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 10px;                          /* Vertical scrollbar width */
+  height: 10px;                         /* Horizontal scrollbar height */
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f1f5f9;                  /* Track background (slate-100) */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 5px;
+  background: #cbd5e1;                  /* Thumb color (slate-300) */
+  border-radius: 5px;                   /* Rounded thumb corners */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #f97316;
+  background: #f97316;                  /* Orange thumb on hover (brand color) */
 }
 
-/* ── Layout containment for performance ───────────────────────── */
+/* ── Layout Containment for Performance ──────────────────────────
+   CSS containment hints to the browser that these elements'
+   layout/style changes won't affect siblings, enabling rendering
+   optimizations. Used on the sidebar and main content area.
+   ─────────────────────────────────────────────────────────────── */
 
+/* Sidebar container — uses will-change for smooth width transitions */
 .group.w-20 {
   will-change: width;
   contain: layout style;
 }
 
+/* Main content area — contained to prevent layout thrashing */
 main.flex-1 {
   contain: layout style;
 }
 
-/* ── Focus & selection ────────────────────────────────────────── */
+/* ── Focus & Selection Styles ────────────────────────────────────
+   Accessibility-focused styles that ensure visible focus indicators
+   and branded text selection highlighting.
+   ─────────────────────────────────────────────────────────────── */
 
+/* Visible focus ring for keyboard navigation (orange outline) */
 *:focus-visible {
   outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
+/* Text selection highlighting with brand orange background */
 ::selection {
   background-color: #f97316;
   color: white;

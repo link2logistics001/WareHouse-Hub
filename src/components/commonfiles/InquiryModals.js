@@ -1,3 +1,33 @@
+/**
+ * InquiryModals.js — Inquiry Submission Modal System
+ *
+ * Three interconnected modals for submitting warehouse storage inquiries:
+ *
+ *  1. **InquirySelectionModal** — Entry point: lets users choose between:
+ *     - Quick Inquiry (Zap icon, orange) → few key questions, 24h pricing
+ *     - Detailed Inquiry (FileText icon, blue) → comprehensive scoping form
+ *
+ *  2. **QuickInquiryModal** — Streamlined form with:
+ *     - Section 1: Company name, contact person, email, phone
+ *     - Section 2: Storage needs (what to store, space required, type, duration)
+ *     - Submits to Firestore via submitInquiry('quick', formData)
+ *
+ *  3. **DetailedInquiryModal** — Comprehensive 5-section form with:
+ *     - Section 1: Company info (name, contact, email, phone, address, GST)
+ *     - Section 2: Goods & storage scope (2 product entries, categories, conditions)
+ *     - Section 3: Contract terms (duration, billing cycle, payment terms)
+ *     - Section 4: Inbound/outbound operations (vehicles, processes, order triggers)
+ *     - Section 5: Special services (fumigation, pick & pack, customs, insurance)
+ *     - Submits to Firestore via submitInquiry('detailed', formData)
+ *
+ * Helper Components:
+ *  - `InputField`: Reusable labeled input with icon support
+ *  - `SelectField`: Reusable labeled select dropdown
+ *
+ * All modals use React.memo to prevent unnecessary re-renders.
+ * Success state shows animated checkmark with auto-close after 3 seconds.
+ */
+
 'use client';
 
 import React, { useState } from 'react';

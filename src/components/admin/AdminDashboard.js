@@ -1,3 +1,41 @@
+/**
+ * AdminDashboard.js — Full Admin Control Panel
+ *
+ * The main administration interface for the Link2Logistics platform.
+ * This is the largest component in the codebase (~1600 lines) and is
+ * rendered when a user with `userType === 'admin'` is logged in.
+ *
+ * ── Views (controlled by `activeView` state) ────────────────────────
+ *  1. **Overview** — Platform-wide stats (total warehouses, approved count,
+ *     pending count, users) with animated counters and trend sparklines.
+ *  2. **Warehouses** — Searchable, filterable list of ALL warehouses across
+ *     every owner. Admins can approve, reject, toggle online/offline,
+ *     view details (expandable card), and browse photos in a lightbox.
+ *  3. **Lead Enquiries** — Real-time feed of user-submitted inquiries
+ *     (Quick and Detailed). Admins approve or reject leads, which then
+ *     become visible to warehouse owners on the Global Leads page.
+ *  4. **Block People** — User management panel. Lists all registered users
+ *     with role badges. Admins can block/unblock accounts to restrict access.
+ *  5. **Data Migration** — Utility view for migrating legacy Firestore
+ *     documents from the nested structure to the flat structure.
+ *  6. **Analytics** — External link to Vercel Analytics dashboard.
+ *
+ * ── Sub-components (defined inline) ─────────────────────────────────
+ *  - `AdminSidebar` — Fixed left sidebar with nav items and pending badge
+ *  - `WarehouseDetailCard` — Expandable card with all warehouse fields
+ *  - `PhotoLightbox` — Full-screen image viewer with prev/next navigation
+ *  - Various stat cards, filters, and action buttons
+ *
+ * ── Data Flow ───────────────────────────────────────────────────────
+ *  - Warehouses: Fetched via `collectionGroup('warehouses')` on mount
+ *  - Users: Fetched from `users` collection (flat structure)
+ *  - Inquiries: Real-time via `subscribeToInquiries()` from inquiryService
+ *  - Blocking: Uses `blockUser()` from auth.js to toggle isBlocked flag
+ *
+ * @param {Object} props
+ * @param {Object} props.user — The admin user object from AuthContext
+ * @param {Function} props.onLogout — Callback to sign the admin out
+ */
 'use client';
 
 import { useEffect, useState, useRef } from 'react';

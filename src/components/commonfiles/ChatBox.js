@@ -1,3 +1,27 @@
+/**
+ * ChatBox.js — Real-Time Messaging Modal
+ *
+ * Full-screen modal overlay for direct messaging between business clients
+ * and warehouse owners about a specific warehouse listing.
+ *
+ * Features:
+ *  - **Conversation Management**: Creates or retrieves an existing Firestore
+ *    conversation document via getOrCreateConversation()
+ *  - **Real-Time Messages**: Uses Firestore onSnapshot listener for instant updates
+ *  - **System Messages**: Auto-generated intro message when conversation starts
+ *  - **Message Bubbles**: Own messages (orange gradient, right-aligned) vs
+ *    received messages (white, left-aligned) with timestamps and read receipts
+ *  - **Warehouse Info Bar**: Collapsible bottom bar showing area, price, category
+ *  - **Auto-Scroll**: Scrolls to newest message automatically
+ *  - **Keyboard Support**: Enter to send, Shift+Enter for new line
+ *  - **Region-Aware**: Uses CountryContext for price/area formatting
+ *
+ * @param {Object} props
+ * @param {Object} props.warehouse — The warehouse data being discussed
+ * @param {Object} props.user — The current authenticated user
+ * @param {Function} props.onClose — Callback to close the modal
+ */
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { db } from '@/lib/firebase'

@@ -1,3 +1,39 @@
+/**
+ * OwnerDashboard.js — Warehouse Partner Dashboard
+ *
+ * The main dashboard for users with `userType === 'warehouse_partner'`.
+ * Provides warehouse management, inquiry handling, and operational tools.
+ *
+ * ── Tabs (controlled by `activeTab` state via OwnerSidebar) ─────────
+ *  1. **Dashboard** (DashboardHome) — Overview stats, recent warehouses, activity
+ *  2. **Manage Properties** (MyWarehouses) — List/edit/delete warehouses
+ *  3. **Add New** (AddWarehouse) — Multi-step warehouse registration form
+ *  4. **Console** — Cargo inbound/outbound logging per warehouse
+ *  5. **Inquiries** — Kanban board for managing business client conversations
+ *  6. **Global Leads** — Admin-approved inquiry leads from the marketplace
+ *  7. **Calendar** (Availability) — Per-warehouse availability calendar
+ *  8. **Settings** — Profile management (name, company, photo upload)
+ *
+ * ── Profile Management ──────────────────────────────────────────────
+ *  - Profile banner with avatar upload (via uploadProfileImage)
+ *  - Name editing (limited to one change via nameChanged flag)
+ *  - Company name editing
+ *  - Verification badge and email display
+ *  - Profile photo upload with 30-second timeout protection
+ *
+ * ── Mobile Support ──────────────────────────────────────────────────
+ *  - Hamburger button opens OwnerSidebar as a drawer overlay
+ *  - AnimatePresence handles sidebar slide-in/out animation
+ *
+ * ── Edit Warehouse Flow ─────────────────────────────────────────────
+ *  - MyWarehouses passes `onEdit(warehouse)` → sets `editingWarehouse`
+ *  - Switches to AddWarehouse tab with pre-filled data for editing
+ *  - After save, clears editing state and returns to My Warehouses
+ *
+ * @param {Object} props
+ * @param {Object} props.user — Warehouse partner user from AuthContext
+ * @param {Function} props.onLogout — Sign out callback
+ */
 'use client'
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

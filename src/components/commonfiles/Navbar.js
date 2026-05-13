@@ -1,3 +1,23 @@
+/**
+ * Navbar.js — Global Navigation Bar
+ *
+ * Sticky navigation component used across all public pages (landing, search, contact, warehouse detail).
+ * Adapts its appearance based on scroll position and current route.
+ *
+ * Features:
+ *  - **Scroll Progress Bar**: Orange gradient bar at the very top showing page scroll progress
+ *  - **Smart Hide/Show**: Hides when scrolling down past 150px, reappears when scrolling up
+ *  - **Transparent → Solid**: On the home page, starts transparent over the hero video,
+ *    transitions to solid white background after scrolling 20px. Always solid on other pages.
+ *  - **Country Selector**: Globe dropdown for switching regions (flags, currencies)
+ *  - **Auth-Aware**: Shows profile avatar + dropdown if logged in, or "Login / SignUp" button if not
+ *  - **Profile Dropdown**: Name, email, role badge, Dashboard link, and Sign Out
+ *  - **Responsive**: Desktop version (md+) with inline links, mobile version with hamburger menu
+ *  - **Smooth Scroll**: Nav links scroll to page sections on the home page, or navigate + scroll on other pages
+ *
+ * @param {void} — No props; uses AuthContext and CountryContext internally
+ */
+
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';

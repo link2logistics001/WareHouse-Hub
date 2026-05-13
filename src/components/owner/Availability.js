@@ -1,3 +1,34 @@
+/**
+ * Availability.js — Warehouse Availability Calendar
+ *
+ * Interactive calendar for warehouse partners to manage per-day
+ * availability status for each of their warehouses.
+ *
+ * ── How It Works ────────────────────────────────────────────────────
+ *  1. Loads all warehouses for the current user on mount
+ *  2. Fetches existing availability entries for the displayed month
+ *  3. Calendar grid shows colored dots for each day/warehouse combo:
+ *     - Green (available), Red (booked), Amber (maintenance)
+ *  4. Clicking a day opens a modal to set status for each warehouse
+ *  5. Changes are saved to Firestore with owner_id for security rules
+ *
+ * ── Firestore Structure ─────────────────────────────────────────────
+ *  Collection: warehouse_availability/{YYYY-MM}/entries/{warehouseId_YYYY-MM-DD}
+ *  Fields: { owner_id, warehouse_id, warehouse_name, date, status }
+ *
+ * ── Status Options ──────────────────────────────────────────────────
+ *  - `available` — Green dot, warehouse is open for new bookings
+ *  - `booked` — Red dot, warehouse is occupied / busy
+ *  - `maintenance` — Amber dot, warehouse is under maintenance
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - Month navigation (prev/next arrows)
+ *  - Today highlight with pulsing blue ring
+ *  - Multi-warehouse status dots on each calendar day
+ *  - Bulk status modal with per-warehouse status selection
+ *  - Toast notifications for save success/failure
+ *  - Responsive: scroll-based layout on mobile
+ */
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

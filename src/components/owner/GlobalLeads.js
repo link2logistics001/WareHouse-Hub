@@ -1,3 +1,29 @@
+/**
+ * GlobalLeads.js — Admin-Approved Inquiry Marketplace
+ *
+ * Read-only view of inquiries that have been approved by the admin.
+ * Warehouse partners can browse these leads to find potential clients
+ * who are actively looking for warehouse space.
+ *
+ * ── How It Works ────────────────────────────────────────────────────
+ *  1. Fetches all inquiries with status 'approved' from admin_inquiries
+ *  2. Displays them in expandable cards with key details
+ *  3. Partners can filter by type (Quick/Detailed) and search by text
+ *
+ * ── Lead Card Display ───────────────────────────────────────────────
+ *  Quick Inquiries show: Company, Contact, Email, Phone, Storage Needs,
+ *    Storage Type, Duration, Date submitted
+ *  Detailed Inquiries show: All of the above plus address, products,
+ *    contract terms, inbound/outbound operations, special services
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - Search bar for filtering by company/contact/storage needs
+ *  - Type filter toggle (All / Quick / Detailed)
+ *  - Expandable cards with click-to-reveal full details
+ *  - Color-coded badges: orange for Quick, blue for Detailed
+ *  - Loading spinner and empty state illustrations
+ *  - Animated card entries with Framer Motion stagger
+ */
 'use client';
 
 import React, { useState, useEffect } from 'react';

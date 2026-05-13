@@ -1,3 +1,42 @@
+/**
+ * AddWarehouse.js — Multi-Step Warehouse Registration Form
+ *
+ * A comprehensive 6-step form for warehouse partners to register new
+ * warehouse listings or edit existing ones. This is the second largest
+ * component in the codebase (~1300 lines).
+ *
+ * ── Form Steps ──────────────────────────────────────────────────────
+ *  Step 1: **Basic Info** — Warehouse name, category (Bonded/General/FTWZ),
+ *          construction type, age, state, city, pincode
+ *  Step 2: **Space & Specs** — Total area, available area, ceiling height,
+ *          dock doors, floor load capacity, WMS availability
+ *  Step 3: **Operations** — Operating days, hours, security features,
+ *          suitable goods categories, value-added services
+ *  Step 4: **Pricing** — Pricing model (per unit/pallet/CBM/SKU/custom),
+ *          base amount, minimum commitment, short-term availability
+ *  Step 5: **Photos** — Upload up to 4 images (Front View, Inside View,
+ *          Loading Dock, Rate Card) with drag-and-drop and preview
+ *  Step 6: **Contact Verification** — Phone OTP verification via Firebase
+ *          phone auth (uses secondary app instance to avoid session conflicts)
+ *
+ * ── Edit Mode ───────────────────────────────────────────────────────
+ *  When `editingWarehouse` prop is provided, the form pre-fills all fields
+ *  from the existing warehouse data and submits updates to the same document.
+ *  Step 6 (phone verification) is skipped in edit mode.
+ *
+ * ── Data Storage ────────────────────────────────────────────────────
+ *  Saves to: warehouse_details/warehouse_partner/emails/{email}/warehouses/{id}
+ *  Photos → Firebase Storage: warehouse_photos/{email}/{warehouseName}/{filename}
+ *  Status defaults to 'pending' (requires admin approval)
+ *
+ * ── Static Data ─────────────────────────────────────────────────────
+ *  Contains curated lists of Indian states and cities (CITIES_BY_STATE),
+ *  warehouse categories, construction types, storage types, etc.
+ *
+ * @param {Object} props
+ * @param {Object|null} props.editingWarehouse — Pre-fill data for edit mode (null = new)
+ * @param {Function} props.onSaveComplete — Called after successful save
+ */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';

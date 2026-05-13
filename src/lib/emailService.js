@@ -1,7 +1,29 @@
 import { Resend } from 'resend';
 
 /**
- * Professional Email Service for Link2Logistics
+ * emailService.js — Branded Email Service
+ *
+ * Server-side service (used by API routes only) that sends professionally
+ * designed HTML emails via the Resend email API.
+ *
+ * Currently handles:
+ *  - Email verification: Sends a branded verification email to new users
+ *    with the Firebase-generated verification link embedded in a styled button
+ *
+ * HTML Template Features:
+ *  - Inter font family for brand consistency
+ *  - Rounded card layout with subtle shadow
+ *  - Orange CTA button matching the L2L brand color (#E65100)
+ *  - Safety notice for non-users who receive the email accidentally
+ *  - Copyright footer
+ *
+ * Dependencies:
+ *  - Resend API (RESEND_API_KEY env variable) for email delivery
+ *
+ * @param {string} email — Recipient's email address
+ * @param {string} name — Recipient's display name (for personalization)
+ * @param {string} verificationLink — Firebase-generated verification URL
+ * @returns {{ success: boolean, data?: object, error?: string }}
  */
 export const sendVerificationEmail = async (email, name, verificationLink) => {
   try {

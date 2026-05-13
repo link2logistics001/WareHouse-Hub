@@ -1,3 +1,28 @@
+/**
+ * DataEntrySidebar.js — Data Entry Navigation Sidebar
+ *
+ * Dark navy-themed sidebar for the DataEntryDashboard with cyan accents.
+ * Uses a fixed collapsible layout (80px → 256px on hover).
+ *
+ * ── Menu Items ──────────────────────────────────────────────────────
+ *  - Dashboard — Overview stats and recent entries
+ *  - My Entries — View/edit/delete entered warehouses
+ *  - Add New — Multi-step warehouse registration form
+ *  - Inquiries — Conversation management with business clients
+ *  - Calendar — Per-warehouse availability management
+ *  - Settings — Profile editing
+ *
+ * ── Differences from OwnerSidebar ───────────────────────────────────
+ *  - Cyan accent color instead of orange
+ *  - "DE" logo badge instead of L2L brand logo
+ *  - No Console or Global Leads menu items
+ *  - Fixed position (not sticky) with dark navy background
+ *
+ * @param {Object} props
+ * @param {string} props.activeTab — Currently active tab ID
+ * @param {Function} props.setActiveTab — Tab change handler
+ * @param {Function} props.onLogout — Sign out callback
+ */
 'use client'
 import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';

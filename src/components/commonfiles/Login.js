@@ -1,3 +1,36 @@
+/**
+ * Login.js — Authentication Section (Landing Page)
+ *
+ * Two-step authentication flow embedded in the landing page at `#login`:
+ *
+ *  **Step 1 — Role Selection (RoleStep)**:
+ *    - "Business Clients" (need space) vs "Warehouse Partners" (have space)
+ *    - Decorative orange background elements
+ *    - Step indicator badge ("Step 1 of 2")
+ *
+ *  **Step 2 — Auth Form (AuthFormStep)**:
+ *    - Toggle between Sign In / Sign Up modes
+ *    - Email + Password form with validation
+ *    - "Forgot Password" flow with reset email
+ *    - Google OAuth sign-in button
+ *    - Post-registration email verification screen
+ *    - Role badge and "← Change" back button
+ *
+ *  **Left Panel (WarehouseLeftPanel)** — Desktop only:
+ *    - Animated isometric warehouse visualization with SVG
+ *    - Boxes spawn and slide into shelf rack slots at random
+ *    - Orange scan beam effect when a box lands
+ *    - Stats footer (500+ Facilities, 12 Cities, 24/7 Support)
+ *    - "Join the Hub." headline with orange accent
+ *
+ * Animation:
+ *  - Step transitions use Framer Motion slide variants (left/right)
+ *  - Direction-aware: forward slides right-to-left, back slides left-to-right
+ *
+ * @param {Object} props
+ * @param {Function} props.onLoginSuccess — Callback with user data after successful auth
+ */
+
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'

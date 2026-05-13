@@ -1,3 +1,33 @@
+/**
+ * OwnerSidebar.js — Warehouse Partner Navigation Sidebar
+ *
+ * Dark slate-themed sidebar for the OwnerDashboard with auto-expand on hover.
+ * Collapsed state (80px) shows only icons; expanded state (256px) reveals labels.
+ *
+ * ── Menu Items ──────────────────────────────────────────────────────
+ *  - Dashboard — Overview stats and recent activity
+ *  - Manage Properties — View/edit/delete listed warehouses
+ *  - Add New — Multi-step warehouse registration form
+ *  - Console — Cargo inbound/outbound logging
+ *  - Inquiries — Business client conversation management
+ *  - Global Leads — Admin-approved marketplace inquiries
+ *  - Calendar — Per-warehouse availability management
+ *  - Settings — Profile editing
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - Collapsible sidebar with CSS transition (80px → 256px on hover)
+ *  - Can render as full-width mobile drawer (isDrawer prop)
+ *  - Orange accent on active item with subtle glow effect
+ *  - Country selector (SidebarCountrySelector) at the bottom
+ *  - Sign out button at the very bottom
+ *  - L2L logo that expands to full brand name on hover
+ *
+ * @param {Object} props
+ * @param {string} props.activeTab — Currently active tab ID
+ * @param {Function} props.setActiveTab — Tab change handler
+ * @param {Function} props.onLogout — Sign out callback
+ * @param {boolean} props.isDrawer — If true, renders as full-width mobile drawer
+ */
 'use client'
 import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut, Monitor, MessageSquarePlus } from 'lucide-react';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';

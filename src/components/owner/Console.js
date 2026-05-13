@@ -1,3 +1,32 @@
+/**
+ * Console.js — Cargo Inbound/Outbound Logging Console
+ *
+ * An operational tool for warehouse partners to log cargo movements
+ * (inbound arrivals and outbound dispatches) for each of their warehouses.
+ *
+ * ── How It Works ────────────────────────────────────────────────────
+ *  1. On mount, fetches all warehouses owned by the current user
+ *  2. User selects a warehouse from the dropdown
+ *  3. The last 50 cargo logs for that warehouse are fetched from Firestore
+ *  4. User can add new logs via the "New Entry" modal
+ *
+ * ── Log Entry Fields ────────────────────────────────────────────────
+ *  - Type: Inbound (arriving cargo) or Outbound (dispatching cargo)
+ *  - Description: What goods are being moved
+ *  - Quantity: Number of units/pallets
+ *  - Vehicle Number: Truck/container ID for tracking
+ *  - Timestamp: Auto-generated via serverTimestamp
+ *
+ * ── Firestore Path ──────────────────────────────────────────────────
+ *  warehouse_details/{role}/emails/{email}/warehouses/{warehouseId}/cargo_logs/{logId}
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - Searchable log list with filter by type (Inbound/Outbound)
+ *  - Animated log entry cards with Framer Motion
+ *  - Color-coded arrows: green (inbound), red (outbound)
+ *  - Empty state illustration when no logs exist
+ *  - Loading spinner during data fetches
+ */
 'use client';
 
 import { useState, useEffect } from 'react';

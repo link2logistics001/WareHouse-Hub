@@ -1,3 +1,30 @@
+/**
+ * MerchantSidebar.js — Business Client Navigation Sidebar
+ *
+ * Dark-themed sidebar for the MerchantDashboard with auto-expand on hover.
+ * Collapsed state (80px) shows only icons; expanded state (256px) reveals labels.
+ *
+ * ── Menu Items ──────────────────────────────────────────────────────
+ *  - Browse Directory — Search and view available warehouses
+ *  - Active Chats — View ongoing conversations with warehouse owners
+ *  - Saved Properties — Wishlisted warehouses
+ *  - My Requirements — Post storage requirements via inquiry forms
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - Collapsible sidebar: 80px → 256px on hover (CSS transition)
+ *  - Can also render as full-width drawer (for mobile via `isDrawer` prop)
+ *  - "Send Custom Enquiry" button with sparkle icon
+ *  - Country selector (SidebarCountrySelector) at the bottom
+ *  - Sign out button with danger hover state
+ *  - Ambient glow effects in the dark background
+ *
+ * @param {Object} props
+ * @param {string} props.activeTab — Currently active tab ID
+ * @param {Function} props.setActiveTab — Tab change handler
+ * @param {Function} props.onLogout — Sign out callback
+ * @param {Function} props.onSendEnquiry — Opens the inquiry modal
+ * @param {boolean} props.isDrawer — If true, renders as full-width mobile drawer
+ */
 'use client'
 import { useState } from 'react';
 import { 
