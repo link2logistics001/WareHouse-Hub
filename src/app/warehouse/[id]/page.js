@@ -1,3 +1,34 @@
+/**
+ * warehouse/[id]/page.js — Warehouse Detail Page
+ *
+ * Dynamic route page at `/warehouse/:encodedId` that displays the full details
+ * of a specific warehouse. The ID in the URL is Base64-encoded (via warehouseId.js)
+ * to prevent exposing raw Firestore document IDs.
+ *
+ * Features:
+ *  - Photo gallery with 4 views (Front, Inside, Dock, Rate Card) and thumbnail navigation
+ *  - Warehouse specs: area, height, docks, construction type, WMS, etc.
+ *  - Operations info: hours, days open, security
+ *  - Premium amenities list
+ *  - Sidebar with partner contact info (locked behind access control)
+ *  - Price card with region-aware currency formatting
+ *  - "Send Inquiry" chat button (for business clients)
+ *  - "Your Property" badge + dashboard link (for the warehouse owner)
+ *  - Login prompt (for unauthenticated visitors)
+ *  - Copy protection (right-click and text selection disabled)
+ *  - Breadcrumb navigation
+ *
+ * Access Control:
+ *  - Contact details (phone, email) are LOCKED by default
+ *  - Admins and the warehouse owner always see unlocked contacts
+ *  - Business clients see unlocked contacts only if the owner has granted access
+ *    (checked via messaging.checkAccessStatus)
+ *
+ * Data Fetching:
+ *  - Uses collectionGroup('warehouses') to find the warehouse across all
+ *    owner subcollections (supports both warehouse_partner and dataentry paths)
+ */
+
 "use client"
 import { useState, useEffect, use } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -411,6 +442,14 @@ export default function WarehouseDetailPage({ params }) {
   );
 }
 
+/**
+ * SpecItem — A single key-value row in the warehouse specs table.
+ * Returns null if value is empty/undefined to avoid showing blank rows.
+ *
+ * @param {Object} props
+ * @param {string} props.label — The spec label (e.g., "Construction", "Docks")
+ * @param {string} props.value — The spec value (e.g., "RCC", "4")
+ */
 function SpecItem({ label, value }) {
   if (!value) return null;
   return (
@@ -421,6 +460,17 @@ function SpecItem({ label, value }) {
   );
 }
 
+/**
+ * ModernStat — An animated stat card showing a key metric with an icon.
+ * Used in the grid showing Total Area, Available Area, Clear Height, and Age.
+ * Features hover effects: icon background changes color and text slides.
+ *
+ * @param {Object} props
+ * @param {React.ComponentType} props.icon — Lucide icon component
+ * @param {string} props.label — Stat label (e.g., "Total Area")
+ * @param {string} props.value — Stat value (e.g., "5,000 sq ft")
+ * @param {number} props.delay — Animation delay in seconds for staggered entrance
+ */
 function ModernStat({ icon: Icon, label, value, delay }) {
   return (
     <motion.div 
@@ -440,6 +490,17 @@ function ModernStat({ icon: Icon, label, value, delay }) {
   );
 }
 
+/**
+ * SidebarInfoBox — A contact info row in the sidebar.
+ * Shows the contact person name, phone, or email with a lock icon
+ * when access hasn't been granted by the warehouse owner.
+ *
+ * @param {Object} props
+ * @param {React.ComponentType} props.icon — Lucide icon component (User, Phone, Mail)
+ * @param {string} props.label — Info label (e.g., "Contact Number")
+ * @param {string} props.value — The actual value (phone number, email, etc.)
+ * @param {boolean} props.isLocked — Whether to show the value or a "Locked" placeholder
+ */
 function SidebarInfoBox({ icon: Icon, label, value, isLocked }) {
   return (
     <div className="flex items-center gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 hover:border-orange-200 hover:bg-white transition-all group">

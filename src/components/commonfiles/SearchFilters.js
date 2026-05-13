@@ -1,3 +1,24 @@
+/**
+ * SearchFilters.js — Dashboard Warehouse Search Filters
+ *
+ * A filter bar component used in the Merchant and Owner dashboards to
+ * narrow down warehouse listings by multiple criteria.
+ *
+ * Filters:
+ *  - **City**: Text input with city autocomplete dropdown (via useCityAutocomplete)
+ *  - **Category**: Dropdown select (General Storage, Cold Storage, Electronics, Pharmaceutical)
+ *  - **Min Area**: Numeric input with region-aware unit label (sq ft / sq m)
+ *  - **Max Budget**: Numeric input with region-aware currency label
+ *
+ * Two-way sync:
+ *  - Internal searchQuery syncs to parent's `filters.city` on change
+ *  - Parent clearing `filters.city` resets the internal search query
+ *
+ * @param {Object} props
+ * @param {Object} props.filters — Current filter state { city, category, minArea, maxBudget }
+ * @param {Function} props.setFilters — State setter for updating filters
+ */
+
 'use client'
 import { Search, MapPin, Grid, Ruler, Wallet, Filter } from 'lucide-react';
 import { useCityAutocomplete } from '@/hooks/useCityAutocomplete';

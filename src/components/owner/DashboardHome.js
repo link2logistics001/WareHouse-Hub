@@ -1,3 +1,33 @@
+/**
+ * DashboardHome.js — Owner Dashboard Home / Overview Tab
+ *
+ * The landing view when a warehouse partner first logs in. Displays
+ * key performance metrics, recent warehouses, and quick-action buttons.
+ *
+ * ── Sections ────────────────────────────────────────────────────────
+ *  1. **Welcome Banner** — Greeting with user's first name and date
+ *  2. **Stats Cards** — 4 animated metric cards:
+ *     - Total Properties (warehouse count)
+ *     - Total Area (sum of all warehouse areas in sq ft)
+ *     - Active Cities (unique cities from warehouse listings)
+ *     - Avg. Rating (placeholder, currently returns 4.8)
+ *     Each card has an AnimatedNumber counter and an AnimatedTrendLine sparkline.
+ *  3. **Recent Warehouses** — 3 most recent warehouses with status badges,
+ *     city, area, and "View Details" links to the warehouse detail page.
+ *  4. **Quick Actions** — Shortcut buttons to Add New, Calendar, and Settings tabs.
+ *
+ * ── Data Fetching ───────────────────────────────────────────────────
+ *  Uses `fetchUserWarehouses('warehouse_partner', email, uid)` from
+ *  warehouseCollections.js to get all warehouses owned by this user.
+ *
+ * ── Sub-components (inline) ─────────────────────────────────────────
+ *  - `AnimatedNumber` — Framer Motion `animate()` counter (0 → value)
+ *  - `AnimatedTrendLine` — SVG sparkline with animated path drawing
+ *
+ * @param {Object} props
+ * @param {Function} props.setActiveTab — Switch to another dashboard tab
+ * @param {Function} props.onOpenSidebar — Open the mobile sidebar drawer
+ */
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';

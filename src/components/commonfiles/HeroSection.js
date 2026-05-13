@@ -1,3 +1,24 @@
+/**
+ * HeroSection.js — Landing Page Hero with Video Background
+ *
+ * Full-viewport hero section at the top of the landing page featuring:
+ *  - Background video (warehouse-bg.mp4) lazy-loaded via IntersectionObserver
+ *  - Dark overlay with radial gradient for text readability
+ *  - Main headline with orange accent text
+ *  - City search bar with autocomplete (powered by useCityAutocomplete hook)
+ *  - Availability check: queries Firestore to verify warehouses exist in the searched city
+ *  - "Send Enquiry" button → opens InquirySelectionModal (Quick or Detailed)
+ *  - "Become a Warehouse Partner" button
+ *  - Click-to-call phone number (region-aware via CountryContext)
+ *  - Error toast when no warehouses are found in the searched city
+ *
+ * Search Flow:
+ *  1. User types a city → autocomplete suggestions appear
+ *  2. User selects/enters a city → checkAvailability() queries collectionGroup('warehouses')
+ *  3. If approved warehouses exist → navigates to /search?q=<city>
+ *  4. If none found → shows red error toast with city name
+ */
+
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';

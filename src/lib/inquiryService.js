@@ -1,3 +1,28 @@
+/**
+ * inquiryService.js — Warehouse Inquiry Management Service
+ *
+ * Handles the lifecycle of warehouse storage inquiries submitted by users
+ * (from InquiryModals.js) and managed by admins.
+ *
+ * Firestore Collection: `admin_inquiries`
+ *
+ * Inquiry Lifecycle:
+ *  1. User submits inquiry → submitInquiry() saves to 'admin_inquiries' with status 'pending'
+ *  2. Admin reviews on dashboard → updateInquiryStatus() sets 'approved' or 'rejected'
+ *  3. Approved inquiries become visible to warehouse owners via getApprovedInquiries()
+ *  4. Real-time admin dashboard uses subscribeToInquiries() for live updates
+ *
+ * Inquiry Types:
+ *  - 'quick': Basic info (company, contact, storage needs, type, duration)
+ *  - 'detailed': Full scoping form (company, products, contract terms, inbound/outbound, services)
+ *
+ * Functions:
+ *  - submitInquiry() — Creates a new inquiry document
+ *  - updateInquiryStatus() — Admin updates the approval status
+ *  - subscribeToInquiries() — Real-time listener for admin dashboard
+ *  - getApprovedInquiries() — One-time fetch of approved inquiries for owner dashboard
+ */
+
 import { 
   collection, 
   addDoc, 

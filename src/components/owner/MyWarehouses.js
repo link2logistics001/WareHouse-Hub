@@ -1,3 +1,29 @@
+/**
+ * MyWarehouses.js — Warehouse Partner's Property List
+ *
+ * Displays all warehouses owned by the current warehouse partner in a
+ * responsive card grid. Provides management actions for each listing.
+ *
+ * ── Features ────────────────────────────────────────────────────────
+ *  - **Property Cards**: Each card shows warehouse photo, name, city,
+ *    area, status badge (Approved/Pending/Rejected), and online status
+ *  - **Status Badges**: Color-coded — green (Approved), amber (Pending), red (Rejected)
+ *  - **Online Toggle**: Switch warehouse visibility on/off (updates Firestore isOnline field)
+ *  - **Edit**: Opens AddWarehouse form pre-filled with warehouse data
+ *  - **Delete**: Removes warehouse document from Firestore with confirmation
+ *  - **View Live**: Opens the public warehouse detail page in a new tab
+ *  - **Skeleton Loading**: Premium animated pulse placeholders during data fetch
+ *  - **Empty State**: Friendly illustration when no warehouses exist
+ *
+ * ── Data Fetching ───────────────────────────────────────────────────
+ *  Uses `fetchUserWarehouses('warehouse_partner', email, uid)` to get
+ *  all warehouses from the collection group, filtered by the current user.
+ *
+ * @param {Object} props
+ * @param {Function} props.setActiveTab — Switch to another dashboard tab (e.g., 'add-warehouse')
+ * @param {Function} props.onOpenSidebar — Open the mobile sidebar drawer
+ * @param {Function} props.onEdit — Callback to switch to edit mode with warehouse data
+ */
 'use client';
 
 import { useEffect, useState, useRef } from 'react';

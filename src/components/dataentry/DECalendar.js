@@ -1,3 +1,16 @@
+/**
+ * DECalendar.js — Data Entry Availability Calendar
+ *
+ * Data Entry variant of the Owner's Availability.js calendar component.
+ * Functionally identical but fetches warehouses from the 'dataentry' role
+ * path instead of 'warehouse_partner'.
+ *
+ * Uses the same Firestore structure:
+ *   warehouse_availability/{YYYY-MM}/entries/{warehouseId_YYYY-MM-DD}
+ *
+ * See Availability.js (owner) for full documentation of how the
+ * calendar, status options, and day modal work.
+ */
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

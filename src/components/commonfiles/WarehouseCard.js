@@ -1,3 +1,33 @@
+/**
+ * WarehouseCard.js — Warehouse Listing Card Component
+ *
+ * A clickable card that displays a warehouse's key information in a grid layout.
+ * Used on the search results page and in various dashboard warehouse lists.
+ *
+ * Features:
+ *  - Hero image with Next.js optimization (via OptimizedImage)
+ *  - Category badge and "Verified" status badge
+ *  - Wishlist heart button (only for business_client users)
+ *  - Warehouse name, location, and owner info
+ *  - Price and area stats grid
+ *  - Facilities and amenities tags (max 3 shown, with "+N more" overflow)
+ *  - Click navigates to the warehouse detail page using encoded ID
+ *  - Region-aware price formatting via CountryContext
+ *
+ * @param {Object} props
+ * @param {string} props.id — Firestore document ID of the warehouse
+ * @param {string} props.title — Warehouse name
+ * @param {string} props.location — "City, State" string
+ * @param {number|string} props.price — Monthly pricing amount
+ * @param {number|string} props.area — Total area in the configured unit
+ * @param {string} props.type — Warehouse category/type
+ * @param {string} props.imageUrl — URL of the front view photo
+ * @param {string} props.owner — Company/partner name
+ * @param {string[]} props.facilities — List of facility features
+ * @param {string[]} props.amenities — List of amenities
+ * @param {string} props.category — Alternative category field (fallback for type)
+ */
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPin, Ruler, User, Layers, CheckCircle2, Heart } from 'lucide-react';
@@ -13,15 +43,17 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { fmtPrice, config } = useCountry();
   
+  // Only business clients can save warehouses to their wishlist
   const isBusinessClient = user?.userType === 'business_client';
   const saved = isWishlisted(id);
 
   return (
     <div 
+      // Navigate to warehouse detail page on click (ID is Base64-encoded for URL safety)
       onClick={() => id && router.push(`/warehouse/${encodeWarehouseId(id)}`)}
       className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
     >
-      {/* Image Section */}
+      {/* ── Image Section ── */}
       <div className="relative aspect-video w-full overflow-hidden">
         <OptimizedImage
           src={imageUrl}
@@ -32,11 +64,14 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
           className="w-full h-full"
           imgClassName="group-hover:scale-105 transition-transform duration-500 object-cover"
         />
-        {/* Floating Badges */}
+
+        {/* Floating Badges — Category tag and wishlist heart */}
         <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+          {/* Category/Type badge */}
           <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold text-gray-700 shadow-sm">
             {type || category || "General"}
           </div>
+          {/* Wishlist heart — only visible for business clients */}
           {isBusinessClient && (
             <button
               onClick={(e) => toggleWishlist(id, e)}
@@ -48,13 +83,16 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
             </button>
           )}
         </div>
+
+        {/* Verified badge — top-left corner */}
         <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1 z-10">
           <CheckCircle2 className="w-3 h-3 mr-1" /> Verified
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* ── Content Section ── */}
       <div className="p-5">
+        {/* Warehouse name and location */}
         <div className="mb-4">
           <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors truncate">
             {title}
@@ -63,7 +101,7 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
             <MapPin className="w-4 h-4 mr-1 text-gray-400 shrink-0" />
             <span className="truncate">{location}</span>
           </div>
-          {/* Owner Name */}
+          {/* Owner/Partner Name */}
           {owner && (
             <div className="flex items-center text-xs text-gray-400 mt-1">
               <User className="w-3 h-3 mr-1" />
@@ -72,11 +110,12 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
           )}
         </div>
 
-        {/* Stats Grid */}
+        {/* ── Stats Grid — Price and Area ── */}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
           <div>
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price</p>
             <p className="text-lg font-bold text-gray-900">
+              {/* Use fmtPrice for numeric prices, show raw string for "Contact for Price" etc. */}
               {isNaN(Number(price)) ? price : fmtPrice(price)} <span className="text-xs text-gray-400 font-normal">/mo</span>
             </p>
           </div>
@@ -88,7 +127,8 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
             </div>
           </div>
         </div>
-        {/* Facilities */}
+
+        {/* ── Facilities Tags — Show first 3 with overflow indicator ── */}
         {facilities && facilities.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {facilities.slice(0, 3).map((f, i) => (
@@ -96,13 +136,14 @@ const WarehouseCard = ({ id, title, location, price, area, type, imageUrl, owner
                 <Layers className="w-3 h-3" /> {f}
               </span>
             ))}
+            {/* "+N more" badge if there are more than 3 facilities */}
             {facilities.length > 3 && (
               <span className="bg-slate-200 text-slate-500 px-2 py-1 rounded text-xs font-medium">+{facilities.length - 3} more</span>
             )}
           </div>
         )}
 
-        {/* Amenities */}
+        {/* ── Amenities Tags — Show first 3 with overflow indicator ── */}
         {amenities && amenities.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             <span className="text-xs font-semibold text-slate-500 w-full">Amenities:</span>

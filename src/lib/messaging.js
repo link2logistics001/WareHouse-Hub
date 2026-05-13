@@ -1,3 +1,26 @@
+/**
+ * messaging.js — Real-Time Messaging Service
+ *
+ * Manages conversations between business clients and warehouse owners.
+ * Conversations are stored in Firestore at `conversations/{convId}/messages/{msgId}`.
+ *
+ * Conversation ID format: `{warehouseId}_{merchantId}` — ensures one conversation
+ * per business-client/warehouse pair.
+ *
+ * Access Control Flow:
+ *  1. Business client opens ChatBox → getOrCreateConversation() creates/fetches the conversation
+ *  2. Messages are sent via sendMessage() with word filtering
+ *  3. Warehouse owner can grant contact access via grantContactAccess()
+ *  4. Contact details on the warehouse page check access via checkAccessStatus()
+ *
+ * Functions:
+ *  - getOrCreateConversation() — Creates or retrieves a conversation document
+ *  - sendMessage() — Sends a filtered message and updates lastMessage metadata
+ *  - grantContactAccess() — Sets conversation status to 'access_granted'
+ *  - checkAccessStatus() — Checks if contact access has been granted
+ *  - deleteConversation() — Removes a conversation document
+ */
+
 import { 
   collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, serverTimestamp, setDoc 

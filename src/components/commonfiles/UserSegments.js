@@ -1,3 +1,24 @@
+/**
+ * UserSegments.js — "Who You Are / How We Help" Landing Page Section
+ *
+ * Two-panel marketing section targeting the platform's two user types:
+ *  1. **Space Seekers** (Cargo Businesses) — Light background, orange accents
+ *     - Animated floating UI mockup (SeekerVisual) showing search + results
+ *     - "Find Warehouse Space" CTA → scrolls to login
+ *     - "Send Custom Enquiry" CTA → opens InquirySelectionModal
+ *  2. **Space Providers** (Warehouse Operators) — Dark slate background
+ *     - Animated dashboard mockup (ProviderVisual) showing capacity/revenue stats
+ *     - "List Your Warehouse" CTA → scrolls to login
+ *
+ * Sub-components:
+ *  - `SeekerVisual`: Memoized floating card animation (search, map pins, trust badge)
+ *  - `ProviderVisual`: Memoized dark dashboard mockup (capacity %, revenue, notifications)
+ *  - `InquiryModalController`: Isolated modal state manager that listens for
+ *    'open-inquiry-modal' custom events (dispatched by the "Send Custom Enquiry" button)
+ *
+ * Uses React.memo on visuals and modal controller to prevent unnecessary re-renders.
+ */
+
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

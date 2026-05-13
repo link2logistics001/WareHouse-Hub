@@ -1,3 +1,37 @@
+/**
+ * MerchantDashboard.js — Business Client Dashboard
+ *
+ * The main dashboard for users with `userType === 'business_client'`.
+ * Provides warehouse discovery, communication, and inquiry management.
+ *
+ * ── Tabs (controlled by `activeTab` state via MerchantSidebar) ──────
+ *  1. **Browse Directory** — Real-time grid of all approved warehouses
+ *     with search filters (city, category, min area, max budget).
+ *     Uses Firestore `collectionGroup('warehouses')` with onSnapshot.
+ *  2. **Active Chats** — List of all conversations the merchant has
+ *     with warehouse owners. Click to open ChatBox modal.
+ *  3. **Saved Properties** — Wishlisted warehouses (via useWishlist hook).
+ *  4. **My Requirements** — Inquiry submission (Quick or Detailed) via
+ *     InquiryModals, allowing users to post storage requirements.
+ *  5. **Settings** — Profile editing (name, company, photo upload).
+ *
+ * ── Key Features ────────────────────────────────────────────────────
+ *  - Animated stat counters (AnimatedNumber) for available/saved/chats count
+ *  - Skeleton loading cards while data is being fetched
+ *  - Mobile-responsive: hamburger menu triggers sidebar drawer overlay
+ *  - Profile banner with avatar upload, name editing, and verification badges
+ *  - Floating ChatBox modal for real-time messaging with warehouse owners
+ *
+ * ── Sub-components (defined inline) ─────────────────────────────────
+ *  - `AnimatedNumber` — Spring-animated counter that animates from 0 to value
+ *  - `AnimatedTrendLine` — SVG sparkline with path animation
+ *  - `SkeletonCard` — Pulsing placeholder card shown during data loading
+ *
+ * @param {Object} props
+ * @param {Object} props.user — Business client user from AuthContext
+ * @param {Function} props.onLogout — Sign out callback
+ * @param {Function} props.onOpenChat — Opens ChatBox with a specific warehouse
+ */
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, animate } from 'framer-motion';

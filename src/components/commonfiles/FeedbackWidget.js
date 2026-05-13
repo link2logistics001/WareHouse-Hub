@@ -1,3 +1,23 @@
+/**
+ * FeedbackWidget.js — Floating Feedback Collection Button
+ *
+ * A fixed-position floating action button (FAB) in the bottom-right corner
+ * that expands into a feedback form when clicked.
+ *
+ * Features:
+ *  - **FAB Toggle**: Orange gradient button → dark slate when form is open
+ *  - **Feedback Types**: Idea (amber), Bug (rose), Other (blue) — selectable chips
+ *  - **Form Fields**: Message textarea (required), optional email for replies
+ *  - **Submission**: Saves to Firestore `feedbacks` collection with type, message, source
+ *  - **Success State**: Shows checkmark animation, auto-closes after 3 seconds
+ *  - **Spring Animation**: Form slides up/scales in with spring physics
+ *  - **Glassmorphism**: Semi-transparent white card with backdrop blur
+ *
+ * Storage: feedbacks/{docId} → { type, message, email, source, status, createdAt }
+ *
+ * Note: This widget is shown on the landing page only (not in dashboards).
+ */
+
 'use client';
 
 import React, { useState } from 'react';

@@ -1,3 +1,23 @@
+/**
+ * Footer.js — Global Site Footer
+ *
+ * Dark-themed footer displayed at the bottom of every page.
+ *
+ * Layout:
+ *  - Left column: Logo, brand name, mission statement, newsletter email input
+ *  - Right columns (3): Navigation links grouped by audience:
+ *    - "For Space Seekers": Find Warehouses, Post Requirements, How It Works
+ *    - "For Space Providers": List Your Warehouse, View Inquiries, Pricing
+ *    - "Company": About Us, Contact, Privacy Policy
+ *  - Bottom bar: Copyright, Terms of Service, Privacy Policy, Security links
+ *
+ * Design:
+ *  - Deep navy background (#0a0f1d) with subtle orange gradient top border
+ *  - Hover effects: arrow appears on link hover, underline slides in on legal links
+ *  - Logo transitions from grayscale to color on hover
+ *  - Responsive: single column on mobile, 12-column grid on desktop
+ */
+
 'use client'
 
 import Link from 'next/link'

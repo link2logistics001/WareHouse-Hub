@@ -1,3 +1,21 @@
+/**
+ * WhyWarehouseHub.js — "Why Link2Logistics" Landing Page Section
+ *
+ * A value proposition section that showcases 4 key differentiators:
+ *  1. Warehouse Experts — Deep industry roots and logistics experience
+ *  2. Verified Partnerships — 100% pre-validated, transparent pricing
+ *  3. Operational Support — Active facilitation, not just matching
+ *  4. Localized Expertise — Regional focus with global capability
+ *
+ * Design:
+ *  - Large headline with text reveal animation (scroll-triggered)
+ *  - 4-column grid of FeatureCards with hover effects
+ *  - Each card has: category label, stat number, divider, title, description, icon
+ *  - Orange progress bar fills across top on hover
+ *  - Animated SVG blob in background (breathing/rotating)
+ *  - Scroll-triggered visibility via IntersectionObserver
+ */
+
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Building2, Handshake, ShieldCheck, MapPin } from "lucide-react";

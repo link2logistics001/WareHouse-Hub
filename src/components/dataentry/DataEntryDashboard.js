@@ -1,3 +1,34 @@
+/**
+ * DataEntryDashboard.js — Data Entry Operator Dashboard
+ *
+ * The main dashboard for users with `userType === 'dataentry'`.
+ * Data entry operators add and manage warehouses on behalf of warehouse
+ * owners who may not have direct platform access.
+ *
+ * ── Tabs (controlled by `activeTab` state via DataEntrySidebar) ─────
+ *  1. **Dashboard** (DEDashboardHome) — Overview stats and recent entries
+ *  2. **My Entries** (DEMyWarehouses) — List/edit/delete entered warehouses
+ *  3. **Add New** (DEAddWarehouse) — Multi-step warehouse form (cyan theme)
+ *  4. **Inquiries** (DEInquiries) — Conversation management (same as owner)
+ *  5. **Calendar** (DECalendar) — Availability calendar (same as owner)
+ *  6. **Settings** (SettingsPanel) — Profile management
+ *
+ * ── Differences from OwnerDashboard ─────────────────────────────────
+ *  - Uses cyan/teal accent color instead of orange
+ *  - Saves warehouses under 'dataentry' role path instead of 'warehouse_partner'
+ *  - SettingsPanel is defined inline (not shared) with cyan theming
+ *  - No Console tab (cargo logging is owner-only)
+ *  - No Global Leads tab
+ *
+ * ── Sub-components (inline) ─────────────────────────────────────────
+ *  - `SettingsPanel` — Profile edit form (name, company, avatar upload)
+ *    with cyan theme styling and same logic as owner settings
+ *
+ * @param {Object} props
+ * @param {Object} props.user — Data entry user from AuthContext
+ * @param {Function} props.onLogout — Sign out callback
+ * @param {Function} props.onOpenChat — Opens ChatBox modal
+ */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
