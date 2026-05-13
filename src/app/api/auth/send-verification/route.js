@@ -47,9 +47,12 @@ export async function POST(request) {
     }
 
     // 1. Generate the secure Firebase verification link
-    // The actionCodeSettings determine where the user is redirected after clicking the link
+    // The actionCodeSettings determine where the user is redirected after
+    // clicking the link. Use the app root with a query param instead of '/login'
+    // so users are not sent to a missing route (this app has no /login page —
+    // the login form lives at /#login on the home page).
     const actionCodeSettings = {
-      url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/?mode=verify-email`,
       handleCodeInApp: true,  // Opens in the app instead of a Firebase-hosted page
     };
 

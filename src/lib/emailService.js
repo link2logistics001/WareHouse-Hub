@@ -23,7 +23,7 @@ import { Resend } from 'resend';
  * @param {string} email — Recipient's email address
  * @param {string} name — Recipient's display name (for personalization)
  * @param {string} verificationLink — Firebase-generated verification URL
- * @returns {{ success: boolean, data?: object, error?: string }}
+ * @returns {{ success: boolean, data?: object, error?: string | object }}
  */
 export const sendVerificationEmail = async (email, name, verificationLink) => {
   try {

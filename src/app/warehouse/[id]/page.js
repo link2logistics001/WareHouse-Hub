@@ -451,7 +451,8 @@ export default function WarehouseDetailPage({ params }) {
  * @param {string} props.value — The spec value (e.g., "RCC", "4")
  */
 function SpecItem({ label, value }) {
-  if (!value) return null;
+  // Only hide null/undefined/empty — allow falsy values like 0 (e.g., "0 docks")
+  if (value == null || value === '') return null;
   return (
     <div className="flex items-center justify-between py-3 border-b border-slate-100/50 last:border-0 group">
       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">{label}</span>
