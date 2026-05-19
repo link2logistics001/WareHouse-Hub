@@ -61,6 +61,8 @@ import {
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
+import AdminAddWarehouse from './AdminAddWarehouse';
+import { PlusCircle } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -69,6 +71,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
+        { id: 'add-warehouse', label: 'Add Warehouse', icon: PlusCircle },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
         { id: 'block-people', label: 'Block People', icon: Users },
         { id: 'migration', label: 'Data Migration', icon: Database },
@@ -376,7 +379,7 @@ export default function AdminDashboard({ user, onLogout }) {
                                 exit={{ x: 20, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'migration' ? 'Data Migration' : 'User Management'}
+                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'add-warehouse' ? 'Add Warehouse' : activeView === 'migration' ? 'Data Migration' : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -462,6 +465,17 @@ export default function AdminDashboard({ user, onLogout }) {
                                 transition={{ duration: 0.3, type: 'tween' }}
                             >
                                 <AdminInquiriesView showToast={showToast} />
+                            </motion.div>
+                        ) : activeView === 'add-warehouse' ? (
+                            <motion.div
+                                key="add-warehouse"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="h-full"
+                            >
+                                <AdminAddWarehouse setActiveTab={setActiveView} />
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
