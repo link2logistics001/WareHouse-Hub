@@ -47,6 +47,19 @@ export function CountryProvider({ children }) {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('l2l_country') : null
     if (saved && COUNTRY_CONFIG[saved]) {
       setCountryState(saved)
+    } else {
+      // Auto-detect user's country via IP if no saved preference exists
+      fetch('https://ipapi.co/json/')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.country_code && COUNTRY_CONFIG[data.country_code]) {
+            setCountryState(data.country_code)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('l2l_country', data.country_code)
+            }
+          }
+        })
+        .catch((err) => console.error("Could not auto-detect country:", err))
     }
   }, [])
 
