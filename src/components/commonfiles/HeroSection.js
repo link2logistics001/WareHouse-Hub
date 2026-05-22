@@ -108,22 +108,9 @@ export default function HeroSection() {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-
-    // Only start loading + playing once the hero is in the viewport
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          video.src = '/warehouse-bg.mp4';
-          video.load();
-          video.play().catch(() => { }); // autoplay may be blocked silently
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(video);
-    return () => observer.disconnect();
+    if (video) {
+      video.play().catch(() => { }); // Ensure autoplay triggers
+    }
   }, []);
 
   return (
@@ -148,13 +135,15 @@ export default function HeroSection() {
         ::placeholder { color: #9ca3af; }
       `}</style>
 
-      {/* Background Video — lazy-loaded via IntersectionObserver */}
+      {/* Background Video — loaded immediately for faster hero rendering */}
       <video
         ref={videoRef}
+        src="/warehouse-bg.mp4"
+        autoPlay
         loop
         muted
         playsInline
-        preload="none"
+        preload="auto"
         style={{
           position: 'absolute',
           inset: 0,
