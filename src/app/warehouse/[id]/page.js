@@ -65,7 +65,7 @@ export default function WarehouseDetailPage({ params }) {
       if (!user || !warehouse) return;
       
       // Admins and the owner of the warehouse always have access
-      if (user.userType === 'admin' || user.uid === warehouse.ownerId || user.userType === 'warehouse_partner') {
+      if (user.userType === 'superadmin' || user.userType === 'admin' || user.uid === warehouse.ownerId || user.userType === 'warehouse_partner') {
         setHasAccess(true);
         return;
       }

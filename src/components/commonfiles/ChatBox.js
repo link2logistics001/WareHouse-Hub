@@ -49,7 +49,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
         
         // IMPORTANT: The merchantId is either the logged-in user (if they are a business client)
         // or the specific business client who sent the inquiry (if the warehouse partner is viewing)
-        const merchantId = ['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase()) 
+        const merchantId = ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase()) 
           ? (warehouse.merchantId || warehouse.userId) 
           : currentUserId;
 
@@ -159,13 +159,13 @@ export default function ChatBox({ warehouse, user, onClose }) {
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                  {['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase())
+                  {['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
                     ? (warehouse.merchantName || 'Business Client')
                     : (warehouse.name || warehouse.warehouseName)}
                 </h3>
                 <div className="flex items-center gap-2 mt-0.5">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    {['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase())
+                    {['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
                       ? (warehouse.name || warehouse.warehouseName)
                       : (warehouse.ownerName || 'Warehouse Partner')}
                   </p>

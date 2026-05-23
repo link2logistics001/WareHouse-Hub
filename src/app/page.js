@@ -46,6 +46,7 @@ import MerchantDashboard from '@/components/merchant/MerchantDashboard'
 import OwnerDashboard from '@/components/owner/OwnerDashboard'
 import DataEntryDashboard from '@/components/dataentry/DataEntryDashboard'
 import AdminDashboard from '@/components/admin/AdminDashboard'
+import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard'
 
 // ── Shared Components ──
 import ChatBox from '@/components/commonfiles/ChatBox'
@@ -128,6 +129,16 @@ export default function Home() {
         <AccountBlocked 
           user={user} 
           onLogout={handleLogout} 
+        />
+      )
+    }
+
+    // Super admin gets the super admin panel
+    if (user.userType === 'superadmin') {
+      return (
+        <SuperAdminDashboard
+          user={user}
+          onLogout={handleLogout}
         />
       )
     }

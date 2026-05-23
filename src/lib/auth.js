@@ -21,7 +21,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 import { saveContactDetails } from './contactDetails';
 
-const USER_ROLES = ['warehouse_partner', 'business_client', 'admin', 'dataentry'];
+const USER_ROLES = ['warehouse_partner', 'business_client', 'admin', 'superadmin', 'dataentry'];
 
 /**
  * Maps role names to the Firestore collection keys used in paths.
@@ -31,6 +31,7 @@ export const ROLE_TO_COLLECTION_KEY = {
   warehouse_partner: 'warehouse_partner',
   business_client: 'business_client',
   admin: 'admin',
+  superadmin: 'superadmin',
   dataentry: 'dataentry',
 };
 
@@ -39,6 +40,7 @@ export const ROLE_DISPLAY_LABELS = {
   warehouse_partner: 'Warehouse Partners',
   business_client: 'Business Clients',
   admin: 'Admin',
+  superadmin: 'Super Admin',
   dataentry: 'Data Entry',
 };
 
@@ -298,14 +300,14 @@ export const loginUser = async (email, password, userType) => {
       // ── Admin & Data Entry override: can log in from any portal ────
       // If this email is an admin or data entry, redirect them to their panel
       // regardless of which role (business_client/warehouse_partner) they selected.
-      if (userData.userType === 'admin' || userData.userType === 'dataentry') {
+      if (userData.userType === 'superadmin' || userData.userType === 'admin' || userData.userType === 'dataentry') {
         return {
           uid: user.uid,
           email: user.email,
           name: userData.name || user.displayName || '',
           company: userData.company || '',
           userType: userData.userType,
-          verified: userData.verified || (userData.userType === 'admin' ? true : false),
+          verified: userData.verified || (userData.userType === 'admin' || userData.userType === 'superadmin' ? true : false),
           emailVerified: userData.emailVerified || user.emailVerified || false,
           phone: userData.phone || userData.mobile || '',
           photoURL: userData.photoURL || user.photoURL || null,
@@ -430,14 +432,14 @@ export const loginWithGoogle = async (userType, isSignIn = false) => {
     const existingUserData = userResult.data;
 
     // ── Admin & Data Entry override: can log in from any portal ────
-    if (existingUserData.userType === 'admin' || existingUserData.userType === 'dataentry') {
+    if (existingUserData.userType === 'superadmin' || existingUserData.userType === 'admin' || existingUserData.userType === 'dataentry') {
       return {
         uid: user.uid,
         email: user.email,
         name: existingUserData.name || user.displayName || '',
         company: existingUserData.company || '',
         userType: existingUserData.userType,
-        verified: existingUserData.verified || (existingUserData.userType === 'admin' ? true : false),
+        verified: existingUserData.verified || (existingUserData.userType === 'admin' || existingUserData.userType === 'superadmin' ? true : false),
         emailVerified: existingUserData.emailVerified || user.emailVerified || false,
         phone: existingUserData.phone || existingUserData.mobile || '',
         photoURL: existingUserData.photoURL || user.photoURL || null,

@@ -135,8 +135,8 @@ export default function Navbar() {
   const handleDashboard = () => {
     setProfileOpen(false);
     setMobileMenuOpen(false);
-    if (user?.userType === 'admin') {
-      router.push('/admin');
+    if (user?.userType === 'admin' || user?.userType === 'superadmin') {
+      router.push('/');
     } else if (user?.userType === 'warehouse_partner') {
       router.push('/owner');
     } else {
@@ -170,7 +170,7 @@ export default function Navbar() {
         <p className="text-sm font-bold text-slate-900 truncate">{user.name || 'User'}</p>
         <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
         <span className="inline-block mt-1.5 px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-orange-100">
-          {user.userType === 'warehouse_partner' ? 'Warehouse Partners' : user.userType === 'dataentry' ? 'Data Entry' : 'Business Clients'}
+          {user.userType === 'warehouse_partner' ? 'Warehouse Partners' : user.userType === 'dataentry' ? 'Data Entry' : user.userType === 'admin' ? 'Admin' : user.userType === 'superadmin' ? 'Super Admin' : 'Business Clients'}
         </span>
       </div>
 

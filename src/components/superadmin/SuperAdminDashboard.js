@@ -41,7 +41,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {
     collection, collectionGroup, query, getDocs, doc, updateDoc,
-    serverTimestamp, orderBy, onSnapshot
+    serverTimestamp, orderBy, onSnapshot, where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatPrice } from '@/lib/locale';
@@ -61,19 +61,19 @@ import {
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
-import AdminAddWarehouse from './AdminAddWarehouse';
-import { PlusCircle } from 'lucide-react';
+
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount }) {
+function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount }) {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
-        { id: 'add-warehouse', label: 'Add Warehouse', icon: PlusCircle },
+        { id: 'assign-admin', label: 'Assign Admin', icon: Shield },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
         { id: 'block-people', label: 'Block People', icon: Users },
+        { id: 'analytics', label: 'Analytics', icon: Activity, isExternal: true, href: 'https://vercel.com/link2logistics001-7602s-projects/ware-house-hub/analytics' },
     ];
 
     return (
@@ -85,7 +85,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
                 </div>
                 <div>
                     <span className="text-base font-bold text-slate-900 leading-none block">Link2Logistics</span>
-                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Admin Panel</span>
+                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Super Admin Panel</span>
                 </div>
             </div>
 
@@ -157,7 +157,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Main AdminDashboard
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-export default function AdminDashboard({ user, onLogout }) {
+export default function SuperAdminDashboard({ user, onLogout }) {
     const [warehouses, setWarehouses] = useState([]);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -221,7 +221,7 @@ export default function AdminDashboard({ user, onLogout }) {
 
     // Fetch all users for "Block People" view
     useEffect(() => {
-        if (!user || user.userType !== 'admin') return;
+        if (!user || user.userType !== 'superadmin') return;
         setUsersLoading(true);
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
         const unsub = onSnapshot(q,
@@ -316,7 +316,7 @@ export default function AdminDashboard({ user, onLogout }) {
         >
             {/* Sidebar desktop */}
             <div className="hidden md:block">
-                <AdminSidebar
+                <SuperAdminSidebar
                     activeView={activeView}
                     setActiveView={setActiveView}
                     user={user}
@@ -343,7 +343,7 @@ export default function AdminDashboard({ user, onLogout }) {
                             transition={{ type: 'tween', duration: 0.25 }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <AdminSidebar
+                            <SuperAdminSidebar
                                 activeView={activeView}
                                 setActiveView={(v) => { setActiveView(v); setSidebarOpen(false); }}
                                 user={user}
@@ -377,7 +377,7 @@ export default function AdminDashboard({ user, onLogout }) {
                                 exit={{ x: 20, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'add-warehouse' ? 'Add Warehouse' : 'User Management'}
+                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'assign-admin' ? 'Assign Admin' : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -454,16 +454,16 @@ export default function AdminDashboard({ user, onLogout }) {
                             >
                                 <AdminInquiriesView showToast={showToast} />
                             </motion.div>
-                        ) : activeView === 'add-warehouse' ? (
+                        ) : activeView === 'assign-admin' ? (
                             <motion.div
-                                key="add-warehouse"
+                                key="assign-admin"
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: -20, opacity: 0 }}
                                 transition={{ duration: 0.3 }}
                                 className="h-full"
                             >
-                                <AdminAddWarehouse setActiveTab={setActiveView} />
+                                <AssignAdminView showToast={showToast} />
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
@@ -491,9 +491,6 @@ export default function AdminDashboard({ user, onLogout }) {
     );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Overview
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function OverviewView({ counts, warehouses }) {
     const recentPending = warehouses.filter(w => w.status === 'pending').slice(0, 5);
 
@@ -513,7 +510,7 @@ function OverviewView({ counts, warehouses }) {
 
     return (
         <div className="space-y-6">
-            {/* Stat cards Ã¢â‚¬â€ matches merchant/owner dashboard style */}
+            {/* Stat cards Ã¢â‚¬â€  matches merchant/owner dashboard style */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {stats.map(s => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
@@ -542,7 +539,7 @@ function OverviewView({ counts, warehouses }) {
                                 <div>
                                     <p className="font-semibold text-slate-900 text-sm">{w.warehouseName || 'Unnamed Warehouse'}</p>
                                     <p className="text-slate-500 text-xs mt-0.5">
-                                        {[w.city, w.state].filter(Boolean).join(', ')} Ã‚Â· {w.contactPerson || 'Ã¢â‚¬â€'}
+                                        {[w.city, w.state].filter(Boolean).join(', ')} Ã‚Â· {w.contactPerson || 'Ã¢â‚¬â€ '}
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
@@ -565,9 +562,6 @@ function OverviewView({ counts, warehouses }) {
     );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Warehouse List View
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function WarehouseListView({
     filtered, loading, error, filter, setFilter,
     search, setSearch, counts, handleAction,
@@ -664,9 +658,6 @@ function WarehouseListView({
     );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Warehouse Row
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, onToggleExpand }) {
     const status = w.status || 'pending';
     const isActing = actionLoading[w.id];
@@ -698,7 +689,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€'}</p>
+                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€ '}</p>
                                 <button onClick={onToggleExpand} className="text-slate-400 hover:text-slate-600 flex-shrink-0">
                                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                 </button>
@@ -711,7 +702,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         </span>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€'}</span>
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€ '}</span>
                         {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} ftÃ‚Â²</span>}
                     </div>
                     <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
@@ -722,24 +713,23 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     {/* Warehouse name */}
                     <div className="min-w-0">
                         <div className="flex items-center gap-1">
-                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€'}</p>
+                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€ '}</p>
                             <button onClick={onToggleExpand} className="text-slate-400 hover:text-orange-500 flex-shrink-0 transition-colors">
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || 'Ã¢â‚¬â€'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || 'Ã¢â‚¬â€ '} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
                     </div>
 
                     {/* Owner */}
                     <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || 'Ã¢â‚¬â€'}</p>
-                        <p className="text-xs text-slate-400 truncate">{w.email || 'Ã¢â‚¬â€'}</p>
+                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || 'Ã¢â‚¬â€ '}</p>
+                        <p className="text-xs text-slate-400 truncate">{w.email || 'Ã¢â‚¬â€ '}</p>
                     </div>
-
                     {/* Location */}
                     <div className="flex items-center gap-1 min-w-0">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€'}</span>
+                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€ '}</span>
                     </div>
 
                     {/* Area */}
@@ -1642,6 +1632,99 @@ function DataPoint({ label, value }) {
         <div className="space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{label}</p>
             <p className="text-sm font-bold text-slate-800">{value || "-"}</p>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Assign Admin View
+// ─────────────────────────────────────────────────────────────────────
+function AssignAdminView({ showToast }) {
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleAssign = async (e) => {
+        e.preventDefault();
+        if (!email.trim()) {
+            showToast('Please enter an email address.', 'error');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Find user by email
+            const q = query(collection(db, 'users'), where('email', '==', email.trim().toLowerCase()));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                showToast('User not found with that email address.', 'error');
+                setLoading(false);
+                return;
+            }
+
+            const userDoc = querySnapshot.docs[0];
+            const currentType = userDoc.data().userType;
+
+            if (currentType === 'admin' || currentType === 'superadmin') {
+                showToast(`User is already an ${currentType}.`, 'error');
+                setLoading(false);
+                return;
+            }
+
+            // Update user document
+            await updateDoc(doc(db, 'users', userDoc.id), {
+                userType: 'admin'
+            });
+
+            showToast('Admin role assigned successfully!', 'success');
+            setEmail('');
+        } catch (error) {
+            console.error('Error assigning admin:', error);
+            showToast('Failed to assign admin. Please try again.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="max-w-xl mx-auto mt-10">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
+                        <Shield className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">Assign Admin</h2>
+                        <p className="text-sm text-slate-500 mt-1">Grant administrative privileges to an existing user.</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleAssign} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">User Email Address</label>
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="e.g., employee@link2logistics.com"
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all shadow-sm disabled:opacity-70"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
+                        {loading ? 'Assigning...' : 'Assign Admin Role'}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
