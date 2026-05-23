@@ -7,7 +7,8 @@ service cloud.firestore {
       return uid != null && (
         exists(/databases/$(database)/documents/users/admin/accounts/$(uid)) ||
         (exists(/databases/$(database)/documents/users/$(uid)) &&
-         get(/databases/$(database)/documents/users/$(uid)).data.userType == 'admin')
+         (get(/databases/$(database)/documents/users/$(uid)).data.userType == 'admin' ||
+          get(/databases/$(database)/documents/users/$(uid)).data.userType == 'superadmin'))
       );
     }
 
