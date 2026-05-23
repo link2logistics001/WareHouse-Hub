@@ -79,6 +79,36 @@ body {
   background: #f97316;                  /* Orange thumb on hover (brand color) */
 }
 
+/* ── Inquiry Modal Custom Scrollbar ──────────────────────────────
+   Keeps the scrollbar track transparent and places the thumb inset
+   so it sits beautifully inside the rounded card layout.
+   ─────────────────────────────────────────────────────────────── */
+.inquiry-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.inquiry-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.inquiry-modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inquiry-modal-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;                  /* Thumb color (slate-300) */
+  border-radius: 9999px;                /* Fully rounded thumb */
+  border: 2px solid transparent;        /* Insets the thumb by creating transparent border */
+  background-clip: padding-box;
+}
+
+.inquiry-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #f97316;                  /* Hover color (brand orange) */
+  background-clip: padding-box;
+}
+
+
 /* ── Layout Containment for Performance ──────────────────────────
    CSS containment hints to the browser that these elements'
    layout/style changes won't affect siblings, enabling rendering

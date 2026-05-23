@@ -151,9 +151,9 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-white"
+        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden border border-white flex flex-col"
       >
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="bg-white p-6 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
               <Zap size={20} />
@@ -168,103 +168,105 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
           </button>
         </div>
 
-        {success ? (
-          <div className="p-12 text-center flex flex-col items-center gap-6">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 animate-bounce">
-              <CheckCircle2 size={40} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">Inquiry Sent Successfully!</h3>
-              <p className="text-slate-500 font-medium">Our admin team will review it and get back to you soon.</p>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-8">
-            {/* Section 1: Your Details */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">Section 1</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Your Details</h3>
+        <div className="overflow-y-auto flex-1 inquiry-modal-scroll">
+          {success ? (
+            <div className="p-12 text-center flex flex-col items-center gap-6">
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 animate-bounce">
+                <CheckCircle2 size={40} />
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Building2 size={12} /> Company Name (Required)</label>
-                  <input required value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. Acme Corp" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><User size={12} /> Contact Person (Required)</label>
-                  <input required value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. John Doe" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Mail size={12} /> Email Address (Required)</label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. john@example.com" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Phone size={12} /> Phone Number (Required)</label>
-                  <input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. +91 9876543210" />
-                </div>
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">Inquiry Sent Successfully!</h3>
+                <p className="text-slate-500 font-medium">Our admin team will review it and get back to you soon.</p>
               </div>
             </div>
-
-            {/* Section 2: Storage Needs */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">Section 2</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Your Storage Needs</h3>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Package size={12} /> What will you store? (Required)</label>
-                <input required value={formData.storageNeeds} onChange={e => setFormData({...formData, storageNeeds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. Electronics, Textiles, FMCG, Pharma" />
-              </div>
-              <div className="grid-cols-1 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Scale size={12} /> Storage Space Required</label>
-                  <div className="flex gap-3">
-                    <input required type="number" value={formData.storageSpace} onChange={e => setFormData({...formData, storageSpace: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Quantity" />
-                    <select value={formData.storageUnit} onChange={e => setFormData({...formData, storageUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
-                      {['CBM', 'MT', 'Sqm', 'Pallets'].map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-8">
+              {/* Section 1: Your Details */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">Section 1</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Your Details</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Building2 size={12} /> Company Name (Required)</label>
+                    <input required value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. Acme Corp" />
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Clock size={12} /> Contract Duration</label>
-                  <div className="flex gap-3">
-                    <input required type="number" value={formData.contractDuration} onChange={e => setFormData({...formData, contractDuration: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Duration" />
-                    <select value={formData.durationUnit} onChange={e => setFormData({...formData, durationUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
-                      {['Months', 'Years'].map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><User size={12} /> Contact Person (Required)</label>
+                    <input required value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. John Doe" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Mail size={12} /> Email Address (Required)</label>
+                    <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. john@example.com" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Phone size={12} /> Phone Number (Required)</label>
+                    <input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. +91 9876543210" />
                   </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><ShieldCheck size={12} /> Storage Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {['Ambient', 'Temp Controlled', 'Cold Chain', 'Bonded', 'High-Security', 'Open Yard'].map(t => (
-                    <button 
-                      key={t}
-                      type="button"
-                      onClick={() => setFormData({...formData, storageType: t})}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold border-2 transition-all ${formData.storageType === t ? 'bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}`}
-                    >
-                      {t}
-                    </button>
-                  ))}
+
+              {/* Section 2: Storage Needs */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">Section 2</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Your Storage Needs</h3>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Package size={12} /> What will you store? (Required)</label>
+                  <input required value={formData.storageNeeds} onChange={e => setFormData({...formData, storageNeeds: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. Electronics, Textiles, FMCG, Pharma" />
+                </div>
+                <div className="grid-cols-1 gap-6">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Scale size={12} /> Storage Space Required</label>
+                    <div className="flex gap-3">
+                      <input required type="number" value={formData.storageSpace} onChange={e => setFormData({...formData, storageSpace: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Quantity" />
+                      <select value={formData.storageUnit} onChange={e => setFormData({...formData, storageUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
+                        {['CBM', 'MT', 'Sqm', 'Pallets'].map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Clock size={12} /> Contract Duration</label>
+                    <div className="flex gap-3">
+                      <input required type="number" value={formData.contractDuration} onChange={e => setFormData({...formData, contractDuration: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="Duration" />
+                      <select value={formData.durationUnit} onChange={e => setFormData({...formData, durationUnit: e.target.value})} className="w-32 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-sm">
+                        {['Months', 'Years'].map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><ShieldCheck size={12} /> Storage Type</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Ambient', 'Temp Controlled', 'Cold Chain', 'Bonded', 'High-Security', 'Open Yard'].map(t => (
+                      <button 
+                        key={t}
+                        type="button"
+                        onClick={() => setFormData({...formData, storageType: t})}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold border-2 transition-all ${formData.storageType === t ? 'bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Info size={12} /> Additional Requirements (Optional)</label>
+                  <textarea value={formData.additionalRequirements} onChange={e => setFormData({...formData, additionalRequirements: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold min-h-[100px]" placeholder="Any specific needs or questions..." />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5"><Info size={12} /> Additional Requirements (Optional)</label>
-                <textarea value={formData.additionalRequirements} onChange={e => setFormData({...formData, additionalRequirements: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-orange-500 outline-none transition-all font-semibold min-h-[100px]" placeholder="Any specific needs or questions..." />
-              </div>
-            </div>
 
-            <button 
-              disabled={loading}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-orange-600 transition-all duration-300 shadow-xl shadow-slate-200 hover:shadow-orange-200 flex items-center justify-center gap-3 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="animate-spin" /> : <><Send size={20} /> Submit Quick Inquiry</>}
-            </button>
-          </form>
-        )}
+              <button 
+                disabled={loading}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-orange-600 transition-all duration-300 shadow-xl shadow-slate-200 hover:shadow-orange-200 flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="animate-spin" /> : <><Send size={20} /> Submit Quick Inquiry</>}
+              </button>
+            </form>
+          )}
+        </div>
       </motion.div>
     </div>
   );
@@ -332,9 +334,9 @@ export const DetailedInquiryModal = React.memo(({ isOpen, onClose, user }) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white"
+        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white flex flex-col"
       >
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="bg-white p-6 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
               <FileText size={20} />
@@ -349,141 +351,143 @@ export const DetailedInquiryModal = React.memo(({ isOpen, onClose, user }) => {
           </button>
         </div>
 
-        {success ? (
-          <div className="p-12 text-center flex flex-col items-center gap-6">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 animate-bounce">
-              <CheckCircle2 size={40} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">Detailed Inquiry Sent!</h3>
-              <p className="text-slate-500 font-medium">Thank you for the comprehensive information. Our team will prepare a tailored proposal for you.</p>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-12">
-            {/* Section 1: Company Information */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 1</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Company Information</h3>
+        <div className="overflow-y-auto flex-1 inquiry-modal-scroll">
+          {success ? (
+            <div className="p-12 text-center flex flex-col items-center gap-6">
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 animate-bounce">
+                <CheckCircle2 size={40} />
               </div>
-              <div className="grid md:grid-cols-2 gap-5">
-                <InputField label="Company Name" icon={<Building2 size={14} />} value={formData.companyName} onChange={v => setFormData({...formData, companyName: v})} />
-                <InputField label="Contact Person" icon={<User size={14} />} value={formData.contactPerson} onChange={v => setFormData({...formData, contactPerson: v})} />
-                <InputField label="Email Address" icon={<Mail size={14} />} type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
-                <InputField label="Phone Number" icon={<Phone size={14} />} value={formData.phone} onChange={v => setFormData({...formData, phone: v})} />
-                <div className="md:col-span-2">
-                  <InputField label="Address" value={formData.address} onChange={v => setFormData({...formData, address: v})} />
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">Detailed Inquiry Sent!</h3>
+                <p className="text-slate-500 font-medium">Thank you for the comprehensive information. Our team will prepare a tailored proposal for you.</p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-12">
+              {/* Section 1: Company Information */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 1</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Company Information</h3>
                 </div>
-                <InputField label="GST Number (Optional)" value={formData.gstNumber} onChange={v => setFormData({...formData, gstNumber: v})} />
-              </div>
-            </div>
-
-            {/* Section 2: Goods & Storage Scope */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 2</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Goods & Storage Scope</h3>
-              </div>
-              
-              {/* Product 1 */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Product 1 Details</p>
-                <InputField label="Description" value={formData.product1.description} onChange={v => setFormData({...formData, product1: {...formData.product1, description: v}})} />
-                <div className="grid md:grid-cols-2 gap-4">
-                  <SelectField label="Category" options={['FMCG', 'Textiles', 'Electronics', 'Pharma', 'Chemicals', 'Heavy']} value={formData.product1.category} onChange={v => setFormData({...formData, product1: {...formData.product1, category: v}})} />
-                  <div className="flex gap-2">
-                    <InputField label="Quantity" type="number" value={formData.product1.quantity} onChange={v => setFormData({...formData, product1: {...formData.product1, quantity: v}})} />
-                    <SelectField label="Unit" options={['CBM', 'MT', 'Sqm', 'Pallets']} value={formData.product1.unit} onChange={v => setFormData({...formData, product1: {...formData.product1, unit: v}})} />
+                <div className="grid md:grid-cols-2 gap-5">
+                  <InputField label="Company Name" icon={<Building2 size={14} />} value={formData.companyName} onChange={v => setFormData({...formData, companyName: v})} />
+                  <InputField label="Contact Person" icon={<User size={14} />} value={formData.contactPerson} onChange={v => setFormData({...formData, contactPerson: v})} />
+                  <InputField label="Email Address" icon={<Mail size={14} />} type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
+                  <InputField label="Phone Number" icon={<Phone size={14} />} value={formData.phone} onChange={v => setFormData({...formData, phone: v})} />
+                  <div className="md:col-span-2">
+                    <InputField label="Address" value={formData.address} onChange={v => setFormData({...formData, address: v})} />
                   </div>
+                  <InputField label="GST Number (Optional)" value={formData.gstNumber} onChange={v => setFormData({...formData, gstNumber: v})} />
                 </div>
-                <SelectField label="Storage Condition" options={['Ambient', 'Temp Controlled', 'Cold Chain', 'Bonded', 'High-Security']} value={formData.product1.condition} onChange={v => setFormData({...formData, product1: {...formData.product1, condition: v}})} />
               </div>
 
-              {/* Product 2 Optional */}
-              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Product 2 Details (Optional)</p>
-                <InputField label="Description" value={formData.product2.description} onChange={v => setFormData({...formData, product2: {...formData.product2, description: v}})} />
-                <div className="grid md:grid-cols-2 gap-4">
-                  <SelectField label="Category" options={['FMCG', 'Textiles', 'Electronics', 'Pharma', 'Chemicals', 'Heavy']} value={formData.product2.category} onChange={v => setFormData({...formData, product2: {...formData.product2, category: v}})} />
-                  <div className="flex gap-2">
-                    <InputField label="Quantity" type="number" value={formData.product2.quantity} onChange={v => setFormData({...formData, product2: {...formData.product2, quantity: v}})} />
-                    <SelectField label="Unit" options={['CBM', 'MT', 'Sqm', 'Pallets']} value={formData.product2.unit} onChange={v => setFormData({...formData, product2: {...formData.product2, unit: v}})} />
+              {/* Section 2: Goods & Storage Scope */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 2</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Goods & Storage Scope</h3>
+                </div>
+                
+                {/* Product 1 */}
+                <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Product 1 Details</p>
+                  <InputField label="Description" value={formData.product1.description} onChange={v => setFormData({...formData, product1: {...formData.product1, description: v}})} />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <SelectField label="Category" options={['FMCG', 'Textiles', 'Electronics', 'Pharma', 'Chemicals', 'Heavy']} value={formData.product1.category} onChange={v => setFormData({...formData, product1: {...formData.product1, category: v}})} />
+                    <div className="flex gap-2">
+                      <InputField label="Quantity" type="number" value={formData.product1.quantity} onChange={v => setFormData({...formData, product1: {...formData.product1, quantity: v}})} />
+                      <SelectField label="Unit" options={['CBM', 'MT', 'Sqm', 'Pallets']} value={formData.product1.unit} onChange={v => setFormData({...formData, product1: {...formData.product1, unit: v}})} />
+                    </div>
                   </div>
+                  <SelectField label="Storage Condition" options={['Ambient', 'Temp Controlled', 'Cold Chain', 'Bonded', 'High-Security']} value={formData.product1.condition} onChange={v => setFormData({...formData, product1: {...formData.product1, condition: v}})} />
                 </div>
-              </div>
-            </div>
 
-            {/* Section 3: Contract Terms */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 3</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Contract Terms</h3>
-              </div>
-              <div className="grid md:grid-cols-2 gap-5">
-                <div className="flex gap-2">
-                  <InputField label="Duration" type="number" value={formData.duration} onChange={v => setFormData({...formData, duration: v})} />
-                  <SelectField label="Unit" options={['Months', 'Years']} value={formData.durationUnit} onChange={v => setFormData({...formData, durationUnit: v})} />
-                </div>
-                <SelectField label="Billing Cycle" options={['Monthly', 'Quarterly', 'Per Consignment']} value={formData.billingCycle} onChange={v => setFormData({...formData, billingCycle: v})} />
-                <SelectField label="Payment Terms" options={['Advance', 'Net 7', 'Net 15', 'Net 30', 'Letter of Credit']} value={formData.paymentTerms} onChange={v => setFormData({...formData, paymentTerms: v})} />
-              </div>
-            </div>
-
-            {/* Section 4: Inbound & Outbound */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 4</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Inbound & Outbound Operations</h3>
-              </div>
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <p className="text-xs font-black text-slate-900 border-b pb-2">Inbound</p>
-                  <InputField label="Vehicles per Month" type="number" value={formData.inboundVehicles} onChange={v => setFormData({...formData, inboundVehicles: v})} />
-                  <SelectField label="Vehicle Type" options={['FTL', 'LTL', 'Both']} value={formData.inboundVehicleType} onChange={v => setFormData({...formData, inboundVehicleType: v})} />
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500">Inbound Processes</label>
-                    <div className="flex flex-wrap gap-2">
-                      {['Barcode', 'Quality', 'Serial', 'Batch'].map(p => (
-                        <button key={p} type="button" onClick={() => toggleList('inboundProcesses', p)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border-2 transition-all ${formData.inboundProcesses.includes(p) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-500'}`}>{p}</button>
-                      ))}
+                {/* Product 2 Optional */}
+                <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Product 2 Details (Optional)</p>
+                  <InputField label="Description" value={formData.product2.description} onChange={v => setFormData({...formData, product2: {...formData.product2, description: v}})} />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <SelectField label="Category" options={['FMCG', 'Textiles', 'Electronics', 'Pharma', 'Chemicals', 'Heavy']} value={formData.product2.category} onChange={v => setFormData({...formData, product2: {...formData.product2, category: v}})} />
+                    <div className="flex gap-2">
+                      <InputField label="Quantity" type="number" value={formData.product2.quantity} onChange={v => setFormData({...formData, product2: {...formData.product2, quantity: v}})} />
+                      <SelectField label="Unit" options={['CBM', 'MT', 'Sqm', 'Pallets']} value={formData.product2.unit} onChange={v => setFormData({...formData, product2: {...formData.product2, unit: v}})} />
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <p className="text-xs font-black text-slate-900 border-b pb-2">Outbound</p>
-                  <InputField label="Orders per Day" type="number" value={formData.outboundOrders} onChange={v => setFormData({...formData, outboundOrders: v})} />
-                  <SelectField label="Vehicle Type" options={['FTL', 'LTL', 'Courier', 'Mixed']} value={formData.outboundVehicleType} onChange={v => setFormData({...formData, outboundVehicleType: v})} />
-                  <SelectField label="Order Trigger" options={['System Entry', 'Email', 'Both']} value={formData.orderTrigger} onChange={v => setFormData({...formData, orderTrigger: v})} />
+              </div>
+
+              {/* Section 3: Contract Terms */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 3</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Contract Terms</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div className="flex gap-2">
+                    <InputField label="Duration" type="number" value={formData.duration} onChange={v => setFormData({...formData, duration: v})} />
+                    <SelectField label="Unit" options={['Months', 'Years']} value={formData.durationUnit} onChange={v => setFormData({...formData, durationUnit: v})} />
+                  </div>
+                  <SelectField label="Billing Cycle" options={['Monthly', 'Quarterly', 'Per Consignment']} value={formData.billingCycle} onChange={v => setFormData({...formData, billingCycle: v})} />
+                  <SelectField label="Payment Terms" options={['Advance', 'Net 7', 'Net 15', 'Net 30', 'Letter of Credit']} value={formData.paymentTerms} onChange={v => setFormData({...formData, paymentTerms: v})} />
                 </div>
               </div>
-            </div>
 
-            {/* Section 5: Special Services */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 5</span>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Special Services</h3>
+              {/* Section 4: Inbound & Outbound */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 4</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Inbound & Outbound Operations</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <p className="text-xs font-black text-slate-900 border-b pb-2">Inbound</p>
+                    <InputField label="Vehicles per Month" type="number" value={formData.inboundVehicles} onChange={v => setFormData({...formData, inboundVehicles: v})} />
+                    <SelectField label="Vehicle Type" options={['FTL', 'LTL', 'Both']} value={formData.inboundVehicleType} onChange={v => setFormData({...formData, inboundVehicleType: v})} />
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500">Inbound Processes</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Barcode', 'Quality', 'Serial', 'Batch'].map(p => (
+                          <button key={p} type="button" onClick={() => toggleList('inboundProcesses', p)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border-2 transition-all ${formData.inboundProcesses.includes(p) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-500'}`}>{p}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <p className="text-xs font-black text-slate-900 border-b pb-2">Outbound</p>
+                    <InputField label="Orders per Day" type="number" value={formData.outboundOrders} onChange={v => setFormData({...formData, outboundOrders: v})} />
+                    <SelectField label="Vehicle Type" options={['FTL', 'LTL', 'Courier', 'Mixed']} value={formData.outboundVehicleType} onChange={v => setFormData({...formData, outboundVehicleType: v})} />
+                    <SelectField label="Order Trigger" options={['System Entry', 'Email', 'Both']} value={formData.orderTrigger} onChange={v => setFormData({...formData, orderTrigger: v})} />
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {['Fumigation', 'Pest Control', 'Pick & Pack', 'Labelling', 'Quality Inspection', 'Customs', 'Insurance'].map(s => (
-                  <button key={s} type="button" onClick={() => toggleList('specialServices', s)} className={`px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all ${formData.specialServices.includes(s) ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}`}>{s}</button>
-                ))}
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 ml-1">Other Requirements</label>
-                <textarea value={formData.otherRequirements} onChange={e => setFormData({...formData, otherRequirements: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-blue-600 outline-none transition-all font-semibold min-h-[100px]" placeholder="Anything else we should know?" />
-              </div>
-            </div>
 
-            <button 
-              disabled={loading}
-              className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xl hover:bg-blue-600 transition-all duration-500 shadow-2xl shadow-slate-200 hover:shadow-blue-200 flex items-center justify-center gap-3 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="animate-spin" /> : <><Send size={24} /> Submit Detailed Inquiry</>}
-            </button>
-          </form>
-        )}
+              {/* Section 5: Special Services */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Section 5</span>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Special Services</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['Fumigation', 'Pest Control', 'Pick & Pack', 'Labelling', 'Quality Inspection', 'Customs', 'Insurance'].map(s => (
+                    <button key={s} type="button" onClick={() => toggleList('specialServices', s)} className={`px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all ${formData.specialServices.includes(s) ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}`}>{s}</button>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 ml-1">Other Requirements</label>
+                  <textarea value={formData.otherRequirements} onChange={e => setFormData({...formData, otherRequirements: e.target.value})} className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-blue-600 outline-none transition-all font-semibold min-h-[100px]" placeholder="Anything else we should know?" />
+                </div>
+              </div>
+
+              <button 
+                disabled={loading}
+                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xl hover:bg-blue-600 transition-all duration-500 shadow-2xl shadow-slate-200 hover:shadow-blue-200 flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="animate-spin" /> : <><Send size={24} /> Submit Detailed Inquiry</>}
+              </button>
+            </form>
+          )}
+        </div>
       </motion.div>
     </div>
   );

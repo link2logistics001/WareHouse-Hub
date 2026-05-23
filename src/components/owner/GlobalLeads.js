@@ -32,16 +32,21 @@ import {
   Search, Filter, ChevronRight, Zap, FileText, 
   Building2, User, Mail, Phone, Package, 
   Scale, Clock, ShieldCheck, Loader2, Info,
-  MapPin, Calendar, CheckCircle2, ChevronDown, ChevronUp, XCircle
+  MapPin, Calendar, CheckCircle2, ChevronDown, ChevronUp, XCircle,
+  MessageSquare
 } from 'lucide-react';
 import { getApprovedInquiries } from '@/lib/inquiryService';
+import { useAuth } from '@/contexts/AuthContext';
+import ChatBox from '../commonfiles/ChatBox';
 
 export default function GlobalLeads() {
+  const { user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [expandedLead, setExpandedLead] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(null);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -56,6 +61,28 @@ export default function GlobalLeads() {
     };
     fetchLeads();
   }, []);
+
+  const handleOpenChat = (lead, merchantUser) => {
+    if (!user) return;
+    setSelectedChat({
+      id: `lead_${lead.id}`, // Virtual warehouse ID associated with the lead
+      warehouseId: `lead_${lead.id}`,
+      name: lead.data.storageNeeds || 'Warehouse Inquiry',
+      warehouseName: lead.data.storageNeeds || 'Warehouse Inquiry',
+      ownerId: user.uid,
+      owner_id: user.uid,
+      userId: user.uid,
+      merchantId: merchantUser.uid,
+      merchantName: lead.data.contactPerson || merchantUser.name || 'Business Client',
+      ownerName: user.name || user.displayName || 'Warehouse Partner',
+      totalArea: parseFloat(lead.data.storageSpace || 0),
+      pricingAmount: 0,
+      city: lead.data.address || '',
+      category: lead.data.storageType || 'Storage',
+      images: [],
+      location: { city: lead.data.address || '' }
+    });
+  };
 
   const filteredLeads = leads.filter(lead => {
     const matchType = filterType === 'all' || lead.type === filterType;
@@ -134,16 +161,50 @@ export default function GlobalLeads() {
               lead={lead} 
               isExpanded={expandedLead === lead.id}
               onToggle={() => setExpandedLead(expandedLead === lead.id ? null : lead.id)}
+              onOpenChat={handleOpenChat}
+              currentUser={user}
             />
           ))
         )}
       </div>
+
+      {/* ── Chat Modal ── */}
+      {selectedChat && (
+        <ChatBox
+          warehouse={selectedChat}
+          user={user}
+          onClose={() => setSelectedChat(null)}
+        />
+      )}
     </div>
   );
 }
 
-function LeadCard({ lead, isExpanded, onToggle }) {
+function LeadCard({ lead, isExpanded, onToggle, onOpenChat, currentUser }) {
   const isQuick = lead.type === 'quick';
+  const [merchantUser, setMerchantUser] = useState(null);
+  const [checkingUser, setCheckingUser] = useState(true);
+
+  useEffect(() => {
+    if (!lead.data.email) {
+      setCheckingUser(false);
+      return;
+    }
+    const checkUserAccount = async () => {
+      try {
+        const res = await fetch(`/api/users/check-account?email=${encodeURIComponent(lead.data.email)}`);
+        const data = await res.json();
+        if (data.exists && data.user) {
+          setMerchantUser(data.user);
+        }
+      } catch (err) {
+        console.error('Failed to check user account via API:', err);
+      } finally {
+        setCheckingUser(false);
+      }
+    };
+    checkUserAccount();
+  }, [lead.data.email]);
   
   return (
     <div className={`bg-white rounded-[2rem] border transition-all duration-300 ${isExpanded ? 'border-orange-200 shadow-xl shadow-orange-500/5' : 'border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200'}`}>
@@ -163,10 +224,33 @@ function LeadCard({ lead, isExpanded, onToggle }) {
                 {lead.type} Inquiry
               </span>
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 font-bold uppercase tracking-wider">
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-500 font-bold uppercase tracking-wider mt-1.5">
               <span className="flex items-center gap-1.5"><User size={14} className="text-slate-400" /> {lead.data.contactPerson}</span>
               <span className="flex items-center gap-1.5"><Calendar size={14} className="text-slate-400" /> {new Date(lead.createdAt?.seconds * 1000).toLocaleDateString()}</span>
               {lead.data.address && <span className="flex items-center gap-1.5"><MapPin size={14} className="text-slate-400" /> {lead.data.address}</span>}
+              {!checkingUser && (
+                merchantUser ? (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChat(lead, merchantUser);
+                    }} 
+                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors font-bold"
+                    title="Chat with Client"
+                  >
+                    <MessageSquare size={14} className="text-blue-500 shrink-0" /> Chat with Client
+                  </button>
+                ) : (
+                  <a 
+                    href={`mailto:${lead.data.email}`} 
+                    onClick={(e) => e.stopPropagation()} 
+                    className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600 transition-colors normal-case font-bold lowercase"
+                    title="Mail Back"
+                  >
+                    <Mail size={14} className="text-slate-400 shrink-0" /> {lead.data.email}
+                  </a>
+                )
+              )}
             </div>
           </div>
         </div>
@@ -198,7 +282,30 @@ function LeadCard({ lead, isExpanded, onToggle }) {
                 <DetailGroup title="Business Profile">
                   <DetailItem icon={<Building2 />} label="Company" value={lead.data.companyName} />
                   <DetailItem icon={<User />} label="Contact" value={lead.data.contactPerson} />
-                  <DetailItem icon={<Mail />} label="Email" value={lead.data.email} />
+                  <div className="flex items-center gap-3">
+                    <DetailItem icon={<Mail />} label="Email" value={lead.data.email} />
+                    {!checkingUser && (
+                      merchantUser ? (
+                        <button 
+                          onClick={() => onOpenChat(lead, merchantUser)}
+                          className="mt-4 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 shadow-md shadow-blue-100 animate-in fade-in"
+                          title="Message Client"
+                        >
+                          <MessageSquare size={12} /> Message
+                        </button>
+                      ) : (
+                        lead.data.email && (
+                          <a 
+                            href={`mailto:${lead.data.email}`}
+                            className="mt-4 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
+                            title="Mail Back"
+                          >
+                            <Mail size={12} /> Mail Back
+                          </a>
+                        )
+                      )
+                    )}
+                  </div>
                   <DetailItem icon={<Phone />} label="Phone" value={lead.data.phone} />
                   {lead.data.address && <DetailItem icon={<MapPin />} label="Address" value={lead.data.address} />}
                   {lead.data.gstNumber && <DetailItem icon={<ShieldCheck />} label="GST" value={lead.data.gstNumber} />}

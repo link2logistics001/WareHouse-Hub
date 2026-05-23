@@ -69,6 +69,8 @@ export default function Inquiries() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [grantingId, setGrantingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [updatingPaymentId, setUpdatingPaymentId] = useState(null);
+  const [updatingBookedId, setUpdatingBookedId] = useState(null);
 
   // ── Real-time listener ─────────────────────────────────────
   useEffect(() => {
@@ -128,6 +130,62 @@ export default function Inquiries() {
 
     } finally {
       setMovingId(null);
+    }
+  };
+
+  const togglePaymentReceived = async (item) => {
+    if (updatingPaymentId === item.id) return;
+    setUpdatingPaymentId(item.id);
+
+    const newPaymentState = !(item.paymentReceived || false);
+    try {
+      const convRef = doc(db, 'conversations', item.id);
+      const updates = { 
+        paymentReceived: newPaymentState,
+        updatedAt: new Date()
+      };
+
+      // Check if both are now ticked
+      if (newPaymentState && (item.isBooked || false)) {
+        updates.stage = 'booked';
+        setCelebrationDetails(item);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 5000);
+      }
+
+      await updateDoc(convRef, updates);
+    } catch (e) {
+      console.error('Failed to toggle payment state:', e);
+    } finally {
+      setUpdatingPaymentId(null);
+    }
+  };
+
+  const toggleBookedStatus = async (item) => {
+    if (updatingBookedId === item.id) return;
+    setUpdatingBookedId(item.id);
+
+    const newBookedState = !(item.isBooked || false);
+    try {
+      const convRef = doc(db, 'conversations', item.id);
+      const updates = { 
+        isBooked: newBookedState,
+        updatedAt: new Date()
+      };
+
+      // Check if both are now ticked
+      if ((item.paymentReceived || false) && newBookedState) {
+        updates.stage = 'booked';
+        setCelebrationDetails(item);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 5000);
+      }
+
+      await updateDoc(convRef, updates);
+    } catch (e) {
+      console.error('Failed to toggle booked state:', e);
+    } finally {
+      setUpdatingBookedId(null);
     }
   };
 
@@ -401,14 +459,54 @@ export default function Inquiries() {
                     {grantingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Unlock className="w-4 h-4" /> Grant Contact Access</>}
                   </button>
                   
+                  {/* Payment Received Toggle Button */}
                   <button
-                    onClick={() => moveCard(item, 'booked')}
-                    disabled={movingId === item.id}
-                    className="w-full py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                    onClick={() => togglePaymentReceived(item)}
+                    disabled={updatingPaymentId === item.id}
+                    className={`w-full py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 border ${
+                      item.paymentReceived
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100/80'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
                   >
-                    {movingId === item.id
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <>Mark as Booked <CheckCircle className="w-4 h-4" /></>}
+                    {updatingPaymentId === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : item.paymentReceived ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-emerald-600 fill-emerald-100" />
+                        Payment Received
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-slate-300 flex-shrink-0" />
+                        Payment Received
+                      </>
+                    )}
+                  </button>
+
+                  {/* Mark as Booked Toggle Button */}
+                  <button
+                    onClick={() => toggleBookedStatus(item)}
+                    disabled={updatingBookedId === item.id}
+                    className={`w-full py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 border ${
+                      item.isBooked
+                        ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100/80'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {updatingBookedId === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : item.isBooked ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-blue-600 fill-blue-100" />
+                        Mark as Booked
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-slate-300 flex-shrink-0" />
+                        Mark as Booked
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -434,14 +532,23 @@ export default function Inquiries() {
                         <h4 className="font-bold text-slate-900 text-sm line-clamp-1">{item.merchantName}</h4>
                         <p className="text-[10px] text-slate-400 line-clamp-1">{item.warehouseName}</p>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteDeal(item)}
-                        disabled={deletingId === item.id}
-                        className="text-slate-300 hover:text-red-500 p-1 transition-colors"
-                        title="Remove Deal"
-                      >
-                        {deletingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button 
+                          onClick={() => openChat(item)}
+                          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Chat with Merchant"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteDeal(item)}
+                          disabled={deletingId === item.id}
+                          className="text-slate-300 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
+                          title="Remove Deal"
+                        >
+                          {deletingId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     </div>
                     <p className="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full w-fit mt-1">
                       Deal Closed

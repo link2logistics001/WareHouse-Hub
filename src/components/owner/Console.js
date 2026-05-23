@@ -56,7 +56,8 @@ import {
   FileText,
   Clock,
   ChevronDown,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -69,6 +70,7 @@ export default function Console() {
   const [fetchingLogs, setFetchingLogs] = useState(false);
   const [showLogForm, setShowLogForm] = useState(false);
   const [logType, setLogType] = useState('arrival');
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [formData, setFormData] = useState({
     quantity: '',
@@ -77,6 +79,70 @@ export default function Console() {
     cargoType: '',
     notes: ''
   });
+
+  const filteredLogs = logs.filter(log => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      log.cargoType?.toLowerCase().includes(query) ||
+      log.notes?.toLowerCase().includes(query) ||
+      log.unit?.toLowerCase().includes(query) ||
+      log.vehicleType?.toLowerCase().includes(query) ||
+      log.type?.toLowerCase().includes(query) ||
+      log.quantity?.toString().includes(query) ||
+      log.id?.toLowerCase().includes(query)
+    );
+  });
+
+  const downloadExcel = () => {
+    const logsToExport = filteredLogs;
+    if (logsToExport.length === 0) return;
+    
+    // Define headers
+    const headers = ['Log ID', 'Type', 'Cargo Details', 'Quantity', 'Unit', 'Vehicle/Carrier', 'Time', 'Notes'];
+    
+    // Map logs to rows
+    const rows = logsToExport.map(log => [
+      log.id.slice(-6).toUpperCase(),
+      log.type.toUpperCase(),
+      log.cargoType || 'General',
+      log.quantity,
+      log.unit,
+      log.vehicleType || '—',
+      log.timestamp ? `${log.timestamp.toLocaleDateString()} ${log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '—',
+      log.notes || '—'
+    ]);
+    
+    // Combine headers and csv lines
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(val => {
+          const stringVal = String(val ?? '');
+          if (/[",\n\r]/.test(stringVal)) {
+            return `"${stringVal.replace(/"/g, '""')}"`;
+          }
+          return stringVal;
+        }).join(',')
+      )
+    ].join('\n');
+    
+    // Create blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const warehouseNameClean = selectedWarehouse?.warehouseName?.replace(/[^a-zA-Z0-9]/g, '_') || 'warehouse';
+    const dateClean = new Date().toISOString().split('T')[0];
+    
+    link.href = url;
+    link.setAttribute('download', `${warehouseNameClean}_cargo_logs_${dateClean}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
 
   useEffect(() => {
     if (!user?.uid || !user?.email) return;
@@ -194,8 +260,23 @@ export default function Console() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input type="text" placeholder="Search..." className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded text-xs outline-none focus:border-blue-500 w-40" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded text-xs outline-none focus:border-blue-500 w-40" 
+              />
             </div>
+            {logs.length > 0 && (
+              <button 
+                onClick={downloadExcel}
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                title="Export current logs to CSV/Excel"
+              >
+                <Download size={14} className="text-slate-500" /> Download Excel
+              </button>
+            )}
           </div>
         </div>
 
@@ -217,8 +298,11 @@ export default function Console() {
                 <tr><td colSpan="7" className="px-4 py-10 text-center text-xs text-slate-400">Loading records...</td></tr>
               ) : logs.length === 0 ? (
                 <tr><td colSpan="7" className="px-4 py-10 text-center text-xs text-slate-400">No activity recorded</td></tr>
+              ) : filteredLogs.length === 0 ? (
+                <tr><td colSpan="7" className="px-4 py-10 text-center text-xs text-slate-400">No matching records found</td></tr>
               ) : (
-                logs.map((log) => (
+                filteredLogs.map((log) => (
+
                   <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

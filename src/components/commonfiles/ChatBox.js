@@ -158,12 +158,18 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">{warehouse.name || warehouse.warehouseName}</h3>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  {['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase())
+                    ? (warehouse.merchantName || 'Business Client')
+                    : (warehouse.name || warehouse.warehouseName)}
+                </h3>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    {user.userType === 'business_client' ? warehouse.ownerName : 'Business Client Inquiry'}
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    {['warehouse_partner', 'admin', 'dataentry'].includes(user.userType?.toLowerCase())
+                      ? (warehouse.name || warehouse.warehouseName)
+                      : (warehouse.ownerName || 'Warehouse Partner')}
                   </p>
-                  <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                  <span className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
                   <p className="text-xs font-black text-orange-500">
                     📍 {warehouse.city || warehouse.location?.city || 'Location'}
                   </p>
