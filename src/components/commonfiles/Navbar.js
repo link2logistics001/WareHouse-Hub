@@ -135,13 +135,7 @@ export default function Navbar() {
   const handleDashboard = () => {
     setProfileOpen(false);
     setMobileMenuOpen(false);
-    if (user?.userType === 'admin' || user?.userType === 'superadmin') {
-      router.push('/');
-    } else if (user?.userType === 'warehouse_partner') {
-      router.push('/owner');
-    } else {
-      router.push('/search');
-    }
+    router.push('/');
   };
 
   // Get user initials for avatar
