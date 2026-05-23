@@ -38,7 +38,6 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
     { id: 'browse', label: 'Browse Directory', icon: Building2 },
     { id: 'chats', label: 'Active Chats', icon: MessageSquare },
     { id: 'saved', label: 'Saved Properties', icon: Star },
-    { id: 'requirements', label: 'My Requirements', icon: FileText },
   ];
 
   // Premium Sidebar Container Classes
@@ -70,7 +69,7 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
             WarehouseHub
           </span>
           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 mt-1 flex items-center gap-1">
-            Client Portal <Sparkles className="w-3 h-3" />
+            Client Portal
           </span>
         </div>
       </div>
@@ -111,7 +110,6 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
             onClick={() => onSendEnquiry && onSendEnquiry()}
             className="w-full flex items-center px-3.5 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 hover:scale-[1.02] transition-all duration-300 group/enquiry relative overflow-hidden"
           >
-            <Sparkles className="w-5 h-5 shrink-0 text-white animate-pulse" />
             <span className={`ml-4 text-sm font-black tracking-wide ${containerClasses}`}>
               Send Enquiry
             </span>

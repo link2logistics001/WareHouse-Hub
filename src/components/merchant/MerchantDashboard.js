@@ -284,7 +284,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                     onClick={() => setShowSelectionModal(true)}
                                     className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-black text-xs shadow-lg shadow-orange-500/20 hover:scale-[1.05] transition-all"
                                 >
-                                    <Sparkles className="w-4 h-4" /> Send Enquiry
+                                    Send Enquiry
                                 </button>
 
                                 {/* Profile Pill */}
@@ -313,8 +313,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                         {[
                                             { title: "Warehouses", value: realWarehouses.length, icon: <Building2 className="w-4 h-4" />, color: "text-blue-600", bg: "bg-blue-50", path: "M5 25 Q 25 5, 50 15 T 95 5" },
                                             { title: "Active Chats", value: realChats.length, icon: <MessageSquare className="w-4 h-4" />, color: "text-indigo-600", bg: "bg-indigo-50", path: "M5 20 Q 30 25, 50 10 T 95 5" },
-                                            { title: "Saved", value: wishlistedWarehouses.length, icon: <Star className="w-4 h-4" />, color: "text-emerald-600", bg: "bg-emerald-50", path: "M5 15 Q 25 25, 50 15 T 95 10" },
-                                            { title: "Requirements", value: 0, icon: <ClipboardList className="w-4 h-4" />, color: "text-amber-600", bg: "bg-amber-50", path: "M5 10 Q 30 5, 50 20 T 95 15" }
+                                            { title: "Saved", value: wishlistedWarehouses.length, icon: <Star className="w-4 h-4" />, color: "text-emerald-600", bg: "bg-emerald-50", path: "M5 15 Q 25 25, 50 15 T 95 10" }
                                         ].map((card, i) => (
                                             <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                                 <div className="flex items-center gap-3 mb-4">
@@ -372,6 +371,50 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                             </div>
                                         ))
                                     )}
+                                </motion.div>
+                            )}
+
+                            {/* --- SAVED TAB --- */}
+                            {activeTab === 'saved' && (
+                                <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
+                                        <div>
+                                            <h3 className="text-xl font-black text-slate-900">Saved Properties</h3>
+                                            <p className="text-sm text-slate-500 font-medium mt-1">You have {savedWarehouses.length} saved warehouse{savedWarehouses.length !== 1 ? 's' : ''}.</p>
+                                        </div>
+                                        {savedWarehouses.length > 0 && (
+                                            <button 
+                                                onClick={() => setShowBulkEnquiry(true)}
+                                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+                                            >
+                                                <Send className="w-4 h-4" /> Bulk Enquiry
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {savedWarehouses.length === 0 ? (
+                                            <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-slate-200">
+                                                <Star className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                                <p className="text-slate-500 font-bold text-lg">No saved properties yet.</p>
+                                                <p className="text-slate-400 text-sm mt-1">Browse the directory and click the heart icon to save warehouses here.</p>
+                                            </div>
+                                        ) : (
+                                            savedWarehouses.map((warehouse) => (
+                                                <WarehouseCard 
+                                                    key={warehouse.id} 
+                                                    id={warehouse.id} 
+                                                    title={warehouse.warehouseName} 
+                                                    location={`${warehouse.city || ''}, ${warehouse.state || ''}`.replace(/^, |^,$/, '')} 
+                                                    price={warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'} 
+                                                    area={warehouse.totalArea?.toLocaleString()} 
+                                                    type={warehouse.warehouseCategory} 
+                                                    imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]} 
+                                                    facilities={warehouse.amenities || []} 
+                                                    amenities={warehouse.amenities || []} 
+                                                />
+                                            ))
+                                        )}
+                                    </div>
                                 </motion.div>
                             )}
 

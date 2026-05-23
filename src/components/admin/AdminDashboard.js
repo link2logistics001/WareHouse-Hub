@@ -65,8 +65,7 @@ import AdminAddWarehouse from './AdminAddWarehouse';
 import { PlusCircle } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
-// Sidebar
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Sidebar// ---------------------------------------------------------------------
 function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount }) {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -152,11 +151,8 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
             </div>
         </div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Main AdminDashboard
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Main AdminDashboard// ---------------------------------------------------------------------
 export default function AdminDashboard({ user, onLogout }) {
     const [warehouses, setWarehouses] = useState([]);
     const [users, setUsers] = useState([]);
@@ -184,7 +180,7 @@ export default function AdminDashboard({ user, onLogout }) {
         sessionStorage.setItem('admin_activeView', activeView);
     }, [activeView]);
 
-    // Real-time Firestore subscription Ã¢â‚¬â€ listen to collectionGroup 'warehouses'
+    // Real-time Firestore subscription - listen to collectionGroup 'warehouses'
     // which pulls docs from warehouse_details/owner/emails/*/warehouses AND warehouse_details/dataentry/emails/*/warehouses
     useEffect(() => {
         if (!user) return;
@@ -489,11 +485,8 @@ export default function AdminDashboard({ user, onLogout }) {
             </AnimatePresence>
         </motion.div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Overview
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Overview// ---------------------------------------------------------------------
 function OverviewView({ counts, warehouses }) {
     const recentPending = warehouses.filter(w => w.status === 'pending').slice(0, 5);
 
@@ -513,7 +506,7 @@ function OverviewView({ counts, warehouses }) {
 
     return (
         <div className="space-y-6">
-            {/* Stat cards Ã¢â‚¬â€ matches merchant/owner dashboard style */}
+            {/* Stat cards - matches merchant/owner dashboard style */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {stats.map(s => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
@@ -542,7 +535,7 @@ function OverviewView({ counts, warehouses }) {
                                 <div>
                                     <p className="font-semibold text-slate-900 text-sm">{w.warehouseName || 'Unnamed Warehouse'}</p>
                                     <p className="text-slate-500 text-xs mt-0.5">
-                                        {[w.city, w.state].filter(Boolean).join(', ')} Ã‚Â· {w.contactPerson || 'Ã¢â‚¬â€'}
+                                        {[w.city, w.state].filter(Boolean).join(', ')}  ·  {w.contactPerson || '-'}
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
@@ -563,11 +556,8 @@ function OverviewView({ counts, warehouses }) {
             )}
         </div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Warehouse List View
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Warehouse List View// ---------------------------------------------------------------------
 function WarehouseListView({
     filtered, loading, error, filter, setFilter,
     search, setSearch, counts, handleAction,
@@ -610,7 +600,7 @@ function WarehouseListView({
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Search name, owner, cityÃ¢â‚¬Â¦"
+                        placeholder="Search name, owner, city..."
                         className="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all shadow-sm"
                     />
                     {search && (
@@ -662,11 +652,8 @@ function WarehouseListView({
             )}
         </div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Warehouse Row
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Warehouse Row// ---------------------------------------------------------------------
 function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, onToggleExpand }) {
     const status = w.status || 'pending';
     const isActing = actionLoading[w.id];
@@ -698,12 +685,12 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€'}</p>
+                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
                                 <button onClick={onToggleExpand} className="text-slate-400 hover:text-slate-600 flex-shrink-0">
                                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                 </button>
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory} Ã‚Â· {w.typeOfConstruction}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory}  ·  {w.typeOfConstruction}</p>
                         </div>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
@@ -711,8 +698,8 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         </span>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€'}</span>
-                        {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} ftÃ‚Â²</span>}
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
+                        {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} ft<sup>2</sup></span>}
                     </div>
                     <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
                 </div>
@@ -722,30 +709,30 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     {/* Warehouse name */}
                     <div className="min-w-0">
                         <div className="flex items-center gap-1">
-                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || 'Ã¢â‚¬â€'}</p>
+                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
                             <button onClick={onToggleExpand} className="text-slate-400 hover:text-orange-500 flex-shrink-0 transition-colors">
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || 'Ã¢â‚¬â€'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '-'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
                     </div>
 
                     {/* Owner */}
                     <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || 'Ã¢â‚¬â€'}</p>
-                        <p className="text-xs text-slate-400 truncate">{w.email || 'Ã¢â‚¬â€'}</p>
+                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || '-'}</p>
+                        <p className="text-xs text-slate-400 truncate">{w.email || '-'}</p>
                     </div>
 
                     {/* Location */}
                     <div className="flex items-center gap-1 min-w-0">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || 'Ã¢â‚¬â€'}</span>
+                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
                     </div>
 
                     {/* Area */}
                     <div>
                         <p className="text-sm font-semibold text-slate-800">
-                            {w.totalArea ? `${Number(w.totalArea).toLocaleString()} ftÃ‚Â²` : 'Ã¢â‚¬â€'}
+                            {w.totalArea ? <>{Number(w.totalArea).toLocaleString()} ft<sup>2</sup></> : '-'}
                         </p>
                     </div>
 
@@ -758,7 +745,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         <p className="text-[10px] text-slate-400 mt-1">
                             {w.createdAt?.seconds
                                 ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                : 'Ã¢â‚¬â€'}
+                                : '-'}
                         </p>
                     </div>
 
@@ -875,11 +862,8 @@ function DetailGroup({ title, items }) {
             </div>
         </div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Photo Thumbnail with skeleton loader
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Photo Thumbnail with skeleton loader// ---------------------------------------------------------------------
 const loadedImagesCache = new Set();
 
 function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
@@ -901,7 +885,7 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by email or nameÃ¢â‚¬Â¦"
+                        placeholder="Search by email or name..."
                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
                     />
                 </div>
@@ -981,7 +965,7 @@ function PhotoThumb({ src, alt, onClick, className = '' }) {
             onClick={onClick}
             className={`group relative bg-white rounded-xl overflow-hidden border-2 border-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-200 cursor-pointer ${className}`}
         >
-            {/* Skeleton shimmer Ã¢â‚¬â€ visible until image loads */}
+            {/* Skeleton shimmer - visible until image loads */}
             {!loaded && !error && (
                 <div className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
                     <Image className="w-5 h-5 text-slate-300" />
@@ -1020,11 +1004,8 @@ function PhotoThumb({ src, alt, onClick, className = '' }) {
             )}
         </button>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Photo Gallery (Admin Review)
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Photo Gallery (Admin Review)// ---------------------------------------------------------------------
 function PhotoGallery({ photos }) {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -1102,7 +1083,7 @@ function PhotoGallery({ photos }) {
                         className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
                         onClick={() => setLightboxOpen(false)}
                     >
-                        {/* Top bar Ã¢â‚¬â€ label + close */}
+                        {/* Top bar - label + close */}
                         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                             <div />
                             <span className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-white border border-white/10">
@@ -1119,7 +1100,7 @@ function PhotoGallery({ photos }) {
                             </button>
                         </div>
 
-                        {/* Main image area Ã¢â‚¬â€ fills all remaining space */}
+                        {/* Main image area - fills all remaining space */}
                         <div
                             className="flex-1 flex items-center justify-center relative px-16 min-h-0"
                             onClick={(e) => e.stopPropagation()}
@@ -1187,11 +1168,8 @@ function PhotoGallery({ photos }) {
             </AnimatePresence>
         </>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// Migration View Ã¢â‚¬â€ Migrate legacy owner/merchant Ã¢â€ â€™ warehouse_partner/business_client
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// Migration View - Migrate legacy owner/merchant -> warehouse_partner/business_client// ---------------------------------------------------------------------
 function MigrationView({ showToast }) {
     const [migrating, setMigrating] = useState(false);
     const [migrationLog, setMigrationLog] = useState([]);
@@ -1205,7 +1183,7 @@ function MigrationView({ showToast }) {
     const runMigration = async () => {
         if (migrating) return;
         if (!window.confirm(
-            'This will update all existing users with userType "owner" Ã¢â€ â€™ "warehouse_partner" and "merchant" Ã¢â€ â€™ "business_client" in the database.\n\nThis cannot be undone. Are you sure?'
+            'This will update all existing users with userType "owner" -> "warehouse_partner" and "merchant" -> "business_client" in the database.\n\nThis cannot be undone. Are you sure?'
         )) return;
 
         setMigrating(true);
@@ -1234,7 +1212,7 @@ function MigrationView({ showToast }) {
                             _migratedAt: st()
                         });
                         updated++;
-                        addLog(`[SUCCESS] ${data.email || userDoc.id}: owner Ã¢â€ â€™ warehouse_partner`, 'success');
+                        addLog(`[SUCCESS] ${data.email || userDoc.id}: owner -> warehouse_partner`, 'success');
                     } catch (e) {
                         errors++;
                         addLog(`[ERROR] Failed to migrate ${data.email || userDoc.id}: ${e.message}`, 'error');
@@ -1247,7 +1225,7 @@ function MigrationView({ showToast }) {
                             _migratedAt: st()
                         });
                         updated++;
-                        addLog(`[SUCCESS] ${data.email || userDoc.id}: merchant Ã¢â€ â€™ business_client`, 'success');
+                        addLog(`[SUCCESS] ${data.email || userDoc.id}: merchant -> business_client`, 'success');
                     } catch (e) {
                         errors++;
                         addLog(`[ERROR] Failed to migrate ${data.email || userDoc.id}: ${e.message}`, 'error');
@@ -1260,7 +1238,7 @@ function MigrationView({ showToast }) {
 
             addLog(`\n[SUMMARY] Users migration complete: ${updated} updated, ${skipped} skipped, ${errors} errors`, updated > 0 ? 'success' : 'info');
 
-            // Step 2: Migrate contact_details Ã¢â‚¬â€ copy owner Ã¢â€ â€™ warehouse_partner, merchant Ã¢â€ â€™ business_client
+            // Step 2: Migrate contact_details - copy owner -> warehouse_partner, merchant -> business_client
             addLog('\n[INFO] Scanning contact_details collections...', 'info');
 
             const roleMappings = [
@@ -1286,7 +1264,7 @@ function MigrationView({ showToast }) {
                                 _migratedAt: st()
                             }, { merge: true });
                             contactUpdated++;
-                            addLog(`[SUCCESS] contact_details: ${contactDoc.id} (${oldRole} Ã¢â€ â€™ ${newRole})`, 'success');
+                            addLog(`[SUCCESS] contact_details: ${contactDoc.id} (${oldRole} -> ${newRole})`, 'success');
                         } catch (e) {
                             addLog(`[ERROR] contact_details migration failed for ${contactDoc.id}: ${e.message}`, 'error');
                         }
@@ -1323,7 +1301,7 @@ function MigrationView({ showToast }) {
                                 _migratedAt: st()
                             }, { merge: true });
                             whUpdated++;
-                            addLog(`[SUCCESS] warehouse_details: ${whId} (${email}) Ã¢â€ â€™ warehouse_partner`, 'success');
+                            addLog(`[SUCCESS] warehouse_details: ${whId} (${email}) -> warehouse_partner`, 'success');
                         } catch (e) {
                             whErrors++;
                             addLog(`[ERROR] warehouse_details migration failed for ${whId}: ${e.message}`, 'error');
@@ -1375,7 +1353,7 @@ function MigrationView({ showToast }) {
                         <h4 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3">Warehouse Partners</h4>
                         <div className="flex items-center gap-3">
                             <span className="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-sm font-mono text-orange-700 line-through">owner</span>
-                            <span className="text-orange-400">Ã¢â€ â€™</span>
+                            <span className="text-orange-400">{"\u2192"}</span>
                             <span className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-mono font-bold">warehouse_partner</span>
                         </div>
                     </div>
@@ -1383,7 +1361,7 @@ function MigrationView({ showToast }) {
                         <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Business Clients</h4>
                         <div className="flex items-center gap-3">
                             <span className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-sm font-mono text-blue-700 line-through">merchant</span>
-                            <span className="text-blue-400">Ã¢â€ â€™</span>
+                            <span className="text-blue-400">{"\u2192"}</span>
                             <span className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-mono font-bold">business_client</span>
                         </div>
                     </div>
@@ -1396,8 +1374,8 @@ function MigrationView({ showToast }) {
                         <span className="text-sm font-bold text-amber-800">Collections that will be updated:</span>
                     </div>
                     <ul className="text-sm text-amber-700 space-y-1 ml-6 list-disc">
-                        <li><code className="bg-white/80 px-1 rounded text-xs">users</code> Ã¢â‚¬â€ userType field</li>
-                        <li><code className="bg-white/80 px-1 rounded text-xs">contact_details</code> Ã¢â‚¬â€ documents copied to new role subcollections</li>
+                        <li><code className="bg-white/80 px-1 rounded text-xs">users</code> - userType field</li>
+                        <li><code className="bg-white/80 px-1 rounded text-xs">contact_details</code> - documents copied to new role subcollections</li>
                     </ul>
                 </div>
 
@@ -1481,16 +1459,13 @@ function MigrationView({ showToast }) {
             )}
         </div>
     );
-}
-
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-// States
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+}// ---------------------------------------------------------------------
+// States// ---------------------------------------------------------------------
 function LoadingState() {
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center py-24 text-slate-400">
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-orange-400" />
-            <p className="text-sm font-medium">Loading warehousesÃ¢â‚¬Â¦</p>
+            <p className="text-sm font-medium">Loading warehouses...</p>
         </div>
     );
 }
