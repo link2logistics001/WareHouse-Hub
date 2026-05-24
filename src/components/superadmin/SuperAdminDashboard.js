@@ -48,8 +48,10 @@ import {
     updateDoc,
     serverTimestamp,
     orderBy,
-    onSnapshot,
     where,
+    deleteDoc,
+    setDoc,
+    onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatPrice } from '@/lib/locale';
@@ -107,10 +109,14 @@ import {
     Sparkles,
     User,
     FileUp,
+    Globe,
+    Check,
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
+import { useCountry } from '@/contexts/CountryContext';
+import { COUNTRY_CONFIG } from '@/lib/locale';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -120,6 +126,8 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'assign-admin', label: 'Assign Admin', icon: Shield },
+        { id: 'manage-admins', label: 'Manage Admins', icon: UserSquare2 },
+        { id: 'manage-countries', label: 'Manage Countries', icon: Globe },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
         { id: 'block-people', label: 'Block People', icon: Users },
         {
@@ -358,6 +366,17 @@ export default function SuperAdminDashboard({ user, onLogout }) {
         }
     };
 
+    const handleDeleteUser = async (uid) => {
+        if (!window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
+        try {
+            await deleteDoc(doc(db, 'users', uid));
+            showToast('User deleted successfully.', 'success');
+        } catch (err) {
+            console.error('Failed to delete user:', err);
+            showToast('Failed to delete user. Please try again.', 'error');
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await logoutUser();
@@ -474,7 +493,11 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                       ? 'Warehouse Listings'
                                       : activeView === 'assign-admin'
                                         ? 'Assign Admin'
-                                        : 'User Management'}
+                                        : activeView === 'manage-admins'
+                                          ? 'Manage Admins'
+                                          : activeView === 'manage-countries'
+                                            ? 'Manage Supported Countries'
+                                            : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -534,12 +557,43 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                     users={users}
                                     loading={usersLoading}
                                     handleBlockUser={handleBlockUser}
+                                    handleDeleteUser={handleDeleteUser}
                                     onViewWarehouses={(email) => {
                                         setSearch(email);
                                         setFilter('all');
                                         setActiveView('warehouses');
                                     }}
                                 />
+                            </motion.div>
+                        ) : activeView === 'manage-admins' ? (
+                            <motion.div
+                                key="manage-admins"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <BlockPeopleView
+                                    users={users.filter(u => u.userType === 'admin' || u.userType === 'superadmin')}
+                                    loading={usersLoading}
+                                    handleBlockUser={handleBlockUser}
+                                    handleDeleteUser={handleDeleteUser}
+                                    onViewWarehouses={(email) => {
+                                        setSearch(email);
+                                        setFilter('all');
+                                        setActiveView('warehouses');
+                                    }}
+                                />
+                            </motion.div>
+                        ) : activeView === 'manage-countries' ? (
+                            <motion.div
+                                key="manage-countries"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ManageCountriesView showToast={showToast} />
                             </motion.div>
                         ) : activeView === 'inquiries' ? (
                             <motion.div
@@ -1051,7 +1105,7 @@ function DetailGroup({ title, items }) {
 // --------------------------------------------------------------------------------
 const loadedImagesCache = new Set();
 
-function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
+function BlockPeopleView({ users, loading, handleBlockUser, handleDeleteUser, onViewWarehouses }) {
     const [search, setSearch] = useState('');
 
     const filtered = users.filter((u) => {
@@ -1148,6 +1202,13 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                                         <Building2 className="w-4 h-4" />
                                     </button>
                                 )}
+                                <button
+                                    onClick={() => handleDeleteUser && handleDeleteUser(u.id)}
+                                    className="p-1.5 bg-red-50 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-all"
+                                    title="Delete User"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -2103,3 +2164,130 @@ function AssignAdminView({ showToast }) {
         </div>
     );
 }
+
+// --------------------------------------------------------------------------------
+// ManageCountriesView
+// --------------------------------------------------------------------------------
+function ManageCountriesView({ showToast }) {
+    const { enabledCountries } = useCountry();
+    const [search, setSearch] = useState('');
+    const [loadingCode, setLoadingCode] = useState(null);
+
+    const toggleCountry = async (code) => {
+        setLoadingCode(code);
+        try {
+            const isEnabled = (enabledCountries || []).includes(code);
+            let newArray;
+            if (isEnabled) {
+                newArray = (enabledCountries || []).filter(c => c !== code);
+            } else {
+                newArray = [...(enabledCountries || []), code];
+            }
+            await setDoc(doc(db, 'settings', 'countries'), { enabled: newArray }, { merge: true });
+            showToast(isEnabled ? `${COUNTRY_CONFIG[code]?.name} disabled` : `${COUNTRY_CONFIG[code]?.name} enabled`, 'success');
+        } catch (error) {
+            console.error('Failed to toggle country:', error);
+            showToast('Failed to update country. Try again.', 'error');
+        } finally {
+            setLoadingCode(null);
+        }
+    };
+
+    const allCodes = Object.keys(COUNTRY_CONFIG);
+    const filteredCodes = allCodes.filter((code) => {
+        if (!search) return true;
+        const config = COUNTRY_CONFIG[code];
+        const term = search.toLowerCase();
+        return (
+            config.name.toLowerCase().includes(term) ||
+            code.toLowerCase().includes(term) ||
+            config.currency.toLowerCase().includes(term)
+        );
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search countries by name, code, or currency..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredCodes.map((code) => {
+                    const cfg = COUNTRY_CONFIG[code];
+                    const isEnabled = (enabledCountries || []).includes(code);
+                    const isLoading = loadingCode === code;
+
+                    return (
+                        <div
+                            key={code}
+                            className={`p-4 rounded-2xl border transition-all duration-300 ${
+                                isEnabled
+                                    ? 'bg-white border-orange-200 shadow-sm hover:shadow-md'
+                                    : 'bg-slate-50 border-slate-200 opacity-80 hover:opacity-100'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
+                                        alt={cfg.name}
+                                        className="w-8 h-6 rounded shadow-sm object-cover"
+                                    />
+                                    <div>
+                                        <h3 className="font-bold text-slate-900">{cfg.name}</h3>
+                                        <p className="text-xs text-slate-500 font-medium">{code}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => toggleCountry(code)}
+                                    disabled={isLoading}
+                                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                                        isEnabled ? 'bg-orange-500' : 'bg-slate-300'
+                                    }`}
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-4 text-white animate-spin" />
+                                    ) : (
+                                        <div
+                                            className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${
+                                                isEnabled ? 'translate-x-7 left-0' : 'translate-x-1 left-0'
+                                            }`}
+                                        />
+                                    )}
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="bg-slate-100/50 p-2 rounded-lg">
+                                    <p className="text-slate-400 mb-0.5">Currency</p>
+                                    <p className="font-semibold text-slate-700">{cfg.currencyCode} ({cfg.currency})</p>
+                                </div>
+                                <div className="bg-slate-100/50 p-2 rounded-lg">
+                                    <p className="text-slate-400 mb-0.5">Phone</p>
+                                    <p className="font-semibold text-slate-700">{cfg.phonePrefix}</p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+            
+            {filteredCodes.length === 0 && (
+                <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
+                    <Globe className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-slate-900">No countries found</h3>
+                    <p className="text-slate-500 text-sm mt-1">Try adjusting your search criteria</p>
+                </div>
+            )}
+        </div>
+    );
+}
+

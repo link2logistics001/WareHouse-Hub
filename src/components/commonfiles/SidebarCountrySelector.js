@@ -24,7 +24,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 import { useCountry } from '@/contexts/CountryContext';
-import { COUNTRY_CONFIG, SUPPORTED_COUNTRIES } from '@/lib/locale';
+import { COUNTRY_CONFIG } from '@/lib/locale';
 
 /**
  * Static class map for accent colors.
@@ -39,7 +39,7 @@ const ACCENT_CLASSES = {
 
 export default function SidebarCountrySelector({ containerClasses = '', accentColor = 'orange', theme = 'dark' }) {
     // Get the current country and setter from the global CountryContext
-    const { country, setCountry, config: countryConfig } = useCountry();
+    const { country, setCountry, config: countryConfig, enabledCountries } = useCountry();
 
     // Whether the dropdown is currently open
     const [open, setOpen] = useState(false);
@@ -113,9 +113,10 @@ export default function SidebarCountrySelector({ containerClasses = '', accentCo
                     <p className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest ${labelClasses}`}>
                         Select Region
                     </p>
-                    {/* List of all supported countries */}
-                    {SUPPORTED_COUNTRIES.map((code) => {
+                    {/* List of enabled countries */}
+                    {(enabledCountries || []).map((code) => {
                         const cfg = COUNTRY_CONFIG[code];
+                        if (!cfg) return null;
                         const isActive = country === code;
                         return (
                             <button

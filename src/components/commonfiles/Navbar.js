@@ -25,7 +25,7 @@ import { motion, useScroll, useSpring, AnimatePresence, useMotionValueEvent } fr
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
-import { COUNTRY_CONFIG, SUPPORTED_COUNTRIES } from '@/lib/locale';
+import { COUNTRY_CONFIG } from '@/lib/locale';
 import { LogOut, User, LayoutDashboard, ChevronDown, Globe } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -43,7 +43,7 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, setUser } = useAuth();
-    const { country, setCountry, config: countryConfig } = useCountry();
+    const { country, setCountry, config: countryConfig, enabledCountries } = useCountry();
 
     // Always use solid styling on non-home pages
     const isHome = pathname === '/';
@@ -306,8 +306,9 @@ export default function Navbar() {
                                             transition={{ duration: 0.15 }}
                                             className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 z-[100]"
                                         >
-                                            {SUPPORTED_COUNTRIES.map((code) => {
+                                            {(enabledCountries || []).map((code) => {
                                                 const cfg = COUNTRY_CONFIG[code];
+                                                if (!cfg) return null;
                                                 return (
                                                     <button
                                                         key={code}
@@ -444,8 +445,9 @@ export default function Navbar() {
                                             transition={{ duration: 0.15 }}
                                             className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 z-[100]"
                                         >
-                                            {SUPPORTED_COUNTRIES.map((code) => {
+                                            {(enabledCountries || []).map((code) => {
                                                 const cfg = COUNTRY_CONFIG[code];
+                                                if (!cfg) return null;
                                                 return (
                                                     <button
                                                         key={code}
