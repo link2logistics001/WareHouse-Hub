@@ -25,6 +25,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { COUNTRY_CONFIG, DEFAULT_COUNTRY, getCountryConfig, formatPrice, formatArea } from '@/lib/locale';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 /** React context instance — null by default, filled by CountryProvider */
 const CountryContext = createContext(null);
@@ -41,6 +43,19 @@ const CountryContext = createContext(null);
 export function CountryProvider({ children }) {
     // Initialize with default country (India); localStorage override happens in useEffect
     const [country, setCountryState] = useState(DEFAULT_COUNTRY);
+    const [enabledCountries, setEnabledCountries] = useState(['IN', 'US', 'AE', 'GB', 'DE', 'SG', 'SA']);
+
+    // Listen to Firestore for enabled countries
+    useEffect(() => {
+        const unsub = onSnapshot(doc(db, 'settings', 'countries'), (snap) => {
+            if (snap.exists() && Array.isArray(snap.data().enabled)) {
+                setEnabledCountries(snap.data().enabled);
+            }
+        }, (err) => {
+            console.error('Failed to fetch enabled countries:', err);
+        });
+        return () => unsub();
+    }, []);
 
     // On mount: Restore the user's previously selected country from localStorage
     useEffect(() => {
@@ -94,7 +109,7 @@ export function CountryProvider({ children }) {
     const fmtArea = useCallback((value) => formatArea(value, country), [country]);
 
     return (
-        <CountryContext.Provider value={{ country, setCountry, config, fmtPrice, fmtArea }}>
+        <CountryContext.Provider value={{ country, setCountry, config, fmtPrice, fmtArea, enabledCountries }}>
             {children}
         </CountryContext.Provider>
     );

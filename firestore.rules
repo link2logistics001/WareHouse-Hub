@@ -133,5 +133,11 @@ service cloud.firestore {
                     ));
       allow update, delete: if isAnyAdmin();
     }
+
+    // --- SETTINGS ---
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAnyAdmin();
+    }
   }
 }
