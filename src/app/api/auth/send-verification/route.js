@@ -67,7 +67,7 @@ export async function POST(request) {
 
         // Check if Resend encountered an error
         if (!result.success) {
-            throw new Error(result.error);
+            throw new Error(result.error?.message || (typeof result.error === 'string' ? result.error : JSON.stringify(result.error)));
         }
 
         return NextResponse.json({ success: true, message: 'Verification email sent' });
