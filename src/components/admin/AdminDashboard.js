@@ -699,7 +699,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                         <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
-                        {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} ft<sup>2</sup></span>}
+                        {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} sq ft</span>}
                     </div>
                     <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
                 </div>
@@ -709,30 +709,30 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     {/* Warehouse name */}
                     <div className="min-w-0">
                         <div className="flex items-center gap-1">
-                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
+                            <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '- '}</p>
                             <button onClick={onToggleExpand} className="text-slate-400 hover:text-orange-500 flex-shrink-0 transition-colors">
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '-'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '- '} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
                     </div>
 
                     {/* Owner */}
                     <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || '-'}</p>
-                        <p className="text-xs text-slate-400 truncate">{w.email || '-'}</p>
+                        <p className="text-sm font-medium text-slate-700 truncate">{w.contactPerson || '- '}</p>
+                        <p className="text-xs text-slate-400 truncate">{w.email || '- '}</p>
                     </div>
 
                     {/* Location */}
                     <div className="flex items-center gap-1 min-w-0">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
+                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || '- '}</span>
                     </div>
 
                     {/* Area */}
                     <div>
                         <p className="text-sm font-semibold text-slate-800">
-                            {w.totalArea ? <>{Number(w.totalArea).toLocaleString()} ft<sup>2</sup></> : '-'}
+                            {w.totalArea ? <>{Number(w.totalArea).toLocaleString()} sq ft</> : '- '}
                         </p>
                     </div>
 
