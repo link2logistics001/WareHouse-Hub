@@ -50,23 +50,23 @@ export const sendVerificationEmail = async (email, name, verificationLink) => {
           </style>
         </head>
         <body>
-          <div className="container">
-            <div className="header">
-              <div className="logo">Link2Logistics</div>
+          <div class="container">
+            <div class="header">
+              <div class="logo">Link2Logistics</div>
             </div>
-            <div className="card">
+            <div class="card">
               <h1>Welcome, ${name}!</h1>
               <p>Thank you for joining Link2Logistics. To get started, please verify your email address by clicking the button below:</p>
               <div style="text-align: center; margin: 40px 0;">
-                <a href="${verificationLink}" className="button">Verify Email Address</a>
+                <a href="${verificationLink}" class="button">Verify Email Address</a>
               </div>
               <p style="font-size: 14px; color: #64748b;">
                 If you did not create an account with us, you can safely ignore this email.
               </p>
-              <div className="divider"></div>
+              <div class="divider"></div>
               <p>Thanks,<br><strong>Link2Logistics Team</strong></p>
             </div>
-            <div className="footer">
+            <div class="footer">
               &copy; 2026 Link2Logistics. All rights reserved.
             </div>
           </div>
