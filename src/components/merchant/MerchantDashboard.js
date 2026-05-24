@@ -32,12 +32,18 @@
  * @param {Function} props.onLogout — Sign out callback
  * @param {Function} props.onOpenChat — Opens ChatBox with a specific warehouse
  */
-'use client'
+'use client';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, animate } from 'framer-motion';
 import { collection, collectionGroup, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { logoutUser, updateUserProfile, uploadProfileImage, sendVerificationEmail, refreshEmailVerification } from '@/lib/auth';
+import {
+    logoutUser,
+    updateUserProfile,
+    uploadProfileImage,
+    sendVerificationEmail,
+    refreshEmailVerification,
+} from '@/lib/auth';
 import { useWishlist } from '@/hooks/useWishlist';
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
 
@@ -47,9 +53,29 @@ import MerchantSidebar from './MerchantSidebar';
 import ChatBox from '../commonfiles/ChatBox';
 import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../commonfiles/InquiryModals';
 
-import { 
-    Building2, MessageSquare, Star, ClipboardList, Inbox, ExternalLink, Heart, 
-    Camera, Edit2, CheckCircle, Loader2, AlertTriangle, Shield, LogOut, Mail, Plus, MapPin, Send, Search, X, User, Sparkles
+import {
+    Building2,
+    MessageSquare,
+    Star,
+    ClipboardList,
+    Inbox,
+    ExternalLink,
+    Heart,
+    Camera,
+    Edit2,
+    CheckCircle,
+    Loader2,
+    AlertTriangle,
+    Shield,
+    LogOut,
+    Mail,
+    Plus,
+    MapPin,
+    Send,
+    Search,
+    X,
+    User,
+    Sparkles,
 } from 'lucide-react';
 
 // --- CRISP NUMBER COUNTER ---
@@ -61,7 +87,9 @@ const AnimatedNumber = ({ value }) => {
         const controls = animate(0, value, {
             duration: 1.5,
             ease: [0.22, 1, 0.36, 1],
-            onUpdate: (val) => { node.textContent = Math.floor(val).toLocaleString(); }
+            onUpdate: (val) => {
+                node.textContent = Math.floor(val).toLocaleString();
+            },
         });
         return () => controls.stop();
     }, [value]);
@@ -70,8 +98,21 @@ const AnimatedNumber = ({ value }) => {
 
 // --- SLEEK TRENDLINE ---
 const AnimatedTrendLine = ({ color, pathData }) => (
-    <svg className={`w-14 h-6 ${color}`} viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <motion.path d={pathData} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.5, ease: "easeInOut", delay: 0.1 }} />
+    <svg
+        className={`w-14 h-6 ${color}`}
+        viewBox="0 0 100 30"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <motion.path
+            d={pathData}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 1.5, ease: 'easeInOut', delay: 0.1 }}
+        />
     </svg>
 );
 
@@ -94,7 +135,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [selectedWarehouse, setSelectedWarehouse] = useState(null);
     const [filters, setFilters] = useState({ city: '', category: '', minArea: '', maxBudget: '' });
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    
+
     const [editMode, setEditMode] = useState(false);
     const [profileData, setProfileData] = useState({ name: user?.name || '', company: user?.company || '' });
     const [uploading, setUploading] = useState(false);
@@ -102,12 +143,12 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [localUser, setLocalUser] = useState(user);
     const [mounted, setMounted] = useState(false);
-    
+
     const [realChats, setRealChats] = useState([]);
     const [selectedConv, setSelectedConv] = useState(null);
     const [realWarehouses, setRealWarehouses] = useState([]);
     const [warehousesLoading, setWarehousesLoading] = useState(true);
-    
+
     const { wishlistedWarehouses } = useWishlist();
     const [showBulkEnquiry, setShowBulkEnquiry] = useState(false);
     const [bulkEnquiryText, setBulkEnquiryText] = useState('');
@@ -119,30 +160,53 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [showDetailedModal, setShowDetailedModal] = useState(false);
 
     useEffect(() => {
-        if (user) { setLocalUser(user); setProfileData({ name: user.name || '', company: user.company || '' }); }
+        if (user) {
+            setLocalUser(user);
+            setProfileData({ name: user.name || '', company: user.company || '' });
+        }
     }, [user]);
 
-    useEffect(() => { setMounted(true); }, []);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (!user?.uid) return;
         const q = query(collection(db, 'conversations'), where('merchantId', '==', user.uid));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const chats = snapshot.docs.map(doc => ({ id: doc.id, warehouseName: doc.data().warehouseName || 'Unknown Warehouse', ownerName: doc.data().ownerName || 'Unknown Owner', ...doc.data() }));
-            chats.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-            setRealChats(chats);
-        }, (error) => console.debug('Conversations listener error:', error.code || error.message));
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const chats = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    warehouseName: doc.data().warehouseName || 'Unknown Warehouse',
+                    ownerName: doc.data().ownerName || 'Unknown Owner',
+                    ...doc.data(),
+                }));
+                chats.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+                setRealChats(chats);
+            },
+            (error) => console.debug('Conversations listener error:', error.code || error.message)
+        );
         return () => unsubscribe();
     }, [user?.uid]);
 
     useEffect(() => {
         if (!user) return;
         const cg = collectionGroup(db, 'warehouses');
-        const unsubscribe = onSnapshot(cg, (snapshot) => {
-            const whList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path })).filter(w => w.status === 'approved');
-            setRealWarehouses(whList);
-            setWarehousesLoading(false);
-        }, (error) => { console.error('Warehouse error:', error); setWarehousesLoading(false); });
+        const unsubscribe = onSnapshot(
+            cg,
+            (snapshot) => {
+                const whList = snapshot.docs
+                    .map((doc) => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path }))
+                    .filter((w) => w.status === 'approved');
+                setRealWarehouses(whList);
+                setWarehousesLoading(false);
+            },
+            (error) => {
+                console.error('Warehouse error:', error);
+                setWarehousesLoading(false);
+            }
+        );
         return () => unsubscribe();
     }, [user]);
 
@@ -150,7 +214,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         const file = e.target.files[0];
         if (!file) return;
         e.target.value = '';
-        setUploading(true); setMessage({ type: '', text: '' });
+        setUploading(true);
+        setMessage({ type: '', text: '' });
         try {
             const photoURL = await uploadProfileImage(localUser.uid, file);
             setLocalUser({ ...localUser, photoURL });
@@ -164,93 +229,141 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     };
 
     const handleProfileUpdate = async () => {
-        setSaving(true); setMessage({ type: '', text: '' });
+        setSaving(true);
+        setMessage({ type: '', text: '' });
         try {
             const updates = {};
             if (profileData.name !== localUser.name) updates.name = profileData.name;
             if (profileData.company !== localUser.company) updates.company = profileData.company;
-            if (Object.keys(updates).length === 0) { setEditMode(false); setSaving(false); return; }
+            if (Object.keys(updates).length === 0) {
+                setEditMode(false);
+                setSaving(false);
+                return;
+            }
             const updatedData = await updateUserProfile(localUser.uid, updates);
             setLocalUser({ ...localUser, ...updatedData });
             setEditMode(false);
             setMessage({ type: 'success', text: 'Profile updated!' });
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-        } catch (error) { setMessage({ type: 'error', text: error.message }); } 
-        finally { setSaving(false); }
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message });
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleSendVerification = async () => {
         setMessage({ type: '', text: '' });
-        try { await sendVerificationEmail(); setMessage({ type: 'success', text: 'Verification email sent!' }); } 
-        catch (error) { setMessage({ type: 'error', text: error.message }); }
+        try {
+            await sendVerificationEmail();
+            setMessage({ type: 'success', text: 'Verification email sent!' });
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message });
+        }
     };
 
     const handleRefreshVerification = async () => {
         setMessage({ type: '', text: '' });
         try {
             const isVerified = await refreshEmailVerification();
-            if (isVerified) { setLocalUser({ ...localUser, emailVerified: true }); setMessage({ type: 'success', text: 'Email verified!' }); } 
-            else { setMessage({ type: 'info', text: 'Email not yet verified.' }); }
-        } catch (error) { setMessage({ type: 'error', text: error.message }); }
+            if (isVerified) {
+                setLocalUser({ ...localUser, emailVerified: true });
+                setMessage({ type: 'success', text: 'Email verified!' });
+            } else {
+                setMessage({ type: 'info', text: 'Email not yet verified.' });
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: error.message });
+        }
     };
 
-    const filteredWarehouses = realWarehouses.filter(wh => {
+    const filteredWarehouses = realWarehouses.filter((wh) => {
         const cityMatch = !filters.city || (wh.city && wh.city.toLowerCase().includes(filters.city.toLowerCase()));
         const categoryMatch = !filters.category || wh.warehouseCategory === filters.category;
-        const areaMatch = !filters.minArea || (parseInt(wh.totalArea) >= parseInt(filters.minArea));
-        const priceMatch = !filters.maxBudget || (parseInt(wh.pricingAmount) <= parseInt(filters.maxBudget));
+        const areaMatch = !filters.minArea || parseInt(wh.totalArea) >= parseInt(filters.minArea);
+        const priceMatch = !filters.maxBudget || parseInt(wh.pricingAmount) <= parseInt(filters.maxBudget);
         return cityMatch && categoryMatch && areaMatch && priceMatch;
     });
 
-    const savedWarehouses = realWarehouses.filter(wh => wishlistedWarehouses.includes(wh.id));
+    const savedWarehouses = realWarehouses.filter((wh) => wishlistedWarehouses.includes(wh.id));
 
     const handleSendBulkEnquiry = async () => {
         if (!bulkEnquiryText.trim() || savedWarehouses.length === 0) return;
-        setSendingBulk(true); setMessage({ type: '', text: '' });
+        setSendingBulk(true);
+        setMessage({ type: '', text: '' });
         try {
             let sentCount = 0;
             for (const warehouse of savedWarehouses) {
                 const actualOwnerId = warehouse.ownerId || warehouse.owner_id || warehouse.userId;
                 if (!actualOwnerId) continue;
-                const conv = await getOrCreateConversation(
-                    warehouse.id, localUser.uid, actualOwnerId, 
-                    { warehouseName: warehouse.warehouseName || warehouse.name, merchantName: localUser.name || 'Client', ownerName: warehouse.ownerName || 'Partner', totalArea: warehouse.totalArea || 0, pricingAmount: warehouse.pricingAmount || 0, city: warehouse.city || warehouse.location?.city || '', category: warehouse.warehouseCategory || warehouse.category || '' }
-                );
+                const conv = await getOrCreateConversation(warehouse.id, localUser.uid, actualOwnerId, {
+                    warehouseName: warehouse.warehouseName || warehouse.name,
+                    merchantName: localUser.name || 'Client',
+                    ownerName: warehouse.ownerName || 'Partner',
+                    totalArea: warehouse.totalArea || 0,
+                    pricingAmount: warehouse.pricingAmount || 0,
+                    city: warehouse.city || warehouse.location?.city || '',
+                    category: warehouse.warehouseCategory || warehouse.category || '',
+                });
                 await sendMessage(conv.id, localUser.uid, bulkEnquiryText.trim(), 'business_client');
                 sentCount++;
             }
             if (sentCount > 0) {
                 setMessage({ type: 'success', text: `Enquiry sent to ${sentCount} partners!` });
-                setShowBulkEnquiry(false); setBulkEnquiryText(''); setActiveTab('chats');
+                setShowBulkEnquiry(false);
+                setBulkEnquiryText('');
+                setActiveTab('chats');
             }
-        } catch (error) { setMessage({ type: 'error', text: 'Failed to send enquiry.' }); } 
-        finally { setSendingBulk(false); setTimeout(() => setMessage({ type: '', text: '' }), 4000); }
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to send enquiry.' });
+        } finally {
+            setSendingBulk(false);
+            setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+        }
     };
 
     if (!mounted) return null;
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden z-0">
-            
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden z-0"
+        >
             <div className="hidden lg:block z-40">
-                <MerchantSidebar 
-                    activeTab={activeTab} 
-                    setActiveTab={setActiveTab} 
-                    onLogout={onLogout} 
+                <MerchantSidebar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    onLogout={onLogout}
                     onSendEnquiry={() => setShowSelectionModal(true)}
                 />
             </div>
-            
+
             <AnimatePresence>
                 {sidebarOpen && (
-                    <motion.div className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}>
-                        <motion.div className="absolute left-0 top-0 h-full w-72 bg-[#0B101E] shadow-2xl flex flex-col" initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }} onClick={e => e.stopPropagation()}>
-                            <MerchantSidebar 
-                                activeTab={activeTab} 
-                                setActiveTab={tab => { setActiveTab(tab); setSidebarOpen(false); }} 
-                                onLogout={onLogout} 
+                    <motion.div
+                        className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm lg:hidden"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <motion.div
+                            className="absolute left-0 top-0 h-full w-72 bg-[#0B101E] shadow-2xl flex flex-col"
+                            initial={{ x: -300 }}
+                            animate={{ x: 0 }}
+                            exit={{ x: -300 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <MerchantSidebar
+                                activeTab={activeTab}
+                                setActiveTab={(tab) => {
+                                    setActiveTab(tab);
+                                    setSidebarOpen(false);
+                                }}
+                                onLogout={onLogout}
                                 onSendEnquiry={() => setShowSelectionModal(true)}
-                                isDrawer={true} 
+                                isDrawer={true}
                             />
                         </motion.div>
                     </motion.div>
@@ -259,28 +372,38 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
 
             {/* Main Content Area */}
             <div className="flex-1 lg:ml-20 flex flex-col h-screen overflow-y-auto custom-scrollbar relative z-10">
-                
                 <main className="p-6 lg:p-10">
                     <div className="max-w-7xl mx-auto">
-                        
                         {/* REFINED HEADER */}
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6">
                             <div className="flex items-center gap-4">
-                                <button className="lg:hidden p-3 rounded-2xl bg-white shadow-sm border border-slate-200 text-slate-600" onClick={() => setSidebarOpen(true)}>
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                                <button
+                                    className="lg:hidden p-3 rounded-2xl bg-white shadow-sm border border-slate-200 text-slate-600"
+                                    onClick={() => setSidebarOpen(true)}
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 6h16M4 12h16M4 18h16"
+                                        />
+                                    </svg>
                                 </button>
                                 <div>
                                     <h1 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight capitalize">
                                         {activeTab.replace('-', ' ')}
                                     </h1>
                                     <p className="text-sm font-medium text-slate-500 mt-1">
-                                        {activeTab === 'browse' ? 'Find and manage your warehouse spaces.' : 'Manage your business account.'}
+                                        {activeTab === 'browse'
+                                            ? 'Find and manage your warehouse spaces.'
+                                            : 'Manage your business account.'}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <button 
+                                <button
                                     onClick={() => setShowSelectionModal(true)}
                                     className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-black text-xs shadow-lg shadow-orange-500/20 hover:scale-[1.05] transition-all"
                                 >
@@ -290,15 +413,23 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                 {/* Profile Pill */}
                                 <div className="flex items-center gap-3 bg-white px-3 py-2.5 rounded-full shadow-sm border border-slate-200 w-fit">
                                     {localUser?.photoURL ? (
-                                        <img src={localUser.photoURL} alt="Profile" className="w-9 h-9 rounded-full object-cover border border-slate-100" />
+                                        <img
+                                            src={localUser.photoURL}
+                                            alt="Profile"
+                                            className="w-9 h-9 rounded-full object-cover border border-slate-100"
+                                        />
                                     ) : (
                                         <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
                                             {localUser?.name ? localUser.name[0].toUpperCase() : 'C'}
                                         </div>
                                     )}
                                     <div className="pr-2">
-                                        <p className="text-xs font-black text-slate-800 leading-none mb-1">{(localUser?.name || 'Client').split(' ')[0]}</p>
-                                        <p className="text-[9px] font-bold uppercase tracking-widest text-blue-500 leading-none">Business</p>
+                                        <p className="text-xs font-black text-slate-800 leading-none mb-1">
+                                            {(localUser?.name || 'Client').split(' ')[0]}
+                                        </p>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-blue-500 leading-none">
+                                            Business
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -307,21 +438,57 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                         {/* Tabs Content */}
                         <AnimatePresence mode="wait">
                             {activeTab === 'browse' && (
-                                <motion.div key="browse" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                                <motion.div
+                                    key="browse"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
                                     {/* Metric Grid */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[
-                                            { title: "Warehouses", value: realWarehouses.length, icon: <Building2 className="w-4 h-4" />, color: "text-blue-600", bg: "bg-blue-50", path: "M5 25 Q 25 5, 50 15 T 95 5" },
-                                            { title: "Active Chats", value: realChats.length, icon: <MessageSquare className="w-4 h-4" />, color: "text-indigo-600", bg: "bg-indigo-50", path: "M5 20 Q 30 25, 50 10 T 95 5" },
-                                            { title: "Saved", value: wishlistedWarehouses.length, icon: <Star className="w-4 h-4" />, color: "text-emerald-600", bg: "bg-emerald-50", path: "M5 15 Q 25 25, 50 15 T 95 10" }
+                                            {
+                                                title: 'Warehouses',
+                                                value: realWarehouses.length,
+                                                icon: <Building2 className="w-4 h-4" />,
+                                                color: 'text-blue-600',
+                                                bg: 'bg-blue-50',
+                                                path: 'M5 25 Q 25 5, 50 15 T 95 5',
+                                            },
+                                            {
+                                                title: 'Active Chats',
+                                                value: realChats.length,
+                                                icon: <MessageSquare className="w-4 h-4" />,
+                                                color: 'text-indigo-600',
+                                                bg: 'bg-indigo-50',
+                                                path: 'M5 20 Q 30 25, 50 10 T 95 5',
+                                            },
+                                            {
+                                                title: 'Saved',
+                                                value: wishlistedWarehouses.length,
+                                                icon: <Star className="w-4 h-4" />,
+                                                color: 'text-emerald-600',
+                                                bg: 'bg-emerald-50',
+                                                path: 'M5 15 Q 25 25, 50 15 T 95 10',
+                                            },
                                         ].map((card, i) => (
-                                            <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                            <div
+                                                key={i}
+                                                className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm"
+                                            >
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <div className={`p-2 rounded-lg ${card.bg} ${card.color}`}>{card.icon}</div>
-                                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{card.title}</h3>
+                                                    <div className={`p-2 rounded-lg ${card.bg} ${card.color}`}>
+                                                        {card.icon}
+                                                    </div>
+                                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                        {card.title}
+                                                    </h3>
                                                 </div>
                                                 <div className="flex justify-between items-end">
-                                                    <span className="text-3xl font-bold text-slate-800"><AnimatedNumber value={card.value} /></span>
+                                                    <span className="text-3xl font-bold text-slate-800">
+                                                        <AnimatedNumber value={card.value} />
+                                                    </span>
                                                     <AnimatedTrendLine color={card.color} pathData={card.path} />
                                                 </div>
                                             </div>
@@ -340,32 +507,60 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                         ) : filteredWarehouses.length === 0 ? (
                                             <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-slate-200">
                                                 <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-                                                <p className="text-slate-500 font-bold">No verified properties found.</p>
+                                                <p className="text-slate-500 font-bold">
+                                                    No verified properties found.
+                                                </p>
                                             </div>
                                         ) : (
                                             filteredWarehouses.map((warehouse) => (
-                                                <WarehouseCard key={warehouse.id} id={warehouse.id} title={warehouse.warehouseName} location={`${warehouse.city}, ${warehouse.state}`} price={warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'} area={warehouse.totalArea?.toLocaleString()} type={warehouse.warehouseCategory} imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]} facilities={warehouse.amenities || []} amenities={warehouse.amenities || []} />
+                                                <WarehouseCard
+                                                    key={warehouse.id}
+                                                    id={warehouse.id}
+                                                    title={warehouse.warehouseName}
+                                                    location={`${warehouse.city}, ${warehouse.state}`}
+                                                    price={
+                                                        warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'
+                                                    }
+                                                    area={warehouse.totalArea?.toLocaleString()}
+                                                    type={warehouse.warehouseCategory}
+                                                    imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]}
+                                                    facilities={warehouse.amenities || []}
+                                                    amenities={warehouse.amenities || []}
+                                                />
                                             ))
                                         )}
                                     </div>
                                 </motion.div>
                             )}
-                            
+
                             {/* --- CHATS TAB --- */}
                             {activeTab === 'chats' && (
-                                <motion.div key="chats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                                <motion.div
+                                    key="chats"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="space-y-4"
+                                >
                                     {realChats.length === 0 ? (
                                         <div className="bg-white rounded-2xl p-20 text-center border border-slate-200">
                                             <Inbox className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                                             <p className="text-slate-500 font-bold">No active conversations yet.</p>
                                         </div>
                                     ) : (
-                                        realChats.map(chat => (
-                                            <div key={chat.id} onClick={() => setSelectedConv(chat)} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-400 cursor-pointer transition-all flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-blue-500"><MessageSquare /></div>
+                                        realChats.map((chat) => (
+                                            <div
+                                                key={chat.id}
+                                                onClick={() => setSelectedConv(chat)}
+                                                className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-400 cursor-pointer transition-all flex items-center gap-4"
+                                            >
+                                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-blue-500">
+                                                    <MessageSquare />
+                                                </div>
                                                 <div className="flex-1">
                                                     <h4 className="font-bold text-slate-800">{chat.warehouseName}</h4>
-                                                    <p className="text-sm text-slate-500 truncate">{chat.lastMessage}</p>
+                                                    <p className="text-sm text-slate-500 truncate">
+                                                        {chat.lastMessage}
+                                                    </p>
                                                 </div>
                                                 <ExternalLink className="w-4 h-4 text-slate-300" />
                                             </div>
@@ -376,14 +571,23 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
 
                             {/* --- SAVED TAB --- */}
                             {activeTab === 'saved' && (
-                                <motion.div key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                                <motion.div
+                                    key="saved"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
                                         <div>
                                             <h3 className="text-xl font-black text-slate-900">Saved Properties</h3>
-                                            <p className="text-sm text-slate-500 font-medium mt-1">You have {savedWarehouses.length} saved warehouse{savedWarehouses.length !== 1 ? 's' : ''}.</p>
+                                            <p className="text-sm text-slate-500 font-medium mt-1">
+                                                You have {savedWarehouses.length} saved warehouse
+                                                {savedWarehouses.length !== 1 ? 's' : ''}.
+                                            </p>
                                         </div>
                                         {savedWarehouses.length > 0 && (
-                                            <button 
+                                            <button
                                                 onClick={() => setShowBulkEnquiry(true)}
                                                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
                                             >
@@ -395,22 +599,32 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                         {savedWarehouses.length === 0 ? (
                                             <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-slate-200">
                                                 <Star className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                                                <p className="text-slate-500 font-bold text-lg">No saved properties yet.</p>
-                                                <p className="text-slate-400 text-sm mt-1">Browse the directory and click the heart icon to save warehouses here.</p>
+                                                <p className="text-slate-500 font-bold text-lg">
+                                                    No saved properties yet.
+                                                </p>
+                                                <p className="text-slate-400 text-sm mt-1">
+                                                    Browse the directory and click the heart icon to save warehouses
+                                                    here.
+                                                </p>
                                             </div>
                                         ) : (
                                             savedWarehouses.map((warehouse) => (
-                                                <WarehouseCard 
-                                                    key={warehouse.id} 
-                                                    id={warehouse.id} 
-                                                    title={warehouse.warehouseName} 
-                                                    location={`${warehouse.city || ''}, ${warehouse.state || ''}`.replace(/^, |^,$/, '')} 
-                                                    price={warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'} 
-                                                    area={warehouse.totalArea?.toLocaleString()} 
-                                                    type={warehouse.warehouseCategory} 
-                                                    imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]} 
-                                                    facilities={warehouse.amenities || []} 
-                                                    amenities={warehouse.amenities || []} 
+                                                <WarehouseCard
+                                                    key={warehouse.id}
+                                                    id={warehouse.id}
+                                                    title={warehouse.warehouseName}
+                                                    location={`${warehouse.city || ''}, ${warehouse.state || ''}`.replace(
+                                                        /^, |^,$/,
+                                                        ''
+                                                    )}
+                                                    price={
+                                                        warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'
+                                                    }
+                                                    area={warehouse.totalArea?.toLocaleString()}
+                                                    type={warehouse.warehouseCategory}
+                                                    imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]}
+                                                    facilities={warehouse.amenities || []}
+                                                    amenities={warehouse.amenities || []}
                                                 />
                                             ))
                                         )}
@@ -420,26 +634,53 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
 
                             {/* --- SETTINGS TAB --- */}
                             {activeTab === 'settings' && (
-                                <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl space-y-6">
+                                <motion.div
+                                    key="settings"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="max-w-3xl space-y-6"
+                                >
                                     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                                         <div className="h-24 bg-slate-100" />
                                         <div className="px-8 pb-8">
                                             <div className="relative w-24 h-24 -mt-12 mb-6 group">
                                                 <div className="w-full h-full rounded-2xl border-4 border-white bg-slate-200 overflow-hidden">
-                                                    {localUser?.photoURL ? <img src={localUser.photoURL} className="w-full h-full object-cover" /> : <User className="w-full h-full p-4 text-slate-400" />}
+                                                    {localUser?.photoURL ? (
+                                                        <img
+                                                            src={localUser.photoURL}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <User className="w-full h-full p-4 text-slate-400" />
+                                                    )}
                                                 </div>
                                                 <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer rounded-2xl transition-all">
                                                     <Camera className="text-white w-6 h-6" />
-                                                    <input type="file" className="hidden" onChange={handleImageUpload} />
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        onChange={handleImageUpload}
+                                                    />
                                                 </label>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <InfoField icon={<User size={16}/>} label="Full Name" value={localUser?.name} />
-                                                <InfoField icon={<Mail size={16}/>} label="Email Address" value={localUser?.email} />
+                                                <InfoField
+                                                    icon={<User size={16} />}
+                                                    label="Full Name"
+                                                    value={localUser?.name}
+                                                />
+                                                <InfoField
+                                                    icon={<Mail size={16} />}
+                                                    label="Email Address"
+                                                    value={localUser?.email}
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                    <button onClick={onLogout} className="flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold border border-rose-100 hover:bg-rose-100 transition-all">
+                                    <button
+                                        onClick={onLogout}
+                                        className="flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold border border-rose-100 hover:bg-rose-100 transition-all"
+                                    >
                                         <LogOut size={18} /> Secure Logout
                                     </button>
                                 </motion.div>
@@ -452,22 +693,62 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             {/* MODALS (Outside of Main Scroll) */}
             <AnimatePresence>
                 {selectedConv && (
-                    <motion.div key="chat-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100]">
-                        <ChatBox warehouse={{ id: selectedConv.warehouseId, name: 'Warehouse Inquiry', ownerId: selectedConv.ownerId, ownerName: selectedConv.ownerName }} user={user} onClose={() => setSelectedConv(null)} />
+                    <motion.div
+                        key="chat-modal"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100]"
+                    >
+                        <ChatBox
+                            warehouse={{
+                                id: selectedConv.warehouseId,
+                                name: 'Warehouse Inquiry',
+                                ownerId: selectedConv.ownerId,
+                                ownerName: selectedConv.ownerName,
+                            }}
+                            user={user}
+                            onClose={() => setSelectedConv(null)}
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
                 {showBulkEnquiry && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl"
+                        >
                             <h3 className="text-2xl font-black text-slate-900 mb-2">Bulk Enquiry</h3>
-                            <p className="text-sm text-slate-500 mb-6">Sending to {savedWarehouses.length} properties.</p>
-                            <textarea value={bulkEnquiryText} onChange={e => setBulkEnquiryText(e.target.value)} placeholder="Enter your message..." className="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none mb-6 font-medium" />
+                            <p className="text-sm text-slate-500 mb-6">
+                                Sending to {savedWarehouses.length} properties.
+                            </p>
+                            <textarea
+                                value={bulkEnquiryText}
+                                onChange={(e) => setBulkEnquiryText(e.target.value)}
+                                placeholder="Enter your message..."
+                                className="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none mb-6 font-medium"
+                            />
                             <div className="flex gap-3 justify-end">
-                                <button onClick={() => setShowBulkEnquiry(false)} className="px-6 py-2.5 font-bold text-slate-500">Cancel</button>
-                                <button onClick={handleSendBulkEnquiry} disabled={sendingBulk} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200">
+                                <button
+                                    onClick={() => setShowBulkEnquiry(false)}
+                                    className="px-6 py-2.5 font-bold text-slate-500"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSendBulkEnquiry}
+                                    disabled={sendingBulk}
+                                    className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200"
+                                >
                                     {sendingBulk ? 'Broadcasting...' : 'Send All'}
                                 </button>
                             </div>
@@ -477,8 +758,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             </AnimatePresence>
 
             {/* INQUIRY MODALS */}
-            <InquirySelectionModal 
-                isOpen={showSelectionModal} 
+            <InquirySelectionModal
+                isOpen={showSelectionModal}
                 onClose={() => setShowSelectionModal(false)}
                 onSelect={(type) => {
                     setShowSelectionModal(false);
@@ -486,14 +767,10 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     else setShowDetailedModal(true);
                 }}
             />
-            <QuickInquiryModal 
-                isOpen={showQuickModal} 
-                onClose={() => setShowQuickModal(false)} 
-                user={localUser}
-            />
-            <DetailedInquiryModal 
-                isOpen={showDetailedModal} 
-                onClose={() => setShowDetailedModal(false)} 
+            <QuickInquiryModal isOpen={showQuickModal} onClose={() => setShowQuickModal(false)} user={localUser} />
+            <DetailedInquiryModal
+                isOpen={showDetailedModal}
+                onClose={() => setShowDetailedModal(false)}
                 user={localUser}
             />
         </motion.div>

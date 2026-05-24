@@ -24,10 +24,10 @@
    Change these to update the entire design system.
    ─────────────────────────────────────────────────────────────── */
 :root {
-  --foreground: #0f172a;       /* Slate-900 — primary text color */
-  --background: #ffffff;        /* White — page background */
-  --font-size-base: 17px;       /* Slightly larger than default 16px for readability */
-  --line-height-base: 1.65;     /* Generous line height for comfortable reading */
+    --foreground: #0f172a; /* Slate-900 — primary text color */
+    --background: #ffffff; /* White — page background */
+    --font-size-base: 17px; /* Slightly larger than default 16px for readability */
+    --line-height-base: 1.65; /* Generous line height for comfortable reading */
 }
 
 /* ── Base Element Styles ─────────────────────────────────────────
@@ -36,24 +36,24 @@
    ─────────────────────────────────────────────────────────────── */
 
 html {
-  scroll-behavior: smooth;              /* Enables smooth scrolling for anchor links (#login, #features, etc.) */
-  font-size: var(--font-size-base);     /* Sets the base font size for rem calculations */
+    scroll-behavior: smooth; /* Enables smooth scrolling for anchor links (#login, #features, etc.) */
+    font-size: var(--font-size-base); /* Sets the base font size for rem calculations */
 }
 
 body {
-  color: var(--foreground);             /* Default text color (dark slate) */
-  background: var(--background);        /* Page background color (white) */
-  line-height: var(--line-height-base); /* Default line height for body text */
+    color: var(--foreground); /* Default text color (dark slate) */
+    background: var(--background); /* Page background color (white) */
+    line-height: var(--line-height-base); /* Default line height for body text */
 }
 
 /* ── Tailwind Utility Extensions ─────────────────────────────────
    Custom utility classes that extend Tailwind's built-in set.
    ─────────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* text-balance: Improves text wrapping to avoid orphaned words */
-  .text-balance {
-    text-wrap: balance;
-  }
+    /* text-balance: Improves text wrapping to avoid orphaned words */
+    .text-balance {
+        text-wrap: balance;
+    }
 }
 
 /* ── Custom Scrollbar (WebKit browsers: Chrome, Edge, Safari) ────
@@ -62,21 +62,21 @@ body {
    ─────────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
-  width: 10px;                          /* Vertical scrollbar width */
-  height: 10px;                         /* Horizontal scrollbar height */
+    width: 10px; /* Vertical scrollbar width */
+    height: 10px; /* Horizontal scrollbar height */
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;                  /* Track background (slate-100) */
+    background: #f1f5f9; /* Track background (slate-100) */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;                  /* Thumb color (slate-300) */
-  border-radius: 5px;                   /* Rounded thumb corners */
+    background: #cbd5e1; /* Thumb color (slate-300) */
+    border-radius: 5px; /* Rounded thumb corners */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #f97316;                  /* Orange thumb on hover (brand color) */
+    background: #f97316; /* Orange thumb on hover (brand color) */
 }
 
 /* ── Inquiry Modal Custom Scrollbar ──────────────────────────────
@@ -84,30 +84,29 @@ body {
    so it sits beautifully inside the rounded card layout.
    ─────────────────────────────────────────────────────────────── */
 .inquiry-modal-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
 }
 
 .inquiry-modal-scroll::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 
 .inquiry-modal-scroll::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 .inquiry-modal-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;                  /* Thumb color (slate-300) */
-  border-radius: 9999px;                /* Fully rounded thumb */
-  border: 2px solid transparent;        /* Insets the thumb by creating transparent border */
-  background-clip: padding-box;
+    background: #cbd5e1; /* Thumb color (slate-300) */
+    border-radius: 9999px; /* Fully rounded thumb */
+    border: 2px solid transparent; /* Insets the thumb by creating transparent border */
+    background-clip: padding-box;
 }
 
 .inquiry-modal-scroll::-webkit-scrollbar-thumb:hover {
-  background: #f97316;                  /* Hover color (brand orange) */
-  background-clip: padding-box;
+    background: #f97316; /* Hover color (brand orange) */
+    background-clip: padding-box;
 }
-
 
 /* ── Layout Containment for Performance ──────────────────────────
    CSS containment hints to the browser that these elements'
@@ -117,13 +116,13 @@ body {
 
 /* Sidebar container — uses will-change for smooth width transitions */
 .group.w-20 {
-  will-change: width;
-  contain: layout style;
+    will-change: width;
+    contain: layout style;
 }
 
 /* Main content area — contained to prevent layout thrashing */
 main.flex-1 {
-  contain: layout style;
+    contain: layout style;
 }
 
 /* ── Focus & Selection Styles ────────────────────────────────────
@@ -133,12 +132,12 @@ main.flex-1 {
 
 /* Visible focus ring for keyboard navigation (orange outline) */
 *:focus-visible {
-  outline: 2px solid #f97316;
-  outline-offset: 2px;
+    outline: 2px solid #f97316;
+    outline-offset: 2px;
 }
 
 /* Text selection highlighting with brand orange background */
 ::selection {
-  background-color: #f97316;
-  color: white;
+    background-color: #f97316;
+    color: white;
 }

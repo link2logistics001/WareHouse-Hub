@@ -24,11 +24,11 @@
 
 // Fonts: Fira_Sans = primary font for all text
 // Matches the CSS variable already wired in tailwind.config.js.
-import { Fira_Sans } from 'next/font/google'
-import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
-import { CountryProvider } from '@/contexts/CountryContext'
-import { Analytics } from '@vercel/analytics/react'
+import { Fira_Sans } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { CountryProvider } from '@/contexts/CountryContext';
+import { Analytics } from '@vercel/analytics/react';
 
 /**
  * Configure Fira Sans font with:
@@ -38,32 +38,31 @@ import { Analytics } from '@vercel/analytics/react'
  * - Multiple weights (400-700) and styles (normal, italic)
  */
 const firaSans = Fira_Sans({
-  subsets: ['latin'],
-  variable: '--font-fira-sans',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-})
+    subsets: ['latin'],
+    variable: '--font-fira-sans',
+    display: 'swap',
+    weight: ['400', '500', '600', '700'],
+    style: ['normal', 'italic'],
+});
 
 /**
  * SEO Metadata — used by Next.js to generate <head> tags.
  * Includes title, description, favicon variants, and web manifest.
  */
 export const metadata = {
-  title: 'Link2Logistics | Smart Warehouse Management',
-  description: 'Streamline your logistics with real-time inventory, smart tracking, and seamless operations. The complete warehouse management platform.',
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
-  manifest: '/site.webmanifest',
-}
+    title: 'Link2Logistics | Smart Warehouse Management',
+    description:
+        'Streamline your logistics with real-time inventory, smart tracking, and seamless operations. The complete warehouse management platform.',
+    icons: {
+        icon: [
+            { url: '/favicon.ico', sizes: 'any' },
+            { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+            { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+        ],
+        apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
+    manifest: '/site.webmanifest',
+};
 
 /**
  * Viewport configuration — controls the browser's viewport behavior.
@@ -71,11 +70,11 @@ export const metadata = {
  * - maximumScale: 5 allows zoom up to 5x for accessibility
  */
 export const viewport = {
-  themeColor: '#f97316',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-}
+    themeColor: '#f97316',
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+};
 
 /**
  * RootLayout — The outermost layout component.
@@ -88,19 +87,19 @@ export const viewport = {
  * @param {React.ReactNode} props.children — The page content rendered inside
  */
 export default function RootLayout({ children }) {
-  return (
-    <html lang="en" className={firaSans.variable} suppressHydrationWarning>
-      <body className="font-sans antialiased" suppressHydrationWarning>
-        {/* AuthProvider: Makes user/loading/setUser available app-wide */}
-        <AuthProvider>
-          {/* CountryProvider: Makes currency/units/locale available app-wide */}
-          <CountryProvider>
-            {children}
-            {/* Vercel Analytics: Tracks page views and web vitals */}
-            <Analytics />
-          </CountryProvider>
-        </AuthProvider>
-      </body>
-    </html>
-  )
+    return (
+        <html lang="en" className={firaSans.variable} suppressHydrationWarning>
+            <body className="font-sans antialiased" suppressHydrationWarning>
+                {/* AuthProvider: Makes user/loading/setUser available app-wide */}
+                <AuthProvider>
+                    {/* CountryProvider: Makes currency/units/locale available app-wide */}
+                    <CountryProvider>
+                        {children}
+                        {/* Vercel Analytics: Tracks page views and web vitals */}
+                        <Analytics />
+                    </CountryProvider>
+                </AuthProvider>
+            </body>
+        </html>
+    );
 }

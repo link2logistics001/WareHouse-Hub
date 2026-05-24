@@ -141,8 +141,8 @@ function getClientIp(request) {
  * Suitable for most API endpoints.
  */
 export const apiLimiter = rateLimit({
-    interval: 60_000,           // 1 minute
-    limit: 30,                  // 30 requests per window
+    interval: 60_000, // 1 minute
+    limit: 30, // 30 requests per window
     uniqueTokenPerInterval: 500,
 });
 
@@ -151,11 +151,10 @@ export const apiLimiter = rateLimit({
  * Stricter limit for login / registration / password-reset endpoints.
  */
 export const authLimiter = rateLimit({
-    interval: 60_000,           // 1 minute
-    limit: 5,                   // 5 requests per window
+    interval: 60_000, // 1 minute
+    limit: 5, // 5 requests per window
     uniqueTokenPerInterval: 500,
 });
-
 
 /**
  * Helper to create a 429 Too Many Requests response with Retry-After header.
