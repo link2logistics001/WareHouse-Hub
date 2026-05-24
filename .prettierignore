@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.vscode/
+public/
+build/
+dist/
+*.lock
+package-lock.json

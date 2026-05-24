@@ -26,13 +26,13 @@ import { Resend } from 'resend';
  * @returns {{ success: boolean, data?: object, error?: string | object }}
  */
 export const sendVerificationEmail = async (email, name, verificationLink) => {
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { data, error } = await resend.emails.send({
-      from: 'Link2Logistics <onboarding@resend.dev>', // You should update this to your domain later
-      to: [email],
-      subject: 'Verify your Link2Logistics account',
-      html: `
+    try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { data, error } = await resend.emails.send({
+            from: 'Link2Logistics <onboarding@resend.dev>', // You should update this to your domain later
+            to: [email],
+            subject: 'Verify your Link2Logistics account',
+            html: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -72,17 +72,17 @@ export const sendVerificationEmail = async (email, name, verificationLink) => {
           </div>
         </body>
         </html>
-      `
-    });
+      `,
+        });
 
-    if (error) {
-      console.error('Error sending verification email:', error);
-      return { success: false, error };
+        if (error) {
+            console.error('Error sending verification email:', error);
+            return { success: false, error };
+        }
+
+        return { success: true, data };
+    } catch (err) {
+        console.error('Email service exception:', err);
+        return { success: false, error: err.message };
     }
-
-    return { success: true, data };
-  } catch (err) {
-    console.error('Email service exception:', err);
-    return { success: false, error: err.message };
-  }
 };

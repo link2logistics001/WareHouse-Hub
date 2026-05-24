@@ -33,108 +33,114 @@ import { useAuth } from '@/contexts/AuthContext';
  *  - loading: boolean — Whether the initial wishlist data is still loading
  */
 export function useWishlist() {
-  const { user } = useAuth();
+    const { user } = useAuth();
 
-  // Array of warehouse IDs that the user has wishlisted
-  const [wishlistedWarehouses, setWishlistedWarehouses] = useState([]);
+    // Array of warehouse IDs that the user has wishlisted
+    const [wishlistedWarehouses, setWishlistedWarehouses] = useState([]);
 
-  // Loading state for the initial Firestore fetch
-  const [loading, setLoading] = useState(true);
+    // Loading state for the initial Firestore fetch
+    const [loading, setLoading] = useState(true);
 
-  /**
-   * Effect: Subscribe to real-time wishlist updates from Firestore.
-   *
-   * - Only subscribes for business_client users (other roles don't have wishlists)
-   * - Uses onSnapshot for instant updates when wishlist changes
-   * - Automatically cleans up the listener on unmount or user change
-   */
-  useEffect(() => {
-    // Only business clients have wishlists
-    if (!user || user.userType !== 'business_client') {
-      setWishlistedWarehouses([]);
-      setLoading(false);
-      return;
-    }
-
-    // Subscribe to the user's Firestore document for real-time wishlist updates
-    const docRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(
-      docRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          // Extract the wishlistedWarehouses array (default to empty)
-          setWishlistedWarehouses(data.wishlistedWarehouses || []);
-        } else {
-          setWishlistedWarehouses([]);
+    /**
+     * Effect: Subscribe to real-time wishlist updates from Firestore.
+     *
+     * - Only subscribes for business_client users (other roles don't have wishlists)
+     * - Uses onSnapshot for instant updates when wishlist changes
+     * - Automatically cleans up the listener on unmount or user change
+     */
+    useEffect(() => {
+        // Only business clients have wishlists
+        if (!user || user.userType !== 'business_client') {
+            setWishlistedWarehouses([]);
+            setLoading(false);
+            return;
         }
-        setLoading(false);
-      },
-      (error) => {
-        console.error('Error fetching wishlist:', error);
-        setLoading(false);
-      }
+
+        // Subscribe to the user's Firestore document for real-time wishlist updates
+        const docRef = doc(db, 'users', user.uid);
+        const unsubscribe = onSnapshot(
+            docRef,
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Extract the wishlistedWarehouses array (default to empty)
+                    setWishlistedWarehouses(data.wishlistedWarehouses || []);
+                } else {
+                    setWishlistedWarehouses([]);
+                }
+                setLoading(false);
+            },
+            (error) => {
+                console.error('Error fetching wishlist:', error);
+                setLoading(false);
+            }
+        );
+
+        // Cleanup: Unsubscribe from Firestore listener when user changes or component unmounts
+        return () => unsubscribe();
+    }, [user]);
+
+    /**
+     * toggleWishlist — Adds or removes a warehouse from the user's wishlist.
+     *
+     * Uses Firestore's atomic array operations:
+     *  - arrayRemove: Removes the ID if it's currently in the array
+     *  - arrayUnion: Adds the ID if it's not already in the array
+     *
+     * @param {string} warehouseId — The warehouse ID to toggle
+     * @param {Event} e — The click event (used to prevent card navigation)
+     */
+    const toggleWishlist = useCallback(
+        async (warehouseId, e) => {
+            // Prevent the click from triggering the parent card's onClick (routing)
+            if (e && e.stopPropagation) {
+                e.stopPropagation();
+            }
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
+
+            // Only business clients can use the wishlist
+            if (!user || user.userType !== 'business_client') return;
+
+            try {
+                const docRef = doc(db, 'users', user.uid);
+                const isCurrentlyWishlisted = wishlistedWarehouses.includes(warehouseId);
+
+                // Toggle: remove if already wishlisted, add if not
+                if (isCurrentlyWishlisted) {
+                    await updateDoc(docRef, {
+                        wishlistedWarehouses: arrayRemove(warehouseId),
+                    });
+                } else {
+                    await updateDoc(docRef, {
+                        wishlistedWarehouses: arrayUnion(warehouseId),
+                    });
+                }
+            } catch (error) {
+                console.error('Error toggling wishlist:', error);
+            }
+        },
+        [user, wishlistedWarehouses]
     );
 
-    // Cleanup: Unsubscribe from Firestore listener when user changes or component unmounts
-    return () => unsubscribe();
-  }, [user]);
+    /**
+     * isWishlisted — Check if a specific warehouse is in the user's wishlist.
+     *
+     * @param {string} warehouseId — The warehouse ID to check
+     * @returns {boolean} True if the warehouse is wishlisted
+     */
+    const isWishlisted = useCallback(
+        (warehouseId) => {
+            return wishlistedWarehouses.includes(warehouseId);
+        },
+        [wishlistedWarehouses]
+    );
 
-  /**
-   * toggleWishlist — Adds or removes a warehouse from the user's wishlist.
-   *
-   * Uses Firestore's atomic array operations:
-   *  - arrayRemove: Removes the ID if it's currently in the array
-   *  - arrayUnion: Adds the ID if it's not already in the array
-   *
-   * @param {string} warehouseId — The warehouse ID to toggle
-   * @param {Event} e — The click event (used to prevent card navigation)
-   */
-  const toggleWishlist = useCallback(async (warehouseId, e) => {
-    // Prevent the click from triggering the parent card's onClick (routing)
-    if (e && e.stopPropagation) {
-      e.stopPropagation();
-    }
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-
-    // Only business clients can use the wishlist
-    if (!user || user.userType !== 'business_client') return;
-
-    try {
-      const docRef = doc(db, 'users', user.uid);
-      const isCurrentlyWishlisted = wishlistedWarehouses.includes(warehouseId);
-
-      // Toggle: remove if already wishlisted, add if not
-      if (isCurrentlyWishlisted) {
-        await updateDoc(docRef, {
-          wishlistedWarehouses: arrayRemove(warehouseId)
-        });
-      } else {
-        await updateDoc(docRef, {
-          wishlistedWarehouses: arrayUnion(warehouseId)
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling wishlist:', error);
-    }
-  }, [user, wishlistedWarehouses]);
-
-  /**
-   * isWishlisted — Check if a specific warehouse is in the user's wishlist.
-   *
-   * @param {string} warehouseId — The warehouse ID to check
-   * @returns {boolean} True if the warehouse is wishlisted
-   */
-  const isWishlisted = useCallback((warehouseId) => {
-    return wishlistedWarehouses.includes(warehouseId);
-  }, [wishlistedWarehouses]);
-
-  return {
-    wishlistedWarehouses,
-    toggleWishlist,
-    isWishlisted,
-    loading
-  };
+    return {
+        wishlistedWarehouses,
+        toggleWishlist,
+        isWishlisted,
+        loading,
+    };
 }

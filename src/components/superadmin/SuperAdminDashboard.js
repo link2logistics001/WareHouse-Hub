@@ -40,28 +40,77 @@
 
 import { useEffect, useState, useRef } from 'react';
 import {
-    collection, collectionGroup, query, getDocs, doc, updateDoc,
-    serverTimestamp, orderBy, onSnapshot, where
+    collection,
+    collectionGroup,
+    query,
+    getDocs,
+    doc,
+    updateDoc,
+    serverTimestamp,
+    orderBy,
+    onSnapshot,
+    where,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatPrice } from '@/lib/locale';
 import { logoutUser } from '@/lib/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    LayoutDashboard, Warehouse, CheckCircle2, XCircle, Clock,
-    LogOut, Search, RefreshCw, ChevronDown, ChevronUp,
-    MapPin, Shield, AlertTriangle, X, Wifi, WifiOff,
-    Settings, Package, Building2, Tag, Loader2, Database,
-    Image, Eye, ChevronLeft, ChevronRight, ZoomIn,
-    Users, UserX, Ban, UserSquare2, Activity, MessageSquarePlus,
-    Zap, FileText, FileSearch, Trash2, Edit3, Filter, MoreVertical,
-    FileCheck, ExternalLink, Mail, Phone, Info, Map as MapIcon,
-    ChevronRight as ChevronRightIcon, TrendingUp, Sparkles, User, FileUp
+    LayoutDashboard,
+    Warehouse,
+    CheckCircle2,
+    XCircle,
+    Clock,
+    LogOut,
+    Search,
+    RefreshCw,
+    ChevronDown,
+    ChevronUp,
+    MapPin,
+    Shield,
+    AlertTriangle,
+    X,
+    Wifi,
+    WifiOff,
+    Settings,
+    Package,
+    Building2,
+    Tag,
+    Loader2,
+    Database,
+    Image,
+    Eye,
+    ChevronLeft,
+    ChevronRight,
+    ZoomIn,
+    Users,
+    UserX,
+    Ban,
+    UserSquare2,
+    Activity,
+    MessageSquarePlus,
+    Zap,
+    FileText,
+    FileSearch,
+    Trash2,
+    Edit3,
+    Filter,
+    MoreVertical,
+    FileCheck,
+    ExternalLink,
+    Mail,
+    Phone,
+    Info,
+    Map as MapIcon,
+    ChevronRight as ChevronRightIcon,
+    TrendingUp,
+    Sparkles,
+    User,
+    FileUp,
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
-
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -73,7 +122,13 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
         { id: 'assign-admin', label: 'Assign Admin', icon: Shield },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
         { id: 'block-people', label: 'Block People', icon: Users },
-        { id: 'analytics', label: 'Analytics', icon: Activity, isExternal: true, href: 'https://vercel.com/link2logistics001-7602s-projects/ware-house-hub/analytics' },
+        {
+            id: 'analytics',
+            label: 'Analytics',
+            icon: Activity,
+            isExternal: true,
+            href: 'https://vercel.com/link2logistics001-7602s-projects/ware-house-hub/analytics',
+        },
     ];
 
     return (
@@ -81,17 +136,23 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
             {/* Brand */}
             <div className="p-6 border-b border-slate-100 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white shadow-sm overflow-hidden border border-orange-100">
-                    <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain p-0.5" />
+                    <img
+                        src="/android-chrome-192x192.png"
+                        alt="L2L Logo"
+                        className="w-full h-full object-contain p-0.5"
+                    />
                 </div>
                 <div>
                     <span className="text-base font-bold text-slate-900 leading-none block">Link2Logistics</span>
-                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Super Admin Panel</span>
+                    <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+                        Super Admin Panel
+                    </span>
                 </div>
             </div>
 
             {/* Nav */}
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {menuItems.map((item) => (
+                {menuItems.map((item) =>
                     item.isExternal ? (
                         <a
                             key={item.id}
@@ -102,20 +163,33 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
                         >
                             <item.icon className="w-5 h-5 text-slate-400" />
                             <span className="flex-1 text-left">{item.label}</span>
-                            <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <svg
+                                className="w-4 h-4 text-slate-300"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
                             </svg>
                         </a>
                     ) : (
                         <button
                             key={item.id}
                             onClick={() => setActiveView(item.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeView === item.id
-                                ? 'bg-orange-50 text-orange-700 shadow-sm'
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                }`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                                activeView === item.id
+                                    ? 'bg-orange-50 text-orange-700 shadow-sm'
+                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
                         >
-                            <item.icon className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`} />
+                            <item.icon
+                                className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`}
+                            />
                             <span className="flex-1 text-left">{item.label}</span>
                             {item.badge ? (
                                 <span className="bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
@@ -124,7 +198,7 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
                             ) : null}
                         </button>
                     )
-                ))}
+                )}
             </nav>
 
             {/* Bottom */}
@@ -177,7 +251,9 @@ export default function SuperAdminDashboard({ user, onLogout }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => { setMounted(true); }, []);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Persist activeView to sessionStorage so it survives page reloads
     useEffect(() => {
@@ -190,18 +266,19 @@ export default function SuperAdminDashboard({ user, onLogout }) {
         if (!user) return;
         setLoading(true);
         const cg = collectionGroup(db, 'warehouses');
-        const unsub = onSnapshot(cg,
+        const unsub = onSnapshot(
+            cg,
             (snap) => {
-                const allWarehouses = snap.docs.map(d => {
+                const allWarehouses = snap.docs.map((d) => {
                     const data = d.data();
                     // Extract role and email from path: warehouse_details/{role}/emails/{email}/warehouses/{id}
                     const segments = d.ref.path.split('/');
                     return {
                         id: d.id,
                         ...data,
-                        _role: segments[1],       // 'owner' or 'dataentry'
-                        _email: segments[3],       // user email (after 'emails' at index 2)
-                        _docPath: d.ref.path,      // full path for updates
+                        _role: segments[1], // 'owner' or 'dataentry'
+                        _email: segments[3], // user email (after 'emails' at index 2)
+                        _docPath: d.ref.path, // full path for updates
                     };
                 });
                 // Sort by createdAt descending
@@ -224,9 +301,10 @@ export default function SuperAdminDashboard({ user, onLogout }) {
         if (!user || user.userType !== 'superadmin') return;
         setUsersLoading(true);
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-        const unsub = onSnapshot(q,
+        const unsub = onSnapshot(
+            q,
             (snap) => {
-                const allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const allUsers = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
                 setUsers(allUsers);
                 setUsersLoading(false);
             },
@@ -244,12 +322,12 @@ export default function SuperAdminDashboard({ user, onLogout }) {
     };
 
     const handleAction = async (warehouseId, newStatus, docPath) => {
-        setActionLoading(prev => ({ ...prev, [warehouseId]: newStatus }));
+        setActionLoading((prev) => ({ ...prev, [warehouseId]: newStatus }));
         try {
             // docPath is always available from collectionGroup results
             if (!docPath) {
                 showToast('Cannot update: missing document path.', 'error');
-                setActionLoading(prev => ({ ...prev, [warehouseId]: null }));
+                setActionLoading((prev) => ({ ...prev, [warehouseId]: null }));
                 return;
             }
             const docRef = doc(db, docPath);
@@ -266,7 +344,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
             console.error('Action failed:', err);
             showToast('Action failed. Please try again.', 'error');
         } finally {
-            setActionLoading(prev => ({ ...prev, [warehouseId]: null }));
+            setActionLoading((prev) => ({ ...prev, [warehouseId]: null }));
         }
     };
 
@@ -281,21 +359,26 @@ export default function SuperAdminDashboard({ user, onLogout }) {
     };
 
     const handleLogout = async () => {
-        try { await logoutUser(); } catch { /* non-critical */ }
+        try {
+            await logoutUser();
+        } catch {
+            /* non-critical */
+        }
         onLogout?.();
     };
 
     const counts = {
         all: warehouses.length,
-        pending: warehouses.filter(w => w.status === 'pending').length,
-        approved: warehouses.filter(w => w.status === 'approved').length,
-        rejected: warehouses.filter(w => w.status === 'rejected').length,
+        pending: warehouses.filter((w) => w.status === 'pending').length,
+        approved: warehouses.filter((w) => w.status === 'approved').length,
+        rejected: warehouses.filter((w) => w.status === 'rejected').length,
     };
 
-    const filtered = warehouses.filter(w => {
+    const filtered = warehouses.filter((w) => {
         const matchFilter = filter === 'all' || w.status === filter;
         const q = search.toLowerCase();
-        const matchSearch = !q ||
+        const matchSearch =
+            !q ||
             w.warehouseName?.toLowerCase().includes(q) ||
             w.contactPerson?.toLowerCase().includes(q) ||
             w.email?.toLowerCase().includes(q) ||
@@ -341,11 +424,14 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                             animate={{ x: 0 }}
                             exit={{ x: -260 }}
                             transition={{ type: 'tween', duration: 0.25 }}
-                            onClick={e => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <SuperAdminSidebar
                                 activeView={activeView}
-                                setActiveView={(v) => { setActiveView(v); setSidebarOpen(false); }}
+                                setActiveView={(v) => {
+                                    setActiveView(v);
+                                    setSidebarOpen(false);
+                                }}
                                 user={user}
                                 onLogout={handleLogout}
                                 pendingCount={counts.pending}
@@ -365,7 +451,12 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                             onClick={() => setSidebarOpen(true)}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
                             </svg>
                         </button>
                         <AnimatePresence mode="wait">
@@ -377,7 +468,13 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 exit={{ x: 20, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeView === 'overview' ? 'Overview' : activeView === 'warehouses' ? 'Warehouse Listings' : activeView === 'assign-admin' ? 'Assign Admin' : 'User Management'}
+                                {activeView === 'overview'
+                                    ? 'Overview'
+                                    : activeView === 'warehouses'
+                                      ? 'Warehouse Listings'
+                                      : activeView === 'assign-admin'
+                                        ? 'Assign Admin'
+                                        : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -433,9 +530,9 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 exit={{ y: -20, opacity: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <BlockPeopleView 
-                                    users={users} 
-                                    loading={usersLoading} 
+                                <BlockPeopleView
+                                    users={users}
+                                    loading={usersLoading}
                                     handleBlockUser={handleBlockUser}
                                     onViewWarehouses={(email) => {
                                         setSearch(email);
@@ -443,7 +540,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                         setActiveView('warehouses');
                                     }}
                                 />
-                                </motion.div>
+                            </motion.div>
                         ) : activeView === 'inquiries' ? (
                             <motion.div
                                 key="inquiries"
@@ -477,12 +574,15 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
-                            }`}
+                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${
+                            toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+                        }`}
                     >
-                        {toast.type === 'success'
-                            ? <CheckCircle2 className="w-4 h-4" />
-                            : <AlertTriangle className="w-4 h-4" />}
+                        {toast.type === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                            <AlertTriangle className="w-4 h-4" />
+                        )}
                         {toast.msg}
                     </motion.div>
                 )}
@@ -492,7 +592,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
 }
 
 function OverviewView({ counts, warehouses }) {
-    const recentPending = warehouses.filter(w => w.status === 'pending').slice(0, 5);
+    const recentPending = warehouses.filter((w) => w.status === 'pending').slice(0, 5);
 
     const stats = [
         { label: 'Total Listings', value: counts.all, icon: <Building2 className="w-6 h-6" />, color: 'blue' },
@@ -512,7 +612,7 @@ function OverviewView({ counts, warehouses }) {
         <div className="space-y-6">
             {/* Stat cards - matches merchant/owner dashboard style */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {stats.map(s => (
+                {stats.map((s) => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
                         <div className="flex items-center gap-3 mb-2">
                             <span className="flex items-center justify-center opacity-80">{s.icon}</span>
@@ -534,17 +634,25 @@ function OverviewView({ counts, warehouses }) {
                         </span>
                     </div>
                     <div className="space-y-3">
-                        {recentPending.map(w => (
-                            <div key={w.id} className="flex items-center justify-between p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                        {recentPending.map((w) => (
+                            <div
+                                key={w.id}
+                                className="flex items-center justify-between p-4 bg-amber-50 border border-amber-100 rounded-xl"
+                            >
                                 <div>
-                                    <p className="font-semibold text-slate-900 text-sm">{w.warehouseName || 'Unnamed Warehouse'}</p>
+                                    <p className="font-semibold text-slate-900 text-sm">
+                                        {w.warehouseName || 'Unnamed Warehouse'}
+                                    </p>
                                     <p className="text-slate-500 text-xs mt-0.5">
                                         {[w.city, w.state].filter(Boolean).join(', ')} • {w.contactPerson || '-'}
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
                                     {w.createdAt?.seconds
-                                        ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                                        ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
+                                              day: 'numeric',
+                                              month: 'short',
+                                          })
                                         : 'Just now'}
                                 </span>
                             </div>
@@ -563,9 +671,18 @@ function OverviewView({ counts, warehouses }) {
 }
 
 function WarehouseListView({
-    filtered, loading, error, filter, setFilter,
-    search, setSearch, counts, handleAction,
-    actionLoading, expandedRow, setExpandedRow
+    filtered,
+    loading,
+    error,
+    filter,
+    setFilter,
+    search,
+    setSearch,
+    counts,
+    handleAction,
+    actionLoading,
+    expandedRow,
+    setExpandedRow,
 }) {
     const filterTabs = [
         { key: 'all', label: 'All', count: counts.all },
@@ -580,18 +697,22 @@ function WarehouseListView({
             <div className="flex flex-wrap items-center gap-3 justify-between">
                 {/* Tabs */}
                 <div className="flex gap-1 bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
-                    {filterTabs.map(tab => (
+                    {filterTabs.map((tab) => (
                         <button
                             key={tab.key}
                             onClick={() => setFilter(tab.key)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${filter === tab.key
-                                ? 'bg-orange-600 text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                                }`}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                                filter === tab.key
+                                    ? 'bg-orange-600 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                            }`}
                         >
                             {tab.label}
-                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                                }`}>
+                            <span
+                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                                }`}
+                            >
                                 {tab.count}
                             </span>
                         </button>
@@ -603,7 +724,7 @@ function WarehouseListView({
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                         value={search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search name, owner, city..."
                         className="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all shadow-sm"
                     />
@@ -629,13 +750,15 @@ function WarehouseListView({
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     {/* Table head */}
                     <div className="hidden md:grid grid-cols-[2fr_1.5fr_1.2fr_0.8fr_1fr_1.1fr] gap-3 px-5 py-3 bg-slate-50 border-b border-slate-100">
-                        {['Warehouse', 'Owner / Contact', 'Location', 'Area', 'Status', 'Actions'].map(h => (
-                            <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{h}</span>
+                        {['Warehouse', 'Owner / Contact', 'Location', 'Area', 'Status', 'Actions'].map((h) => (
+                            <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                {h}
+                            </span>
                         ))}
                     </div>
 
                     <div className="divide-y divide-slate-100">
-                        {filtered.map(w => (
+                        {filtered.map((w) => (
                             <WarehouseRow
                                 key={w.id}
                                 warehouse={w}
@@ -662,23 +785,26 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
     const status = w.status || 'pending';
     const isActing = actionLoading[w.id];
 
-    const statusBadge = {
-        approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        pending: 'bg-amber-50 text-amber-700 border-amber-200',
-        rejected: 'bg-red-50 text-red-700 border-red-200',
-    }[status] || 'bg-slate-50 text-slate-600 border-slate-200';
+    const statusBadge =
+        {
+            approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            pending: 'bg-amber-50 text-amber-700 border-amber-200',
+            rejected: 'bg-red-50 text-red-700 border-red-200',
+        }[status] || 'bg-slate-50 text-slate-600 border-slate-200';
 
-    const statusDot = {
-        approved: 'bg-emerald-500',
-        pending: 'bg-amber-400',
-        rejected: 'bg-red-500',
-    }[status] || 'bg-slate-400';
+    const statusDot =
+        {
+            approved: 'bg-emerald-500',
+            pending: 'bg-amber-400',
+            rejected: 'bg-red-500',
+        }[status] || 'bg-slate-400';
 
-    const statusLabel = {
-        approved: 'Approved',
-        pending: 'Pending',
-        rejected: 'Rejected',
-    }[status] || status;
+    const statusLabel =
+        {
+            approved: 'Approved',
+            pending: 'Pending',
+            rejected: 'Rejected',
+        }[status] || status;
 
     return (
         <>
@@ -690,19 +816,33 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                                 <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
-                                <button onClick={onToggleExpand} className="text-slate-400 hover:text-slate-600 flex-shrink-0">
-                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                <button
+                                    onClick={onToggleExpand}
+                                    className="text-slate-400 hover:text-slate-600 flex-shrink-0"
+                                >
+                                    {isExpanded ? (
+                                        <ChevronUp className="w-4 h-4" />
+                                    ) : (
+                                        <ChevronDown className="w-4 h-4" />
+                                    )}
                                 </button>
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory} • {w.typeOfConstruction}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                {w.warehouseCategory} • {w.typeOfConstruction}
+                            </p>
                         </div>
-                        <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}`}>
+                        <span
+                            className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}`}
+                        >
                             <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
                             {statusLabel}
                         </span>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
+                        <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {[w.city, w.state].filter(Boolean).join(', ') || '-'}
+                        </span>
                         {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} sq ft</span>}
                     </div>
                     <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
@@ -714,11 +854,27 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     <div className="min-w-0">
                         <div className="flex items-center gap-1">
                             <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
-                            <button onClick={onToggleExpand} className="text-slate-400 hover:text-orange-500 flex-shrink-0 transition-colors">
-                                {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            <button
+                                onClick={onToggleExpand}
+                                className="text-slate-400 hover:text-orange-500 flex-shrink-0 transition-colors"
+                            >
+                                {isExpanded ? (
+                                    <ChevronUp className="w-3.5 h-3.5" />
+                                ) : (
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                )}
                             </button>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{w.warehouseCategory || '-'} {w._role && <span className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}>{w._role}</span>}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                            {w.warehouseCategory || '-'}{' '}
+                            {w._role && (
+                                <span
+                                    className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}
+                                >
+                                    {w._role}
+                                </span>
+                            )}
+                        </p>
                     </div>
 
                     {/* Owner */}
@@ -729,7 +885,9 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     {/* Location */}
                     <div className="flex items-center gap-1 min-w-0">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-sm text-slate-600 truncate">{[w.city, w.state].filter(Boolean).join(', ') || '-'}</span>
+                        <span className="text-sm text-slate-600 truncate">
+                            {[w.city, w.state].filter(Boolean).join(', ') || '-'}
+                        </span>
                     </div>
 
                     {/* Area */}
@@ -741,13 +899,19 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
 
                     {/* Status badge */}
                     <div>
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}`}>
+                        <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge}`}
+                        >
                             <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
                             {statusLabel}
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1">
                             {w.createdAt?.seconds
-                                ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                  })
                                 : '-'}
                         </p>
                     </div>
@@ -771,29 +935,38 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                     >
                         <div className="px-5 py-4 bg-orange-50 border-t border-orange-100">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                                <DetailGroup title="Warehouse Info" items={[
-                                    ['Category', w.warehouseCategory],
-                                    ['Construction', w.typeOfConstruction],
-                                    ['Age', w.warehouseAge],
-                                    ['Storage Types', w.storageTypes?.join(', ')],
-                                    ['Container', w.containerHandling],
-                                ]} />
-                                <DetailGroup title="Operations" items={[
-                                    ['Days', w.daysOfOperation],
-                                    ['Hours', w.operationTime],
-                                    ['Inbound', w.inboundHandling],
-                                    ['Outbound', w.outboundHandling],
-                                    ['WMS', w.wmsAvailable],
-                                    ['Security', w.securityFeatures?.join(', ')],
-                                ]} />
-                                <DetailGroup title="Pricing & Contact" items={[
-                                    ['Pricing Unit', w.pricingUnit || w.pricingModel],
-                                    ['Storage Rate', w.storageRate ? formatPrice(w.storageRate) : null],
-                                    ['Min Commitment', w.minCommitment],
-                                    ['Mobile', w.mobile],
-                                    ['Company', w.companyName],
-                                    ['GST/PAN', w.ownerGstPan],
-                                ]} />
+                                <DetailGroup
+                                    title="Warehouse Info"
+                                    items={[
+                                        ['Category', w.warehouseCategory],
+                                        ['Construction', w.typeOfConstruction],
+                                        ['Age', w.warehouseAge],
+                                        ['Storage Types', w.storageTypes?.join(', ')],
+                                        ['Container', w.containerHandling],
+                                    ]}
+                                />
+                                <DetailGroup
+                                    title="Operations"
+                                    items={[
+                                        ['Days', w.daysOfOperation],
+                                        ['Hours', w.operationTime],
+                                        ['Inbound', w.inboundHandling],
+                                        ['Outbound', w.outboundHandling],
+                                        ['WMS', w.wmsAvailable],
+                                        ['Security', w.securityFeatures?.join(', ')],
+                                    ]}
+                                />
+                                <DetailGroup
+                                    title="Pricing & Contact"
+                                    items={[
+                                        ['Pricing Unit', w.pricingUnit || w.pricingModel],
+                                        ['Storage Rate', w.storageRate ? formatPrice(w.storageRate) : null],
+                                        ['Min Commitment', w.minCommitment],
+                                        ['Mobile', w.mobile],
+                                        ['Company', w.companyName],
+                                        ['GST/PAN', w.ownerGstPan],
+                                    ]}
+                                />
                             </div>
                             {/* Photo Gallery Section */}
                             <PhotoGallery photos={w.photos} />
@@ -814,9 +987,11 @@ function ActionButtons({ w, status, isActing, handleAction }) {
                     disabled={!!isActing}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isActing === 'approved'
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : <CheckCircle2 className="w-3 h-3" />}
+                    {isActing === 'approved' ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                        <CheckCircle2 className="w-3 h-3" />
+                    )}
                     Approve
                 </button>
             )}
@@ -826,9 +1001,11 @@ function ActionButtons({ w, status, isActing, handleAction }) {
                     disabled={!!isActing}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isActing === 'rejected'
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : <XCircle className="w-3 h-3" />}
+                    {isActing === 'rejected' ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                        <XCircle className="w-3 h-3" />
+                    )}
                     Reject
                 </button>
             )}
@@ -839,9 +1016,11 @@ function ActionButtons({ w, status, isActing, handleAction }) {
                     title="Reset to pending"
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isActing === 'pending'
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : <RefreshCw className="w-3 h-3" />}
+                    {isActing === 'pending' ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                        <RefreshCw className="w-3 h-3" />
+                    )}
                     Reset
                 </button>
             )}
@@ -875,7 +1054,7 @@ const loadedImagesCache = new Set();
 function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
     const [search, setSearch] = useState('');
 
-    const filtered = users.filter(u => {
+    const filtered = users.filter((u) => {
         const q = search.toLowerCase();
         return !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
     });
@@ -890,7 +1069,7 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                         value={search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by email or name..."
                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
                     />
@@ -899,46 +1078,69 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
 
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100 italic">
-                    {['Name', 'Email', 'Role', 'Status / Actions'].map(h => (
-                        <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{h}</span>
+                    {['Name', 'Email', 'Role', 'Status / Actions'].map((h) => (
+                        <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {h}
+                        </span>
                     ))}
                 </div>
 
                 <div className="divide-y divide-slate-100">
-                    {filtered.map(u => (
-                        <div key={u.id} className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors">
+                    {filtered.map((u) => (
+                        <div
+                            key={u.id}
+                            className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors"
+                        >
                             <div className="min-w-0">
                                 <p className="text-sm font-bold text-slate-900 truncate">{u.name || 'Anonymous'}</p>
-                                <span className="text-[10px] text-slate-400 block mt-0.5">Joined {u.createdAt?.seconds ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}</span>
+                                <span className="text-[10px] text-slate-400 block mt-0.5">
+                                    Joined{' '}
+                                    {u.createdAt?.seconds
+                                        ? new Date(u.createdAt.seconds * 1000).toLocaleDateString()
+                                        : 'Unknown'}
+                                </span>
                             </div>
                             <p className="text-sm text-slate-600 truncate">{u.email}</p>
                             <div>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                    u.userType === 'warehouse_partner' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 
-                                    u.userType === 'business_client' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-500'
-                                }`}>
-                                    {u.userType === 'warehouse_partner' ? 'Warehouse Partner' : u.userType === 'business_client' ? 'Business Client' : u.userType === 'admin' ? 'Admin' : u.userType === 'superadmin' ? 'Super Admin' : u.userType || 'User'}
+                                <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                        u.userType === 'warehouse_partner'
+                                            ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                                            : u.userType === 'business_client'
+                                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                              : 'bg-slate-50 text-slate-500'
+                                    }`}
+                                >
+                                    {u.userType === 'warehouse_partner'
+                                        ? 'Warehouse Partner'
+                                        : u.userType === 'business_client'
+                                          ? 'Business Client'
+                                          : u.userType === 'admin'
+                                            ? 'Admin'
+                                            : u.userType === 'superadmin'
+                                              ? 'Super Admin'
+                                              : u.userType || 'User'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3">
                                 {u.isBlocked ? (
-                                    <button 
+                                    <button
                                         onClick={() => handleBlockUser(u.id, false)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors"
                                     >
                                         <CheckCircle2 className="w-3.5 h-3.5" /> Unblock
                                     </button>
                                 ) : (
-                                    <button 
+                                    <button
                                         onClick={() => handleBlockUser(u.id, true)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
                                     >
                                         <Ban className="w-3.5 h-3.5" /> Block
                                     </button>
                                 )}
-                                
+
                                 {u.userType === 'warehouse_partner' && (
-                                    <button 
+                                    <button
                                         onClick={() => onViewWarehouses(u.email)}
                                         className="p-1.5 bg-slate-50 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
                                         title="View Partner Warehouses"
@@ -1030,7 +1232,7 @@ function PhotoGallery({ photos }) {
     // Build array of available photos
     const photoEntries = Object.entries(photoLabels)
         .map(([key, label]) => ({ key, label, url: photos?.[key] }))
-        .filter(p => p.url);
+        .filter((p) => p.url);
 
     if (photoEntries.length === 0) {
         return (
@@ -1093,7 +1295,10 @@ function PhotoGallery({ photos }) {
                         onClick={() => setLightboxOpen(false)}
                     >
                         {/* Top bar - label + close */}
-                        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div
+                            className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <div />
                             <span className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-white border border-white/10">
                                 {photoEntries[activeIndex]?.label}
@@ -1117,7 +1322,10 @@ function PhotoGallery({ photos }) {
                             {/* Navigation - Previous */}
                             {photoEntries.length > 1 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        goPrev();
+                                    }}
                                     className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -1145,7 +1353,10 @@ function PhotoGallery({ photos }) {
                             {/* Navigation - Next */}
                             {photoEntries.length > 1 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        goNext();
+                                    }}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
                                 >
                                     <ChevronRight className="w-5 h-5" />
@@ -1155,18 +1366,29 @@ function PhotoGallery({ photos }) {
 
                         {/* Bottom thumbnail strip */}
                         {photoEntries.length > 1 && (
-                            <div className="flex-shrink-0 flex justify-center py-3" onClick={(e) => e.stopPropagation()}>
+                            <div
+                                className="flex-shrink-0 flex justify-center py-3"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <div className="flex gap-2 bg-white/5 p-1.5 rounded-xl border border-white/10">
                                     {photoEntries.map((photo, idx) => (
                                         <button
                                             key={photo.key}
-                                            onClick={(e) => { e.stopPropagation(); handleNavigation(idx); }}
-                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIndex
-                                                ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
-                                                : 'border-transparent opacity-50 hover:opacity-80'
-                                                }`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleNavigation(idx);
+                                            }}
+                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                                                idx === activeIndex
+                                                    ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
+                                                    : 'border-transparent opacity-50 hover:opacity-80'
+                                            }`}
                                         >
-                                            <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
+                                            <img
+                                                src={photo.url}
+                                                alt={photo.label}
+                                                className="w-full h-full object-cover"
+                                            />
                                         </button>
                                     ))}
                                 </div>
@@ -1189,27 +1411,41 @@ function MigrationView({ showToast }) {
     const [stats, setStats] = useState({ scanned: 0, updated: 0, skipped: 0, errors: 0 });
 
     const addLog = (msg, type = 'info') => {
-        setMigrationLog(prev => [...prev, { msg, type, ts: Date.now() }]);
+        setMigrationLog((prev) => [...prev, { msg, type, ts: Date.now() }]);
     };
 
     const runMigration = async () => {
         if (migrating) return;
-        if (!window.confirm(
-            'This will update all existing users with userType "owner" -> "warehouse_partner" and "merchant" -> "business_client" in the database.\n\nThis cannot be undone. Are you sure?'
-        )) return;
+        if (
+            !window.confirm(
+                'This will update all existing users with userType "owner" -> "warehouse_partner" and "merchant" -> "business_client" in the database.\n\nThis cannot be undone. Are you sure?'
+            )
+        )
+            return;
 
         setMigrating(true);
         setMigrationLog([]);
         setMigrationDone(false);
         setStats({ scanned: 0, updated: 0, skipped: 0, errors: 0 });
 
-        const { collection: col, getDocs: gd, doc: dc, updateDoc: ud, serverTimestamp: st, setDoc: sd, getDoc: gdc } = await import('firebase/firestore');
+        const {
+            collection: col,
+            getDocs: gd,
+            doc: dc,
+            updateDoc: ud,
+            serverTimestamp: st,
+            setDoc: sd,
+            getDoc: gdc,
+        } = await import('firebase/firestore');
 
         try {
             // Step 1: Migrate users collection
             addLog('[INFO] Scanning users collection...', 'info');
             const usersSnap = await gd(col(db, 'users'));
-            let scanned = 0, updated = 0, skipped = 0, errors = 0;
+            let scanned = 0,
+                updated = 0,
+                skipped = 0,
+                errors = 0;
 
             for (const userDoc of usersSnap.docs) {
                 scanned++;
@@ -1221,7 +1457,7 @@ function MigrationView({ showToast }) {
                         await ud(dc(db, 'users', userDoc.id), {
                             userType: 'warehouse_partner',
                             _migratedFrom: 'owner',
-                            _migratedAt: st()
+                            _migratedAt: st(),
                         });
                         updated++;
                         addLog(`[SUCCESS] ${data.email || userDoc.id}: owner -> warehouse_partner`, 'success');
@@ -1234,7 +1470,7 @@ function MigrationView({ showToast }) {
                         await ud(dc(db, 'users', userDoc.id), {
                             userType: 'business_client',
                             _migratedFrom: 'merchant',
-                            _migratedAt: st()
+                            _migratedAt: st(),
                         });
                         updated++;
                         addLog(`[SUCCESS] ${data.email || userDoc.id}: merchant -> business_client`, 'success');
@@ -1248,14 +1484,17 @@ function MigrationView({ showToast }) {
                 setStats({ scanned, updated, skipped, errors });
             }
 
-            addLog(`\n[SUMMARY] Users migration complete: ${updated} updated, ${skipped} skipped, ${errors} errors`, updated > 0 ? 'success' : 'info');
+            addLog(
+                `\n[SUMMARY] Users migration complete: ${updated} updated, ${skipped} skipped, ${errors} errors`,
+                updated > 0 ? 'success' : 'info'
+            );
 
             // Step 2: Migrate contact_details - copy owner -> warehouse_partner, merchant -> business_client
             addLog('\n[INFO] Scanning contact_details collections...', 'info');
 
             const roleMappings = [
                 { oldRole: 'owner', newRole: 'warehouse_partner' },
-                { oldRole: 'merchant', newRole: 'business_client' }
+                { oldRole: 'merchant', newRole: 'business_client' },
             ];
 
             let contactUpdated = 0;
@@ -1269,16 +1508,23 @@ function MigrationView({ showToast }) {
                             const contactData = contactDoc.data();
                             // Write to new path: contact_details/{newRole}/users/{id}
                             const newRef = dc(db, 'contact_details', newRole, 'users', contactDoc.id);
-                            await sd(newRef, {
-                                ...contactData,
-                                userType: newRole,
-                                _migratedFrom: oldRole,
-                                _migratedAt: st()
-                            }, { merge: true });
+                            await sd(
+                                newRef,
+                                {
+                                    ...contactData,
+                                    userType: newRole,
+                                    _migratedFrom: oldRole,
+                                    _migratedAt: st(),
+                                },
+                                { merge: true }
+                            );
                             contactUpdated++;
                             addLog(`[SUCCESS] contact_details: ${contactDoc.id} (${oldRole} -> ${newRole})`, 'success');
                         } catch (e) {
-                            addLog(`[ERROR] contact_details migration failed for ${contactDoc.id}: ${e.message}`, 'error');
+                            addLog(
+                                `[ERROR] contact_details migration failed for ${contactDoc.id}: ${e.message}`,
+                                'error'
+                            );
                         }
                     }
                 } catch (e) {
@@ -1286,11 +1532,16 @@ function MigrationView({ showToast }) {
                 }
             }
 
-            addLog(`\n[SUMMARY] Contact details migration: ${contactUpdated} records copied`, contactUpdated > 0 ? 'success' : 'info');
+            addLog(
+                `\n[SUMMARY] Contact details migration: ${contactUpdated} records copied`,
+                contactUpdated > 0 ? 'success' : 'info'
+            );
 
             // Step 3: Migrate warehouse_details
             addLog('\n[INFO] Scanning warehouse_details...', 'info');
-            let whUpdated = 0, whSkipped = 0, whErrors = 0;
+            let whUpdated = 0,
+                whSkipped = 0,
+                whErrors = 0;
             try {
                 const { collectionGroup } = await import('firebase/firestore');
                 const cg = collectionGroup(db, 'warehouses');
@@ -1303,15 +1554,30 @@ function MigrationView({ showToast }) {
                         const email = pathSegments.includes('emails') ? pathSegments[3] : pathSegments[2];
                         const whId = d.id;
                         const data = d.data();
-                        
+
                         try {
-                            const newRef = dc(db, 'warehouse_details', 'warehouse_partner', 'emails', email, 'warehouses', whId);
-                            await sd(newRef, {
-                                ...data,
-                                source: data.source === 'owner' ? 'warehouse_partner' : (data.source || 'warehouse_partner'),
-                                _migratedFrom: 'owner',
-                                _migratedAt: st()
-                            }, { merge: true });
+                            const newRef = dc(
+                                db,
+                                'warehouse_details',
+                                'warehouse_partner',
+                                'emails',
+                                email,
+                                'warehouses',
+                                whId
+                            );
+                            await sd(
+                                newRef,
+                                {
+                                    ...data,
+                                    source:
+                                        data.source === 'owner'
+                                            ? 'warehouse_partner'
+                                            : data.source || 'warehouse_partner',
+                                    _migratedFrom: 'owner',
+                                    _migratedAt: st(),
+                                },
+                                { merge: true }
+                            );
                             whUpdated++;
                             addLog(`[SUCCESS] warehouse_details: ${whId} (${email}) -> warehouse_partner`, 'success');
                         } catch (e) {
@@ -1322,14 +1588,19 @@ function MigrationView({ showToast }) {
                         whSkipped++;
                     }
                 }
-                addLog(`\n[SUMMARY] Warehouse details migration: ${whUpdated} records copied`, whUpdated > 0 ? 'success' : 'info');
+                addLog(
+                    `\n[SUMMARY] Warehouse details migration: ${whUpdated} records copied`,
+                    whUpdated > 0 ? 'success' : 'info'
+                );
             } catch (e) {
                 addLog(`[ERROR] Failed to scan warehouses: ${e.message}`, 'error');
             }
 
             addLog('\n[DONE] Migration complete!', 'success');
-            showToast(`Migration complete! ${updated} users, ${contactUpdated} contacts, ${whUpdated} warehouses updated.`, 'success');
-
+            showToast(
+                `Migration complete! ${updated} users, ${contactUpdated} contacts, ${whUpdated} warehouses updated.`,
+                'success'
+            );
         } catch (err) {
             addLog(`[ERROR] Migration failed: ${err.message}`, 'error');
             showToast('Migration failed. Check the log for details.', 'error');
@@ -1350,11 +1621,24 @@ function MigrationView({ showToast }) {
                     <div>
                         <h2 className="text-2xl font-bold text-slate-900 mb-1">Migrate User Roles</h2>
                         <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
-                            This tool updates all existing database records to use the new role naming convention.
-                            Users with <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700">owner</code> will become 
-                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700 ml-1">warehouse_partner</code>, and 
-                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">merchant</code> will become 
-                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">business_client</code>.
+                            This tool updates all existing database records to use the new role naming convention. Users
+                            with{' '}
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700">
+                                owner
+                            </code>{' '}
+                            will become
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-orange-700 ml-1">
+                                warehouse_partner
+                            </code>
+                            , and
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">
+                                merchant
+                            </code>{' '}
+                            will become
+                            <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 ml-1">
+                                business_client
+                            </code>
+                            .
                         </p>
                     </div>
                 </div>
@@ -1362,19 +1646,31 @@ function MigrationView({ showToast }) {
                 {/* What gets migrated */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
-                        <h4 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3">Warehouse Partners</h4>
+                        <h4 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-3">
+                            Warehouse Partners
+                        </h4>
                         <div className="flex items-center gap-3">
-                            <span className="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-sm font-mono text-orange-700 line-through">owner</span>
+                            <span className="px-3 py-1.5 bg-white border border-orange-200 rounded-lg text-sm font-mono text-orange-700 line-through">
+                                owner
+                            </span>
                             <span className="text-orange-400">&rarr;</span>
-                            <span className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-mono font-bold">warehouse_partner</span>
+                            <span className="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-mono font-bold">
+                                warehouse_partner
+                            </span>
                         </div>
                     </div>
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-                        <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Business Clients</h4>
+                        <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">
+                            Business Clients
+                        </h4>
                         <div className="flex items-center gap-3">
-                            <span className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-sm font-mono text-blue-700 line-through">merchant</span>
+                            <span className="px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-sm font-mono text-blue-700 line-through">
+                                merchant
+                            </span>
                             <span className="text-blue-400">&rarr;</span>
-                            <span className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-mono font-bold">business_client</span>
+                            <span className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-mono font-bold">
+                                business_client
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1386,8 +1682,13 @@ function MigrationView({ showToast }) {
                         <span className="text-sm font-bold text-amber-800">Collections that will be updated:</span>
                     </div>
                     <ul className="text-sm text-amber-700 space-y-1 ml-6 list-disc">
-                        <li><code className="bg-white/80 px-1 rounded text-xs">users</code> - userType field</li>
-                        <li><code className="bg-white/80 px-1 rounded text-xs">contact_details</code> - documents copied to new role subcollections</li>
+                        <li>
+                            <code className="bg-white/80 px-1 rounded text-xs">users</code> - userType field
+                        </li>
+                        <li>
+                            <code className="bg-white/80 px-1 rounded text-xs">contact_details</code> - documents copied
+                            to new role subcollections
+                        </li>
                     </ul>
                 </div>
 
@@ -1451,10 +1752,13 @@ function MigrationView({ showToast }) {
                             <div
                                 key={i}
                                 className={`px-3 py-1.5 rounded-lg ${
-                                    log.type === 'success' ? 'text-emerald-400' :
-                                    log.type === 'error' ? 'text-red-400' :
-                                    log.type === 'warn' ? 'text-amber-400' :
-                                    'text-slate-400'
+                                    log.type === 'success'
+                                        ? 'text-emerald-400'
+                                        : log.type === 'error'
+                                          ? 'text-red-400'
+                                          : log.type === 'warn'
+                                            ? 'text-amber-400'
+                                            : 'text-slate-400'
                                 }`}
                             >
                                 {log.msg}
@@ -1508,7 +1812,6 @@ function EmptyState({ filter, search }) {
     );
 }
 
-
 function AdminInquiriesView({ showToast }) {
     const [inquiries, setInquiries] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -1523,18 +1826,23 @@ function AdminInquiriesView({ showToast }) {
     }, []);
 
     const handleAction = async (id, status) => {
-        setActionLoading(prev => ({ ...prev, [id]: status }));
+        setActionLoading((prev) => ({ ...prev, [id]: status }));
         try {
             await updateInquiryStatus(id, status);
-            showToast(`Inquiry ${status} successfully.`, status === "approved" ? "success" : "error");
+            showToast(`Inquiry ${status} successfully.`, status === 'approved' ? 'success' : 'error');
         } catch (err) {
-            showToast("Failed to update status.", "error");
+            showToast('Failed to update status.', 'error');
         } finally {
-            setActionLoading(prev => ({ ...prev, [id]: null }));
+            setActionLoading((prev) => ({ ...prev, [id]: null }));
         }
     };
 
-    if (loading) return <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-orange-500" /></div>;
+    if (loading)
+        return (
+            <div className="py-20 text-center">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto text-orange-500" />
+            </div>
+        );
 
     return (
         <div className="space-y-6">
@@ -1545,46 +1853,69 @@ function AdminInquiriesView({ showToast }) {
                         <p className="font-bold text-slate-600">No lead enquiries yet.</p>
                     </div>
                 ) : (
-                    inquiries.map(inq => (
-                        <div key={inq.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                    inquiries.map((inq) => (
+                        <div
+                            key={inq.id}
+                            className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all"
+                        >
                             <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
                                 <div className="flex gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${inq.type === "quick" ? "bg-orange-100 text-orange-600" : "bg-blue-100 text-blue-600"}`}>
-                                        {inq.type === "quick" ? <Zap size={24} /> : <FileText size={24} />}
+                                    <div
+                                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${inq.type === 'quick' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}
+                                    >
+                                        {inq.type === 'quick' ? <Zap size={24} /> : <FileText size={24} />}
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <h3 className="font-bold text-slate-900 text-lg">{inq.data.companyName}</h3>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${inq.status === "approved" ? "bg-emerald-100 text-emerald-700" : inq.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                                            <span
+                                                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${inq.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : inq.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}
+                                            >
                                                 {inq.status}
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
-                                            <span className="flex items-center gap-1.5"><User size={14} /> {inq.data.contactPerson}</span>
-                                            <span className="flex items-center gap-1.5"><Mail size={14} /> {inq.data.email}</span>
-                                            <span className="flex items-center gap-1.5"><Phone size={14} /> {inq.data.phone}</span>
-                                            <span className="flex items-center gap-1.5"><Clock size={14} /> {inq.createdAt?.toDate().toLocaleDateString()}</span>
+                                            <span className="flex items-center gap-1.5">
+                                                <User size={14} /> {inq.data.contactPerson}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Mail size={14} /> {inq.data.email}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Phone size={14} /> {inq.data.phone}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Clock size={14} /> {inq.createdAt?.toDate().toLocaleDateString()}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    {inq.status !== "approved" && (
-                                        <button 
-                                            onClick={() => handleAction(inq.id, "approved")}
+                                    {inq.status !== 'approved' && (
+                                        <button
+                                            onClick={() => handleAction(inq.id, 'approved')}
                                             disabled={!!actionLoading[inq.id]}
                                             className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
                                         >
-                                            {actionLoading[inq.id] === "approved" ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                                            {actionLoading[inq.id] === 'approved' ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <CheckCircle2 size={16} />
+                                            )}
                                             Approve
                                         </button>
                                     )}
-                                    {inq.status !== "rejected" && (
-                                        <button 
-                                            onClick={() => handleAction(inq.id, "rejected")}
+                                    {inq.status !== 'rejected' && (
+                                        <button
+                                            onClick={() => handleAction(inq.id, 'rejected')}
                                             disabled={!!actionLoading[inq.id]}
                                             className="px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold hover:bg-red-100 transition-all flex items-center gap-2 disabled:opacity-50"
                                         >
-                                            {actionLoading[inq.id] === "rejected" ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+                                            {actionLoading[inq.id] === 'rejected' ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <XCircle size={16} />
+                                            )}
                                             Reject
                                         </button>
                                     )}
@@ -1592,29 +1923,71 @@ function AdminInquiriesView({ showToast }) {
                             </div>
 
                             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Enquiry Details</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                                    Enquiry Details
+                                </p>
                                 <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                    {inq.type === "quick" ? (
+                                    {inq.type === 'quick' ? (
                                         <>
                                             <DataPoint label="Store Needs" value={inq.data.storageNeeds} />
-                                            <DataPoint label="Space" value={`${inq.data.storageSpace} ${inq.data.storageUnit}`} />
+                                            <DataPoint
+                                                label="Space"
+                                                value={`${inq.data.storageSpace} ${inq.data.storageUnit}`}
+                                            />
                                             <DataPoint label="Type" value={inq.data.storageType} />
-                                            <DataPoint label="Duration" value={`${inq.data.contractDuration} ${inq.data.durationUnit}`} />
-                                            {inq.data.additionalRequirements && <div className="sm:col-span-2 md:col-span-3"><DataPoint label="Additional Requirements" value={inq.data.additionalRequirements} /></div>}
+                                            <DataPoint
+                                                label="Duration"
+                                                value={`${inq.data.contractDuration} ${inq.data.durationUnit}`}
+                                            />
+                                            {inq.data.additionalRequirements && (
+                                                <div className="sm:col-span-2 md:col-span-3">
+                                                    <DataPoint
+                                                        label="Additional Requirements"
+                                                        value={inq.data.additionalRequirements}
+                                                    />
+                                                </div>
+                                            )}
                                         </>
                                     ) : (
                                         <>
                                             <DataPoint label="Address" value={inq.data.address} />
-                                            <DataPoint label="GST" value={inq.data.gstNumber || "N/A"} />
-                                            <DataPoint label="Duration" value={`${inq.data.duration} ${inq.data.durationUnit}`} />
+                                            <DataPoint label="GST" value={inq.data.gstNumber || 'N/A'} />
+                                            <DataPoint
+                                                label="Duration"
+                                                value={`${inq.data.duration} ${inq.data.durationUnit}`}
+                                            />
                                             <DataPoint label="Billing" value={inq.data.billingCycle} />
                                             <DataPoint label="Payment" value={inq.data.paymentTerms} />
-                                            <DataPoint label="Product 1" value={`${inq.data.product1.description} (${inq.data.product1.category}) - ${inq.data.product1.quantity} ${inq.data.product1.unit}`} />
-                                            {inq.data.product2.description && <DataPoint label="Product 2" value={`${inq.data.product2.description} (${inq.data.product2.category}) - ${inq.data.product2.quantity} ${inq.data.product2.unit}`} />}
-                                            <DataPoint label="Inbound" value={`${inq.data.inboundVehicles} ${inq.data.inboundVehicleType} (${inq.data.inboundProcesses.join(", ")})`} />
-                                            <DataPoint label="Outbound" value={`${inq.data.outboundOrders} orders/day via ${inq.data.outboundVehicleType}`} />
-                                            <DataPoint label="Special" value={inq.data.specialServices.join(", ") || "None"} />
-                                            {inq.data.otherRequirements && <div className="sm:col-span-2 md:col-span-3"><DataPoint label="Other Requirements" value={inq.data.otherRequirements} /></div>}
+                                            <DataPoint
+                                                label="Product 1"
+                                                value={`${inq.data.product1.description} (${inq.data.product1.category}) - ${inq.data.product1.quantity} ${inq.data.product1.unit}`}
+                                            />
+                                            {inq.data.product2.description && (
+                                                <DataPoint
+                                                    label="Product 2"
+                                                    value={`${inq.data.product2.description} (${inq.data.product2.category}) - ${inq.data.product2.quantity} ${inq.data.product2.unit}`}
+                                                />
+                                            )}
+                                            <DataPoint
+                                                label="Inbound"
+                                                value={`${inq.data.inboundVehicles} ${inq.data.inboundVehicleType} (${inq.data.inboundProcesses.join(', ')})`}
+                                            />
+                                            <DataPoint
+                                                label="Outbound"
+                                                value={`${inq.data.outboundOrders} orders/day via ${inq.data.outboundVehicleType}`}
+                                            />
+                                            <DataPoint
+                                                label="Special"
+                                                value={inq.data.specialServices.join(', ') || 'None'}
+                                            />
+                                            {inq.data.otherRequirements && (
+                                                <div className="sm:col-span-2 md:col-span-3">
+                                                    <DataPoint
+                                                        label="Other Requirements"
+                                                        value={inq.data.otherRequirements}
+                                                    />
+                                                </div>
+                                            )}
                                         </>
                                     )}
                                 </div>
@@ -1631,7 +2004,7 @@ function DataPoint({ label, value }) {
     return (
         <div className="space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{label}</p>
-            <p className="text-sm font-bold text-slate-800">{value || "-"}</p>
+            <p className="text-sm font-bold text-slate-800">{value || '-'}</p>
         </div>
     );
 }
@@ -1673,7 +2046,7 @@ function AssignAdminView({ showToast }) {
 
             // Update user document
             await updateDoc(doc(db, 'users', userDoc.id), {
-                userType: 'admin'
+                userType: 'admin',
             });
 
             showToast('Admin role assigned successfully!', 'success');
@@ -1695,7 +2068,9 @@ function AssignAdminView({ showToast }) {
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">Assign Admin</h2>
-                        <p className="text-sm text-slate-500 mt-1">Grant administrative privileges to an existing user.</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Grant administrative privileges to an existing user.
+                        </p>
                     </div>
                 </div>
 
@@ -1728,5 +2103,3 @@ function AssignAdminView({ showToast }) {
         </div>
     );
 }
-
-

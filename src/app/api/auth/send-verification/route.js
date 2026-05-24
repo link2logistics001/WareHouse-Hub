@@ -37,42 +37,42 @@ import { sendVerificationEmail } from '@/lib/emailService';
  * @returns {NextResponse} JSON response with success flag or error message
  */
 export async function POST(request) {
-  try {
-    // Parse the request body
-    const { email, name } = await request.json();
+    try {
+        // Parse the request body
+        const { email, name } = await request.json();
 
-    // Validate required fields
-    if (!email || !name) {
-      return NextResponse.json({ error: 'Missing email or name' }, { status: 400 });
+        // Validate required fields
+        if (!email || !name) {
+            return NextResponse.json({ error: 'Missing email or name' }, { status: 400 });
+        }
+
+        // 1. Generate the secure Firebase verification link
+        // The actionCodeSettings determine where the user is redirected after
+        // clicking the link. Use the app root with a query param instead of '/login'
+        // so users are not sent to a missing route (this app has no /login page —
+        // the login form lives at /#login on the home page).
+        const actionCodeSettings = {
+            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/?mode=verify-email`,
+            handleCodeInApp: true, // Opens in the app instead of a Firebase-hosted page
+        };
+
+        // Use Firebase Admin SDK to generate the verification link
+        // This creates a unique, time-limited link that verifies the user's email
+        const verificationLink = await adminAuth.generateEmailVerificationLink(email, actionCodeSettings);
+
+        // 2. Send the custom branded email via Resend
+        // This replaces Firebase's default plain-text verification email with
+        // a professionally designed HTML email matching the Link2Logistics brand
+        const result = await sendVerificationEmail(email, name, verificationLink);
+
+        // Check if Resend encountered an error
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+
+        return NextResponse.json({ success: true, message: 'Verification email sent' });
+    } catch (error) {
+        console.error('Verification API error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    // 1. Generate the secure Firebase verification link
-    // The actionCodeSettings determine where the user is redirected after
-    // clicking the link. Use the app root with a query param instead of '/login'
-    // so users are not sent to a missing route (this app has no /login page —
-    // the login form lives at /#login on the home page).
-    const actionCodeSettings = {
-      url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/?mode=verify-email`,
-      handleCodeInApp: true,  // Opens in the app instead of a Firebase-hosted page
-    };
-
-    // Use Firebase Admin SDK to generate the verification link
-    // This creates a unique, time-limited link that verifies the user's email
-    const verificationLink = await adminAuth.generateEmailVerificationLink(email, actionCodeSettings);
-
-    // 2. Send the custom branded email via Resend
-    // This replaces Firebase's default plain-text verification email with
-    // a professionally designed HTML email matching the Link2Logistics brand
-    const result = await sendVerificationEmail(email, name, verificationLink);
-
-    // Check if Resend encountered an error
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    return NextResponse.json({ success: true, message: 'Verification email sent' });
-  } catch (error) {
-    console.error('Verification API error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
 }

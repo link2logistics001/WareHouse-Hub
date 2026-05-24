@@ -19,27 +19,27 @@
  * ignore those intermediate events so the dashboard never unmounts.
  */
 
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  getAuth,
-  signOut,
-} from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, getAuth, signOut } from 'firebase/auth';
 import { getApps, initializeApp } from 'firebase/app';
 
 const secondaryAppName = '__phone_auth_app__';
 
 function getPhoneAuthInstance() {
-  const existing = getApps().find(app => app.name === secondaryAppName);
-  const app = existing || initializeApp({
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  }, secondaryAppName);
-  return getAuth(app);
+    const existing = getApps().find((app) => app.name === secondaryAppName);
+    const app =
+        existing ||
+        initializeApp(
+            {
+                apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+                authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+                appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+            },
+            secondaryAppName
+        );
+    return getAuth(app);
 }
 
 let _confirmationResult = null;
@@ -50,10 +50,14 @@ export let phoneVerificationFlowActive = false;
 
 /** Destroy any existing RecaptchaVerifier cleanly before creating a new one. */
 function clearRecaptcha() {
-  if (_recaptchaVerifier) {
-    try { _recaptchaVerifier.clear(); } catch { /* already removed */ }
-    _recaptchaVerifier = null;
-  }
+    if (_recaptchaVerifier) {
+        try {
+            _recaptchaVerifier.clear();
+        } catch {
+            /* already removed */
+        }
+        _recaptchaVerifier = null;
+    }
 }
 
 /**
@@ -65,24 +69,24 @@ function clearRecaptcha() {
  * @param {string} phoneNumber - E.164 format, e.g. "+919876543210"
  */
 export async function sendPhoneOtp(phoneNumber) {
-  const phoneAuth = getPhoneAuthInstance();
-  clearRecaptcha();
-
-  _recaptchaVerifier = new RecaptchaVerifier(phoneAuth, 'recaptcha-container', {
-    size: 'invisible',
-    'expired-callback': clearRecaptcha,
-  });
-
-  phoneVerificationFlowActive = true;
-  try {
-    _confirmationResult = await signInWithPhoneNumber(phoneAuth, phoneNumber, _recaptchaVerifier);
-  } catch (error) {
+    const phoneAuth = getPhoneAuthInstance();
     clearRecaptcha();
-    _confirmationResult = null;
-    throw formatPhoneError(error);
-  } finally {
-    phoneVerificationFlowActive = false;
-  }
+
+    _recaptchaVerifier = new RecaptchaVerifier(phoneAuth, 'recaptcha-container', {
+        size: 'invisible',
+        'expired-callback': clearRecaptcha,
+    });
+
+    phoneVerificationFlowActive = true;
+    try {
+        _confirmationResult = await signInWithPhoneNumber(phoneAuth, phoneNumber, _recaptchaVerifier);
+    } catch (error) {
+        clearRecaptcha();
+        _confirmationResult = null;
+        throw formatPhoneError(error);
+    } finally {
+        phoneVerificationFlowActive = false;
+    }
 }
 
 /**
@@ -94,55 +98,45 @@ export async function sendPhoneOtp(phoneNumber) {
  * @returns {Promise<true>}
  */
 export async function verifyPhoneOtp(otp) {
-  if (!_confirmationResult) {
-    throw new Error('No OTP session found. Please request a new OTP first.');
-  }
+    if (!_confirmationResult) {
+        throw new Error('No OTP session found. Please request a new OTP first.');
+    }
 
-  const phoneAuth = getPhoneAuthInstance();
+    const phoneAuth = getPhoneAuthInstance();
 
-  phoneVerificationFlowActive = true;
-  try {
-    await _confirmationResult.confirm(otp);
-    await signOut(phoneAuth);
-    _confirmationResult = null;
-    clearRecaptcha();
-    return true;
-  } catch (error) {
-    throw formatPhoneError(error);
-  } finally {
-    phoneVerificationFlowActive = false;
-  }
+    phoneVerificationFlowActive = true;
+    try {
+        await _confirmationResult.confirm(otp);
+        await signOut(phoneAuth);
+        _confirmationResult = null;
+        clearRecaptcha();
+        return true;
+    } catch (error) {
+        throw formatPhoneError(error);
+    } finally {
+        phoneVerificationFlowActive = false;
+    }
 }
 
 /** Maps Firebase error codes to user-friendly strings. */
 function formatPhoneError(error) {
-  const code = error?.code || '';
-  const map = {
-    'auth/invalid-phone-number':
-      'Invalid phone number. Use E.164 format, e.g. +91XXXXXXXXXX.',
-    'auth/too-many-requests':
-      'Too many attempts. Please wait a few minutes and try again.',
-    'auth/invalid-verification-code':
-      'Incorrect OTP. Please check and try again.',
-    'auth/code-expired':
-      'OTP expired. Please request a new one.',
-    'auth/session-expired':
-      'Session expired. Please request a new OTP.',
-    'auth/missing-phone-number':
-      'Phone number is required.',
-    'auth/quota-exceeded':
-      'SMS quota exceeded. Please try again later.',
-    'auth/invalid-app-credential':
-      'Verification failed. If testing locally, ensure your URL is http://localhost:3000 (not 127.0.0.1). Ensure your domain is authorized in Firebase Console.',
-    'auth/captcha-check-failed':
-      'reCAPTCHA failed. Please refresh and try again.',
-    'auth/network-request-failed':
-      'Network error. Please check your connection and try again.',
-    'auth/operation-not-allowed':
-      'Phone authentication is not enabled in Firebase Console.',
-  };
-  const message = map[code] || error.message || 'Something went wrong. Please try again.';
-  const err = new Error(message);
-  err.code = code;
-  return err;
+    const code = error?.code || '';
+    const map = {
+        'auth/invalid-phone-number': 'Invalid phone number. Use E.164 format, e.g. +91XXXXXXXXXX.',
+        'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+        'auth/invalid-verification-code': 'Incorrect OTP. Please check and try again.',
+        'auth/code-expired': 'OTP expired. Please request a new one.',
+        'auth/session-expired': 'Session expired. Please request a new OTP.',
+        'auth/missing-phone-number': 'Phone number is required.',
+        'auth/quota-exceeded': 'SMS quota exceeded. Please try again later.',
+        'auth/invalid-app-credential':
+            'Verification failed. If testing locally, ensure your URL is http://localhost:3000 (not 127.0.0.1). Ensure your domain is authorized in Firebase Console.',
+        'auth/captcha-check-failed': 'reCAPTCHA failed. Please refresh and try again.',
+        'auth/network-request-failed': 'Network error. Please check your connection and try again.',
+        'auth/operation-not-allowed': 'Phone authentication is not enabled in Firebase Console.',
+    };
+    const message = map[code] || error.message || 'Something went wrong. Please try again.';
+    const err = new Error(message);
+    err.code = code;
+    return err;
 }
