@@ -42,6 +42,8 @@ import {
     refreshEmailVerification,
     sendVerificationEmail,
 } from '@/lib/auth';
+import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WAREHOUSE LEFT PANEL
@@ -523,7 +525,61 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
               : 'text-[#E65100] bg-orange-50';
 
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '' });
+    const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '', phone: '' });
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otpError, setOtpError] = useState('');
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [resendCountdown, setResendCountdown] = useState(0);
+    const countdownRef = useRef(null);
+
+    useEffect(() => {
+        return () => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+        };
+    }, []);
+
+    const handleSendOtp = async () => {
+        setOtpError('');
+        setSendingOtp(true);
+        try {
+            const phoneNumber = formData.phone.startsWith('+') ? formData.phone : `+91${formData.phone.replace(/\D/g, '')}`;
+            await sendPhoneOtp(phoneNumber);
+            setOtpSent(true);
+            setResendCountdown(30);
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            countdownRef.current = setInterval(() => {
+                setResendCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(countdownRef.current);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } catch (err) {
+            setOtpError(err.message || 'Failed to send OTP.');
+        } finally {
+            setSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        setOtpError('');
+        setVerifyingOtp(true);
+        try {
+            await verifyPhoneOtp(otp);
+            setOtpVerified(true);
+            setOtpSent(false);
+            if (countdownRef.current) clearInterval(countdownRef.current);
+        } catch (err) {
+            setOtpError(err.message || 'Invalid OTP.');
+        } finally {
+            setVerifyingOtp(false);
+        }
+    };
     const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -544,12 +600,16 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                 const user = await loginUser(formData.email, formData.password, userType);
                 onLoginSuccess(user);
             } else {
+                if (!otpVerified) {
+                    throw new Error('Please verify your phone number first.');
+                }
                 const result = await registerUser(
                     formData.email,
                     formData.password,
                     formData.name,
                     userType,
-                    formData.company
+                    formData.company,
+                    formData.phone
                 );
                 if (result.verificationSent) {
                     setVerificationData(result);
@@ -782,13 +842,113 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {!isLogin && (
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Full Name"
-                        onChange={handleInputChange}
-                        className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all"
-                    />
+                    <>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Full Name"
+                            onChange={handleInputChange}
+                            className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all"
+                            required
+                        />
+                        <div className="flex flex-col relative w-full">
+                            <input
+                                type="tel"
+                                name="phone"
+                                placeholder="+91 98765 XXXXX"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                    handleInputChange(e);
+                                    if (otpVerified) setOtpVerified(false);
+                                    if (otpSent) {
+                                        setOtpSent(false);
+                                        setResendCountdown(0);
+                                    }
+                                }}
+                                className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all"
+                                required
+                            />
+                            {/* OTP Section */}
+                            <div className="mt-2">
+                                {otpVerified ? (
+                                    <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit border border-emerald-100">
+                                        <CheckCircle className="w-4 h-4" /> Phone Verified
+                                    </span>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        {!otpSent ? (
+                                            <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                                <span className="text-slate-500 text-xs font-semibold px-2">
+                                                    Verification Required
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSendOtp}
+                                                    disabled={sendingOtp || !formData.phone || formData.phone.replace(/\D/g, '').length < 10}
+                                                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 shadow-md"
+                                                >
+                                                    {sendingOtp && <Loader2 className="w-3 h-3 animate-spin" />}
+                                                    {sendingOtp ? 'Sending...' : 'Send OTP'}
+                                                </button>
+                                                <div id="recaptcha-container" style={{ display: 'none' }} />
+                                            </div>
+                                        ) : (
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                                <div className="flex gap-3">
+                                                    <div className="flex-1">
+                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">
+                                                            Enter OTP
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            maxLength={6}
+                                                            placeholder="123456"
+                                                            value={otp}
+                                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl focus:border-[#E65100] outline-none transition-all tracking-widest text-center font-mono font-bold text-lg shadow-inner"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleVerifyOtp}
+                                                        disabled={verifyingOtp || otp.length < 6}
+                                                        className="self-end px-5 py-3.5 bg-[#E65100] text-white text-sm font-bold rounded-xl hover:bg-[#BF360C] disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md"
+                                                    >
+                                                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                                                    </button>
+                                                </div>
+                                                {!verifyingOtp && (
+                                                    <div className="mt-3 text-center">
+                                                        {resendCountdown > 0 ? (
+                                                            <span className="text-[11px] font-semibold text-slate-400">
+                                                                Resend OTP in {resendCountdown}s
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleSendOtp}
+                                                                disabled={sendingOtp}
+                                                                className="text-[11px] text-[#E65100] hover:text-[#BF360C] font-bold underline transition-colors"
+                                                            >
+                                                                {sendingOtp ? 'Sending...' : 'Resend OTP'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        {otpError && (
+                                            <div className="flex items-start gap-1.5 text-xs text-red-500 font-medium bg-red-50 px-3 py-2 rounded-lg">
+                                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                                <span>{otpError}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </>
                 )}
                 <input
                     type="email"

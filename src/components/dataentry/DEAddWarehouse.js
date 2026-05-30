@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 
 // ─ Same option lists as Owner ─
-const WAREHOUSE_CATEGORIES = ['Bonded', 'General', 'FTWZ'];
+const WAREHOUSE_CATEGORIES = ['Bonded', 'General', 'FTWZ', 'Government'];
 const CONSTRUCTION_TYPES = ['RCC', 'PEB', 'Shed', 'Other'];
 const STORAGE_TYPES = ['Hazardous', 'Non-Hazardous', 'Temperature Controlled', 'Non-Temperature'];
 const WAREHOUSE_AGES = ['0-3 years', '3-7 years', '7+ years'];
@@ -57,7 +57,7 @@ const VALUE_ADDED_SERVICES = [
 const PRICING_UNITS = ['Per unit', 'Per pallet', 'Per CBM', 'Per SKU', 'Custom'];
 const MIN_COMMITMENT_OPTIONS = ['No Minimum', '1 Month', '3 Months', '6 Months', '12 Months'];
 const SHORT_TERM_OPTIONS = ['Yes (1-3 months)', 'Yes (3-6 months)', 'No (Only Long-Term)'];
-const BUSINESS_TYPES = ['Warehouse Owner', '3PL Service Provider', 'Both'];
+const BUSINESS_TYPES = ['Warehouse Owner', '3PL Service Provider', 'Both', 'Government'];
 
 const STEP_LABELS = {
     1: 'Owner / Business Details',
