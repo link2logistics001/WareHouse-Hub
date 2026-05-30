@@ -1413,9 +1413,9 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                 errors={errors}
                                             />
                                             <Field
-                                                label="Google Map Pin (Lat, Long)"
+                                                label="Map Location Link"
                                                 id="googleMapPin"
-                                                placeholder="e.g. 19.0760, 72.8777"
+                                                placeholder="e.g. https://maps.app.goo.gl/..."
                                                 value={warehouseDetails.googleMapPin}
                                                 onChange={(v) => handleWarehouseChange('googleMapPin', v)}
                                                 errors={errors}

@@ -296,12 +296,33 @@ export default function WarehouseDetailPage({ params }) {
                                     <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-[1.1] break-words">
                                         {warehouse.warehouseName}
                                     </h1>
-                                    <div className="flex items-start text-slate-500 font-semibold bg-slate-50 self-start px-4 py-2 rounded-2xl border border-slate-100 max-w-full">
-                                        <MapPin className="w-5 h-5 text-orange-500 mr-2 mt-0.5 shrink-0" />
-                                        <span className="break-words font-medium">
-                                            {warehouse.addressWithZip}, {warehouse.city}, {warehouse.state}
-                                        </span>
-                                    </div>
+                                    {warehouse.googleMapPin ? (
+                                        <a
+                                            href={(() => {
+                                                const pin = warehouse.googleMapPin.trim();
+                                                if (/^https?:\/\//i.test(pin)) return pin;
+                                                if (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(pin)) {
+                                                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+                                                }
+                                                return `https://${pin}`;
+                                            })()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-start text-slate-500 hover:text-orange-600 font-semibold bg-slate-50 hover:bg-slate-100/50 self-start px-4 py-2 rounded-2xl border border-slate-100 hover:border-orange-200 max-w-full transition-all cursor-pointer group"
+                                        >
+                                            <MapPin className="w-5 h-5 text-orange-500 group-hover:text-orange-600 mr-2 mt-0.5 shrink-0 transition-colors" />
+                                            <span className="break-words font-medium underline decoration-dashed underline-offset-4 group-hover:decoration-solid">
+                                                {warehouse.addressWithZip}, {warehouse.city}, {warehouse.state}
+                                            </span>
+                                        </a>
+                                    ) : (
+                                        <div className="flex items-start text-slate-500 font-semibold bg-slate-50 self-start px-4 py-2 rounded-2xl border border-slate-100 max-w-full">
+                                            <MapPin className="w-5 h-5 text-orange-500 mr-2 mt-0.5 shrink-0" />
+                                            <span className="break-words font-medium">
+                                                {warehouse.addressWithZip}, {warehouse.city}, {warehouse.state}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="bg-slate-900 p-6 rounded-3xl shrink-0 min-w-[220px] shadow-2xl shadow-slate-900/20 group hover:scale-[1.02] transition-transform duration-300">

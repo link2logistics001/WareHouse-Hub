@@ -941,6 +941,26 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                                         ['Age', w.warehouseAge],
                                         ['Storage Types', w.storageTypes?.join(', ')],
                                         ['Container', w.containerHandling],
+                                        [
+                                            'Map Link',
+                                            w.googleMapPin ? (
+                                                <a
+                                                    href={(() => {
+                                                        const pin = w.googleMapPin.trim();
+                                                        if (/^https?:\/\//i.test(pin)) return pin;
+                                                        if (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(pin)) {
+                                                            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+                                                        }
+                                                        return `https://${pin}`;
+                                                    })()}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-orange-600 hover:text-orange-700 font-bold underline break-all"
+                                                >
+                                                    View on Map
+                                                </a>
+                                            ) : null,
+                                        ],
                                     ]}
                                 />
                                 <DetailGroup

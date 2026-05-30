@@ -367,7 +367,8 @@ export default function SuperAdminDashboard({ user, onLogout }) {
     };
 
     const handleDeleteUser = async (uid) => {
-        if (!window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
+        if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.'))
+            return;
         try {
             await deleteDoc(doc(db, 'users', uid));
             showToast('User deleted successfully.', 'success');
@@ -574,7 +575,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 transition={{ duration: 0.3 }}
                             >
                                 <BlockPeopleView
-                                    users={users.filter(u => u.userType === 'admin' || u.userType === 'superadmin')}
+                                    users={users.filter((u) => u.userType === 'admin' || u.userType === 'superadmin')}
                                     loading={usersLoading}
                                     handleBlockUser={handleBlockUser}
                                     handleDeleteUser={handleDeleteUser}
@@ -997,6 +998,26 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                                         ['Age', w.warehouseAge],
                                         ['Storage Types', w.storageTypes?.join(', ')],
                                         ['Container', w.containerHandling],
+                                        [
+                                            'Map Link',
+                                            w.googleMapPin ? (
+                                                <a
+                                                    href={(() => {
+                                                        const pin = w.googleMapPin.trim();
+                                                        if (/^https?:\/\//i.test(pin)) return pin;
+                                                        if (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(pin)) {
+                                                            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+                                                        }
+                                                        return `https://${pin}`;
+                                                    })()}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-orange-600 hover:text-orange-700 font-bold underline break-all"
+                                                >
+                                                    View on Map
+                                                </a>
+                                            ) : null,
+                                        ],
                                     ]}
                                 />
                                 <DetailGroup
@@ -2179,12 +2200,15 @@ function ManageCountriesView({ showToast }) {
             const isEnabled = (enabledCountries || []).includes(code);
             let newArray;
             if (isEnabled) {
-                newArray = (enabledCountries || []).filter(c => c !== code);
+                newArray = (enabledCountries || []).filter((c) => c !== code);
             } else {
                 newArray = [...(enabledCountries || []), code];
             }
             await setDoc(doc(db, 'settings', 'countries'), { enabled: newArray }, { merge: true });
-            showToast(isEnabled ? `${COUNTRY_CONFIG[code]?.name} disabled` : `${COUNTRY_CONFIG[code]?.name} enabled`, 'success');
+            showToast(
+                isEnabled ? `${COUNTRY_CONFIG[code]?.name} disabled` : `${COUNTRY_CONFIG[code]?.name} enabled`,
+                'success'
+            );
         } catch (error) {
             console.error('Failed to toggle country:', error);
             showToast('Failed to update country. Try again.', 'error');
@@ -2268,7 +2292,9 @@ function ManageCountriesView({ showToast }) {
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div className="bg-slate-100/50 p-2 rounded-lg">
                                     <p className="text-slate-400 mb-0.5">Currency</p>
-                                    <p className="font-semibold text-slate-700">{cfg.currencyCode} ({cfg.currency})</p>
+                                    <p className="font-semibold text-slate-700">
+                                        {cfg.currencyCode} ({cfg.currency})
+                                    </p>
                                 </div>
                                 <div className="bg-slate-100/50 p-2 rounded-lg">
                                     <p className="text-slate-400 mb-0.5">Phone</p>
@@ -2279,7 +2305,7 @@ function ManageCountriesView({ showToast }) {
                     );
                 })}
             </div>
-            
+
             {filteredCodes.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
                     <Globe className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -2290,4 +2316,3 @@ function ManageCountriesView({ showToast }) {
         </div>
     );
 }
-
