@@ -178,7 +178,7 @@ export const checkEmailExists = async (email) => {
  * @param {string} company - Company name (optional)
  * @returns {Promise<Object>} User data with userType
  */
-export const registerUser = async (email, password, name, userType, company = '') => {
+export const registerUser = async (email, password, name, userType, company = '', phone = '') => {
     // Rate-limit registration attempts
     checkAuthRateLimit(authAttempts, AUTH_RATE_LIMIT_MAX);
 
@@ -241,6 +241,7 @@ export const registerUser = async (email, password, name, userType, company = ''
             email: user.email,
             name: name,
             company: company,
+            phone: phone,
             userType: userType,
             verified: false,
             emailVerified: false,
@@ -256,6 +257,7 @@ export const registerUser = async (email, password, name, userType, company = ''
             name,
             email: user.email,
             company,
+            phone,
         });
 
         return {
@@ -266,7 +268,7 @@ export const registerUser = async (email, password, name, userType, company = ''
             userType: userType,
             verified: false,
             emailVerified: false,
-            phone: '',
+            phone: phone,
             photoURL: null,
             nameChanged: false,
             verificationSent: true,
