@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminDb } from '@/lib/firebase-admin';
+import { getAdminDb, isServiceAccountConfigured } from '@/lib/firebase-admin';
 
 export async function GET(request) {
     try {
@@ -8,6 +8,11 @@ export async function GET(request) {
 
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        }
+
+        if (!isServiceAccountConfigured()) {
+            console.warn('check-account API: Firebase Admin credentials not configured. Returning exists: false.');
+            return NextResponse.json({ exists: false, error: 'Firebase Admin credentials not configured' });
         }
 
         const db = getAdminDb();

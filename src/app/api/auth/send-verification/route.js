@@ -26,7 +26,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
+import { adminAuth, isServiceAccountConfigured } from '@/lib/firebase-admin';
 import { sendVerificationEmail } from '@/lib/emailService';
 
 /**
@@ -38,6 +38,10 @@ import { sendVerificationEmail } from '@/lib/emailService';
  */
 export async function POST(request) {
     try {
+        if (!isServiceAccountConfigured()) {
+            throw new Error('Firebase Admin credentials are not configured. Please add FIREBASE_ADMIN_CLIENT_EMAIL and FIREBASE_ADMIN_PRIVATE_KEY to .env or place service-account.json in the project root.');
+        }
+
         // Parse the request body
         const { email, name } = await request.json();
 
