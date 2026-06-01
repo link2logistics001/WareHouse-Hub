@@ -26,6 +26,8 @@
  * @param {string[]} props.facilities — List of facility features
  * @param {string[]} props.amenities — List of amenities
  * @param {string} props.category — Alternative category field (fallback for type)
+ * @param {string} props.measurementUnit — Unit of measurement (sqft, mt, both)
+ * @param {number|string} props.totalMetricTons — Capacity in metric tons
  */
 
 import React from 'react';
@@ -49,6 +51,8 @@ const WarehouseCard = ({
     facilities,
     amenities,
     category,
+    measurementUnit,
+    totalMetricTons,
 }) => {
     const router = useRouter();
     const { user } = useAuth();
@@ -133,10 +137,20 @@ const WarehouseCard = ({
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Area</p>
-                        <div className="flex items-center justify-end text-gray-700 font-semibold">
-                            <Ruler className="w-4 h-4 mr-1 text-gray-400" />
-                            {area} {config.unit}
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Area / Capacity</p>
+                        <div className="flex flex-col items-end text-gray-700 font-semibold mt-0.5">
+                            {(!measurementUnit || measurementUnit === 'sqft' || measurementUnit === 'both') && (
+                                <div className="flex items-center justify-end">
+                                    <Ruler className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                                    {area} {config.unit}
+                                </div>
+                            )}
+                            {(measurementUnit === 'mt' || measurementUnit === 'both') && (
+                                <div className="flex items-center justify-end text-[13px] mt-0.5">
+                                    <Layers className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                                    {totalMetricTons?.toLocaleString() || 0} MT
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

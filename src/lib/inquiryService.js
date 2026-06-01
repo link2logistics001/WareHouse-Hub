@@ -66,14 +66,19 @@ export const submitInquiry = async (type, formData, userId = null) => {
  * Updates the status of an inquiry (Admin only)
  * @param {string} inquiryId
  * @param {string} status - 'approved' | 'rejected' | 'pending'
+ * @param {Array<string>} targetOwnerEmails - Optional array of owner emails who should see this inquiry
  */
-export const updateInquiryStatus = async (inquiryId, status) => {
+export const updateInquiryStatus = async (inquiryId, status, targetOwnerEmails = []) => {
     try {
         const docRef = doc(db, 'admin_inquiries', inquiryId);
-        await updateDoc(docRef, {
+        const updateData = {
             status,
             updatedAt: serverTimestamp(),
-        });
+        };
+        if (status === 'approved' && targetOwnerEmails.length > 0) {
+            updateData.targetOwnerEmails = targetOwnerEmails;
+        }
+        await updateDoc(docRef, updateData);
         return { success: true };
     } catch (error) {
         console.error('Error updating inquiry status:', error);

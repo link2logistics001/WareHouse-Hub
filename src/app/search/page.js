@@ -272,6 +272,8 @@ function SearchResults() {
                                     wh.pricingAmount ? wh.pricingAmount.toLocaleString('en-IN') : 'Contact for Price'
                                 }
                                 area={wh.totalArea ? wh.totalArea.toLocaleString('en-IN') : 'N/A'}
+                                measurementUnit={wh.measurementUnit}
+                                totalMetricTons={wh.totalMetricTons}
                                 type={wh.warehouseCategory}
                                 imageUrl={wh.photos?.frontView}
                                 owner={wh.companyName || 'Verified Partner'}

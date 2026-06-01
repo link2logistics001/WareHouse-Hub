@@ -412,8 +412,11 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
     const [warehouseDetails, setWarehouseDetails] = useState({
         warehouseName: '',
         warehouseCategory: '',
+        measurementUnit: 'sqft',
         totalArea: '',
         availableArea: '',
+        totalMetricTons: '',
+        availableMetricTons: '',
         clearHeight: '',
         numberOfDockDoors: '',
         containerHandling: '',
@@ -501,8 +504,11 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
             setWarehouseDetails({
                 warehouseName: w.warehouseName || '',
                 warehouseCategory: w.warehouseCategory || '',
+                measurementUnit: w.measurementUnit || 'sqft',
                 totalArea: w.totalArea || '',
                 availableArea: w.availableArea || '',
+                totalMetricTons: w.totalMetricTons || '',
+                availableMetricTons: w.availableMetricTons || '',
                 clearHeight: w.clearHeight || '',
                 numberOfDockDoors: w.numberOfDockDoors || '',
                 containerHandling: w.containerHandling || '',
@@ -624,15 +630,31 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
         const e = {};
         if (!warehouseDetails.warehouseName.trim()) e.warehouseName = 'Warehouse name is required';
         if (!warehouseDetails.warehouseCategory) e.warehouseCategory = 'Please select a category';
-        const total = Number(warehouseDetails.totalArea);
-        const available = Number(warehouseDetails.availableArea);
+        const unit = warehouseDetails.measurementUnit || 'sqft';
 
-        if (!warehouseDetails.totalArea) e.totalArea = 'Total area is required';
-        else if (total < 0) e.totalArea = 'Total area cannot be negative';
+        if (unit === 'sqft' || unit === 'both') {
+            const total = Number(warehouseDetails.totalArea);
+            const available = Number(warehouseDetails.availableArea);
 
-        if (!warehouseDetails.availableArea) e.availableArea = 'Available area is required';
-        else if (available < 0) e.availableArea = 'Available area cannot be negative';
-        else if (total > 0 && available > total) e.availableArea = 'Available area cannot be greater than Total area';
+            if (!warehouseDetails.totalArea) e.totalArea = 'Total area is required';
+            else if (total < 0) e.totalArea = 'Total area cannot be negative';
+
+            if (!warehouseDetails.availableArea) e.availableArea = 'Available area is required';
+            else if (available < 0) e.availableArea = 'Available area cannot be negative';
+            else if (total > 0 && available > total) e.availableArea = 'Available area cannot be greater than Total area';
+        }
+
+        if (unit === 'mt' || unit === 'both') {
+            const totalMT = Number(warehouseDetails.totalMetricTons);
+            const availableMT = Number(warehouseDetails.availableMetricTons);
+
+            if (!warehouseDetails.totalMetricTons) e.totalMetricTons = 'Total capacity (MT) is required';
+            else if (totalMT < 0) e.totalMetricTons = 'Capacity cannot be negative';
+
+            if (!warehouseDetails.availableMetricTons) e.availableMetricTons = 'Available capacity (MT) is required';
+            else if (availableMT < 0) e.availableMetricTons = 'Available capacity cannot be negative';
+            else if (totalMT > 0 && availableMT > totalMT) e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
+        }
 
         if (!warehouseDetails.state.trim()) e.state = 'State is required';
         if (!warehouseDetails.city.trim()) e.city = 'City is required';
@@ -872,8 +894,11 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                 // Step 1
                 warehouseName: warehouseDetails.warehouseName.trim(),
                 warehouseCategory: warehouseDetails.warehouseCategory,
-                totalArea: Number(warehouseDetails.totalArea),
-                availableArea: Number(warehouseDetails.availableArea),
+                measurementUnit: warehouseDetails.measurementUnit || 'sqft',
+                totalArea: Number(warehouseDetails.totalArea) || 0,
+                availableArea: Number(warehouseDetails.availableArea) || 0,
+                totalMetricTons: Number(warehouseDetails.totalMetricTons) || 0,
+                availableMetricTons: Number(warehouseDetails.availableMetricTons) || 0,
                 clearHeight: Number(warehouseDetails.clearHeight),
                 numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors),
                 containerHandling: warehouseDetails.containerHandling,
@@ -1265,45 +1290,116 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                 </motion.div>
                                             )}
 
-                                            <Field
-                                                label={`Total Area (${countryConfig.unit})`}
-                                                id="totalArea"
-                                                type="number"
-                                                placeholder="e.g. 25000"
-                                                value={warehouseDetails.totalArea}
-                                                onChange={(v) => {
-                                                    handleWarehouseChange('totalArea', v);
-                                                    const available = Number(warehouseDetails.availableArea);
-                                                    if (available && Number(v) > 0 && available > Number(v))
-                                                        setErrors((prev) => ({
-                                                            ...prev,
-                                                            availableArea: 'Cannot exceed Total Area',
-                                                        }));
-                                                    else setErrors((prev) => ({ ...prev, availableArea: '' }));
-                                                }}
-                                                mandatory
-                                                errors={errors}
-                                            />
+                                            <div className="col-span-1 sm:col-span-2 mt-4 mb-2">
+                                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                                                    Measurement Unit <span className="text-orange-500">*</span>
+                                                </label>
+                                                <div className="flex gap-4">
+                                                    {['sqft', 'mt', 'both'].map((unit) => (
+                                                        <label key={unit} className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="measurementUnit"
+                                                                value={unit}
+                                                                checked={(warehouseDetails.measurementUnit || 'sqft') === unit}
+                                                                onChange={(e) => handleWarehouseChange('measurementUnit', e.target.value)}
+                                                                className="text-orange-500 focus:ring-orange-500"
+                                                            />
+                                                            <span className="text-sm font-bold text-slate-700">
+                                                                {unit === 'sqft' ? 'SqFt' : unit === 'mt' ? 'Metric Tons' : 'Both'}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
 
-                                            <Field
-                                                label={`Available Area (${countryConfig.unit})`}
-                                                id="availableArea"
-                                                type="number"
-                                                placeholder="e.g. 20000"
-                                                value={warehouseDetails.availableArea}
-                                                onChange={(v) => {
-                                                    handleWarehouseChange('availableArea', v);
-                                                    const total = Number(warehouseDetails.totalArea);
-                                                    if (total > 0 && Number(v) > total)
-                                                        setErrors((prev) => ({
-                                                            ...prev,
-                                                            availableArea: 'Cannot exceed Total Area',
-                                                        }));
-                                                    else setErrors((prev) => ({ ...prev, availableArea: '' }));
-                                                }}
-                                                mandatory
-                                                errors={errors}
-                                            />
+                                            {(warehouseDetails.measurementUnit === 'sqft' || warehouseDetails.measurementUnit === 'both' || !warehouseDetails.measurementUnit) && (
+                                                <>
+                                                    <Field
+                                                        label={`Total Area (${countryConfig.unit})`}
+                                                        id="totalArea"
+                                                        type="number"
+                                                        placeholder="e.g. 25000"
+                                                        value={warehouseDetails.totalArea}
+                                                        onChange={(v) => {
+                                                            handleWarehouseChange('totalArea', v);
+                                                            const available = Number(warehouseDetails.availableArea);
+                                                            if (available && Number(v) > 0 && available > Number(v))
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableArea: 'Cannot exceed Total Area',
+                                                                }));
+                                                            else setErrors((prev) => ({ ...prev, availableArea: '' }));
+                                                        }}
+                                                        mandatory
+                                                        errors={errors}
+                                                    />
+
+                                                    <Field
+                                                        label={`Available Area (${countryConfig.unit})`}
+                                                        id="availableArea"
+                                                        type="number"
+                                                        placeholder="e.g. 20000"
+                                                        value={warehouseDetails.availableArea}
+                                                        onChange={(v) => {
+                                                            handleWarehouseChange('availableArea', v);
+                                                            const total = Number(warehouseDetails.totalArea);
+                                                            if (total > 0 && Number(v) > total)
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableArea: 'Cannot exceed Total Area',
+                                                                }));
+                                                            else setErrors((prev) => ({ ...prev, availableArea: '' }));
+                                                        }}
+                                                        mandatory
+                                                        errors={errors}
+                                                    />
+                                                </>
+                                            )}
+
+                                            {(warehouseDetails.measurementUnit === 'mt' || warehouseDetails.measurementUnit === 'both') && (
+                                                <>
+                                                    <Field
+                                                        label={`Total Capacity (MT)`}
+                                                        id="totalMetricTons"
+                                                        type="number"
+                                                        placeholder="e.g. 1000"
+                                                        value={warehouseDetails.totalMetricTons}
+                                                        onChange={(v) => {
+                                                            handleWarehouseChange('totalMetricTons', v);
+                                                            const available = Number(warehouseDetails.availableMetricTons);
+                                                            if (available && Number(v) > 0 && available > Number(v))
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableMetricTons: 'Cannot exceed Total Capacity',
+                                                                }));
+                                                            else setErrors((prev) => ({ ...prev, availableMetricTons: '' }));
+                                                        }}
+                                                        mandatory
+                                                        errors={errors}
+                                                    />
+
+                                                    <Field
+                                                        label={`Available Capacity (MT)`}
+                                                        id="availableMetricTons"
+                                                        type="number"
+                                                        placeholder="e.g. 500"
+                                                        value={warehouseDetails.availableMetricTons}
+                                                        onChange={(v) => {
+                                                            handleWarehouseChange('availableMetricTons', v);
+                                                            const total = Number(warehouseDetails.totalMetricTons);
+                                                            if (total > 0 && Number(v) > total)
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableMetricTons: 'Cannot exceed Total Capacity',
+                                                                }));
+                                                            else setErrors((prev) => ({ ...prev, availableMetricTons: '' }));
+                                                        }}
+                                                        mandatory
+                                                        errors={errors}
+                                                    />
+                                                </>
+                                            )}
 
                                             <Field
                                                 label="Clear Height (ft)"

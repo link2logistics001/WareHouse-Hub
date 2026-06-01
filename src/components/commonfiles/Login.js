@@ -525,7 +525,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
               : 'text-[#E65100] bg-orange-50';
 
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '', phone: '' });
+    const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '', phone: '', countryCode: '+91' });
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
@@ -545,7 +545,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
         setOtpError('');
         setSendingOtp(true);
         try {
-            const phoneNumber = formData.phone.startsWith('+') ? formData.phone : `+91${formData.phone.replace(/\D/g, '')}`;
+            const phoneNumber = `${formData.countryCode}${formData.phone.replace(/\D/g, '')}`;
             await sendPhoneOtp(phoneNumber);
             setOtpSent(true);
             setResendCountdown(30);
@@ -609,7 +609,7 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                     formData.name,
                     userType,
                     formData.company,
-                    formData.phone
+                    `${formData.countryCode}${formData.phone.replace(/\D/g, '')}`
                 );
                 if (result.verificationSent) {
                     setVerificationData(result);
@@ -852,22 +852,51 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                             required
                         />
                         <div className="flex flex-col relative w-full">
-                            <input
-                                type="tel"
-                                name="phone"
-                                placeholder="+91 98765 XXXXX"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                    handleInputChange(e);
-                                    if (otpVerified) setOtpVerified(false);
-                                    if (otpSent) {
-                                        setOtpSent(false);
-                                        setResendCountdown(0);
+                            <div className="flex gap-2">
+                                <select
+                                    name="countryCode"
+                                    value={formData.countryCode}
+                                    onChange={handleInputChange}
+                                    className="w-[100px] px-3 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all bg-white text-sm font-medium"
+                                >
+                                    <option value="+91">🇮🇳 +91</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+61">🇦🇺 +61</option>
+                                    <option value="+971">🇦🇪 +971</option>
+                                    <option value="+65">🇸🇬 +65</option>
+                                    <option value="+81">🇯🇵 +81</option>
+                                    <option value="+49">🇩🇪 +49</option>
+                                    <option value="+33">🇫🇷 +33</option>
+                                </select>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    placeholder={
+                                        formData.countryCode === '+91' ? '98765 XXXXX' :
+                                        formData.countryCode === '+1' ? '202-555-XXXX' :
+                                        formData.countryCode === '+44' ? '7700 900XXX' :
+                                        formData.countryCode === '+61' ? '412 345 XXX' :
+                                        formData.countryCode === '+971' ? '50 123 XXXX' :
+                                        formData.countryCode === '+65' ? '8123 XXXX' :
+                                        formData.countryCode === '+81' ? '90-1234-XXXX' :
+                                        formData.countryCode === '+49' ? '151 2345XXXX' :
+                                        formData.countryCode === '+33' ? '6 12 34 XX XX' :
+                                        'Phone Number'
                                     }
-                                }}
-                                className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all"
-                                required
-                            />
+                                    value={formData.phone}
+                                    onChange={(e) => {
+                                        handleInputChange(e);
+                                        if (otpVerified) setOtpVerified(false);
+                                        if (otpSent) {
+                                            setOtpSent(false);
+                                            setResendCountdown(0);
+                                        }
+                                    }}
+                                    className="flex-1 px-5 py-4 rounded-2xl border border-slate-200 focus:border-[#E65100] outline-none transition-all"
+                                    required
+                                />
+                            </div>
                             {/* OTP Section */}
                             <div className="mt-2">
                                 {otpVerified ? (

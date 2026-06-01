@@ -39,6 +39,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     collection,
     collectionGroup,
@@ -1243,6 +1244,7 @@ function PhotoGallery({ photos }) {
         insideView: 'Inside View',
         dockArea: 'Dock Area',
         rateCard: 'Rate Card',
+        tariff: 'Tariff',
     };
 
     // Build array of available photos
@@ -1300,6 +1302,7 @@ function PhotoGallery({ photos }) {
             </div>
 
             {/* Lightbox Modal */}
+            {typeof window !== 'undefined' && createPortal(
             <AnimatePresence>
                 {lightboxOpen && (
                     <motion.div
@@ -1412,7 +1415,9 @@ function PhotoGallery({ photos }) {
                         )}
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+            )}
         </>
     );
 }

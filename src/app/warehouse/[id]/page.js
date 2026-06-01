@@ -344,15 +344,25 @@ export default function WarehouseDetailPage({ params }) {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-y border-slate-100 my-8">
                                 <ModernStat
-                                    icon={Ruler}
-                                    label="Total Area"
-                                    value={`${warehouse.totalArea} ${config.unit}`}
+                                    icon={warehouse.measurementUnit === 'mt' ? Layers : Ruler}
+                                    label={warehouse.measurementUnit === 'mt' ? "Total Capacity" : "Total Area"}
+                                    value={(() => {
+                                        const u = warehouse.measurementUnit || 'sqft';
+                                        if (u === 'sqft') return `${warehouse.totalArea} ${config.unit}`;
+                                        if (u === 'mt') return `${warehouse.totalMetricTons} MT`;
+                                        return `${warehouse.totalArea} ${config.unit} | ${warehouse.totalMetricTons} MT`;
+                                    })()}
                                     delay={0.1}
                                 />
                                 <ModernStat
                                     icon={CheckCircle2}
                                     label="Available"
-                                    value={`${warehouse.availableArea} ${config.unit}`}
+                                    value={(() => {
+                                        const u = warehouse.measurementUnit || 'sqft';
+                                        if (u === 'sqft') return `${warehouse.availableArea} ${config.unit}`;
+                                        if (u === 'mt') return `${warehouse.availableMetricTons} MT`;
+                                        return `${warehouse.availableArea} ${config.unit} | ${warehouse.availableMetricTons} MT`;
+                                    })()}
                                     delay={0.2}
                                 />
                                 <ModernStat

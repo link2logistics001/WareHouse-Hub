@@ -67,9 +67,19 @@ export default function GlobalLeads() {
 
     useEffect(() => {
         const fetchLeads = async () => {
+            if (!user) return;
             try {
                 const data = await getApprovedInquiries();
-                setLeads(data);
+                
+                // Filter leads to only show those where the user is targeted (if targets exist)
+                const filtered = data.filter(lead => {
+                    if (lead.targetOwnerEmails && lead.targetOwnerEmails.length > 0) {
+                        return lead.targetOwnerEmails.includes(user.email);
+                    }
+                    return true; // No specific targets, visible to all
+                });
+
+                setLeads(filtered);
             } catch (err) {
                 console.error('Failed to fetch leads:', err);
             } finally {
@@ -77,7 +87,7 @@ export default function GlobalLeads() {
             }
         };
         fetchLeads();
-    }, []);
+    }, [user]);
 
     const handleOpenChat = (lead, merchantUser) => {
         if (!user) return;
