@@ -522,6 +522,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                                         warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'
                                                     }
                                                     area={warehouse.totalArea?.toLocaleString()}
+                                                    measurementUnit={warehouse.measurementUnit}
+                                                    totalMetricTons={warehouse.totalMetricTons}
                                                     type={warehouse.warehouseCategory}
                                                     imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]}
                                                     facilities={warehouse.amenities || []}
@@ -621,6 +623,8 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                                         warehouse.pricingAmount?.toLocaleString('en-IN') || 'Contact'
                                                     }
                                                     area={warehouse.totalArea?.toLocaleString()}
+                                                    measurementUnit={warehouse.measurementUnit}
+                                                    totalMetricTons={warehouse.totalMetricTons}
                                                     type={warehouse.warehouseCategory}
                                                     imageUrl={warehouse.photos?.frontView || warehouse.images?.[0]}
                                                     facilities={warehouse.amenities || []}

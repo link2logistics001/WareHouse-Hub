@@ -470,13 +470,23 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
                 <div className="grid grid-cols-2 gap-3 mb-6 z-10">
                     <StatChip
                         icon={<Layers className="w-4 h-4 text-orange-500" />}
-                        label="Total Area"
-                        value={w.totalArea ? `${Number(w.totalArea).toLocaleString()} ${config.unit}` : '—'}
+                        label={w.measurementUnit === 'mt' ? 'Total Capacity' : 'Total Area'}
+                        value={(() => {
+                            const u = w.measurementUnit || 'sqft';
+                            if (u === 'sqft') return w.totalArea ? `${Number(w.totalArea).toLocaleString()} ${config.unit}` : '—';
+                            if (u === 'mt') return w.totalMetricTons ? `${Number(w.totalMetricTons).toLocaleString()} MT` : '—';
+                            return `${Number(w.totalArea || 0).toLocaleString()} ${config.unit} | ${Number(w.totalMetricTons || 0).toLocaleString()} MT`;
+                        })()}
                     />
                     <StatChip
                         icon={<Package className="w-4 h-4 text-blue-500" />}
-                        label="Available"
-                        value={w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—'}
+                        label={w.measurementUnit === 'mt' ? 'Available' : 'Available'}
+                        value={(() => {
+                            const u = w.measurementUnit || 'sqft';
+                            if (u === 'sqft') return w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—';
+                            if (u === 'mt') return w.availableMetricTons ? `${Number(w.availableMetricTons).toLocaleString()} MT` : '—';
+                            return `${Number(w.availableArea || 0).toLocaleString()} ${config.unit} | ${Number(w.availableMetricTons || 0).toLocaleString()} MT`;
+                        })()}
                     />
                     <StatChip
                         icon={<Building2 className="w-4 h-4 text-slate-500" />}

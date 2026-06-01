@@ -205,11 +205,25 @@ function DEWarehouseCard({ w, onDelete }) {
                                 <MapPin className="w-3 h-3 shrink-0" />
                                 {[w.city, w.state].filter(Boolean).join(', ') || '—'}
                             </span>
-                            {w.totalArea && (
+                            {w.measurementUnit === 'mt' ? (
+                                w.totalMetricTons && (
+                                    <span className="flex items-center gap-1">
+                                        <Layers className="w-3 h-3" />
+                                        {Number(w.totalMetricTons).toLocaleString()} MT
+                                    </span>
+                                )
+                            ) : w.measurementUnit === 'both' ? (
                                 <span className="flex items-center gap-1">
                                     <Layers className="w-3 h-3" />
-                                    {Number(w.totalArea).toLocaleString()} {config.unit}
+                                    {Number(w.totalArea || 0).toLocaleString()} {config.unit} | {Number(w.totalMetricTons || 0).toLocaleString()} MT
                                 </span>
+                            ) : (
+                                w.totalArea && (
+                                    <span className="flex items-center gap-1">
+                                        <Layers className="w-3 h-3" />
+                                        {Number(w.totalArea).toLocaleString()} {config.unit}
+                                    </span>
+                                )
                             )}
                         </div>
                     </div>
@@ -264,9 +278,12 @@ function DEWarehouseCard({ w, onDelete }) {
                                     { label: 'Construction', value: w.typeOfConstruction },
                                     {
                                         label: 'Available',
-                                        value: w.availableArea
-                                            ? `${Number(w.availableArea).toLocaleString()} ${config.unit}`
-                                            : '—',
+                                        value: (() => {
+                                            const u = w.measurementUnit || 'sqft';
+                                            if (u === 'sqft') return w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—';
+                                            if (u === 'mt') return w.availableMetricTons ? `${Number(w.availableMetricTons).toLocaleString()} MT` : '—';
+                                            return `${Number(w.availableArea || 0).toLocaleString()} ${config.unit} | ${Number(w.availableMetricTons || 0).toLocaleString()} MT`;
+                                        })(),
                                     },
                                     { label: 'Dock Doors', value: w.numberOfDockDoors || '—' },
                                     { label: 'Days', value: w.daysOfOperation || '—' },
