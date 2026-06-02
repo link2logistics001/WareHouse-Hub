@@ -70,13 +70,13 @@ export default function GlobalLeads() {
             if (!user) return;
             try {
                 const data = await getApprovedInquiries();
-                
-                // Filter leads to only show those where the user is targeted (if targets exist)
-                const filtered = data.filter(lead => {
+
+                // Filter leads to only show those where the user is targeted
+                const filtered = data.filter((lead) => {
                     if (lead.targetOwnerEmails && lead.targetOwnerEmails.length > 0) {
                         return lead.targetOwnerEmails.includes(user.email);
                     }
-                    return true; // No specific targets, visible to all
+                    return false; // No specific targets means not assigned to anyone yet
                 });
 
                 setLeads(filtered);

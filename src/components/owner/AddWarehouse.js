@@ -641,7 +641,8 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
 
             if (!warehouseDetails.availableArea) e.availableArea = 'Available area is required';
             else if (available < 0) e.availableArea = 'Available area cannot be negative';
-            else if (total > 0 && available > total) e.availableArea = 'Available area cannot be greater than Total area';
+            else if (total > 0 && available > total)
+                e.availableArea = 'Available area cannot be greater than Total area';
         }
 
         if (unit === 'mt' || unit === 'both') {
@@ -653,7 +654,8 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
 
             if (!warehouseDetails.availableMetricTons) e.availableMetricTons = 'Available capacity (MT) is required';
             else if (availableMT < 0) e.availableMetricTons = 'Available capacity cannot be negative';
-            else if (totalMT > 0 && availableMT > totalMT) e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
+            else if (totalMT > 0 && availableMT > totalMT)
+                e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
         }
 
         if (!warehouseDetails.state.trim()) e.state = 'State is required';
@@ -1296,24 +1298,41 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                 </label>
                                                 <div className="flex gap-4">
                                                     {['sqft', 'mt', 'both'].map((unit) => (
-                                                        <label key={unit} className="flex items-center gap-2 cursor-pointer">
+                                                        <label
+                                                            key={unit}
+                                                            className="flex items-center gap-2 cursor-pointer"
+                                                        >
                                                             <input
                                                                 type="radio"
                                                                 name="measurementUnit"
                                                                 value={unit}
-                                                                checked={(warehouseDetails.measurementUnit || 'sqft') === unit}
-                                                                onChange={(e) => handleWarehouseChange('measurementUnit', e.target.value)}
+                                                                checked={
+                                                                    (warehouseDetails.measurementUnit || 'sqft') ===
+                                                                    unit
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleWarehouseChange(
+                                                                        'measurementUnit',
+                                                                        e.target.value
+                                                                    )
+                                                                }
                                                                 className="text-orange-500 focus:ring-orange-500"
                                                             />
                                                             <span className="text-sm font-bold text-slate-700">
-                                                                {unit === 'sqft' ? 'SqFt' : unit === 'mt' ? 'Metric Tons' : 'Both'}
+                                                                {unit === 'sqft'
+                                                                    ? 'SqFt'
+                                                                    : unit === 'mt'
+                                                                      ? 'Metric Tons'
+                                                                      : 'Both'}
                                                             </span>
                                                         </label>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            {(warehouseDetails.measurementUnit === 'sqft' || warehouseDetails.measurementUnit === 'both' || !warehouseDetails.measurementUnit) && (
+                                            {(warehouseDetails.measurementUnit === 'sqft' ||
+                                                warehouseDetails.measurementUnit === 'both' ||
+                                                !warehouseDetails.measurementUnit) && (
                                                 <>
                                                     <Field
                                                         label={`Total Area (${countryConfig.unit})`}
@@ -1357,7 +1376,8 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                 </>
                                             )}
 
-                                            {(warehouseDetails.measurementUnit === 'mt' || warehouseDetails.measurementUnit === 'both') && (
+                                            {(warehouseDetails.measurementUnit === 'mt' ||
+                                                warehouseDetails.measurementUnit === 'both') && (
                                                 <>
                                                     <Field
                                                         label={`Total Capacity (MT)`}
@@ -1367,13 +1387,19 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                         value={warehouseDetails.totalMetricTons}
                                                         onChange={(v) => {
                                                             handleWarehouseChange('totalMetricTons', v);
-                                                            const available = Number(warehouseDetails.availableMetricTons);
+                                                            const available = Number(
+                                                                warehouseDetails.availableMetricTons
+                                                            );
                                                             if (available && Number(v) > 0 && available > Number(v))
                                                                 setErrors((prev) => ({
                                                                     ...prev,
                                                                     availableMetricTons: 'Cannot exceed Total Capacity',
                                                                 }));
-                                                            else setErrors((prev) => ({ ...prev, availableMetricTons: '' }));
+                                                            else
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableMetricTons: '',
+                                                                }));
                                                         }}
                                                         mandatory
                                                         errors={errors}
@@ -1393,7 +1419,11 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                                     ...prev,
                                                                     availableMetricTons: 'Cannot exceed Total Capacity',
                                                                 }));
-                                                            else setErrors((prev) => ({ ...prev, availableMetricTons: '' }));
+                                                            else
+                                                                setErrors((prev) => ({
+                                                                    ...prev,
+                                                                    availableMetricTons: '',
+                                                                }));
                                                         }}
                                                         mandatory
                                                         errors={errors}

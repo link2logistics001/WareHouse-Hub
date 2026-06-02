@@ -473,8 +473,10 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
                         label={w.measurementUnit === 'mt' ? 'Total Capacity' : 'Total Area'}
                         value={(() => {
                             const u = w.measurementUnit || 'sqft';
-                            if (u === 'sqft') return w.totalArea ? `${Number(w.totalArea).toLocaleString()} ${config.unit}` : '—';
-                            if (u === 'mt') return w.totalMetricTons ? `${Number(w.totalMetricTons).toLocaleString()} MT` : '—';
+                            if (u === 'sqft')
+                                return w.totalArea ? `${Number(w.totalArea).toLocaleString()} ${config.unit}` : '—';
+                            if (u === 'mt')
+                                return w.totalMetricTons ? `${Number(w.totalMetricTons).toLocaleString()} MT` : '—';
                             return `${Number(w.totalArea || 0).toLocaleString()} ${config.unit} | ${Number(w.totalMetricTons || 0).toLocaleString()} MT`;
                         })()}
                     />
@@ -483,8 +485,14 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
                         label={w.measurementUnit === 'mt' ? 'Available' : 'Available'}
                         value={(() => {
                             const u = w.measurementUnit || 'sqft';
-                            if (u === 'sqft') return w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—';
-                            if (u === 'mt') return w.availableMetricTons ? `${Number(w.availableMetricTons).toLocaleString()} MT` : '—';
+                            if (u === 'sqft')
+                                return w.availableArea
+                                    ? `${Number(w.availableArea).toLocaleString()} ${config.unit}`
+                                    : '—';
+                            if (u === 'mt')
+                                return w.availableMetricTons
+                                    ? `${Number(w.availableMetricTons).toLocaleString()} MT`
+                                    : '—';
                             return `${Number(w.availableArea || 0).toLocaleString()} ${config.unit} | ${Number(w.availableMetricTons || 0).toLocaleString()} MT`;
                         })()}
                     />

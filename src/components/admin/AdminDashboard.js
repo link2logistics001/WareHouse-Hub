@@ -49,6 +49,7 @@ import {
     updateDoc,
     serverTimestamp,
     orderBy,
+    where,
     onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -107,6 +108,7 @@ import {
     Sparkles,
     User,
     FileUp,
+    Check,
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
@@ -1302,122 +1304,123 @@ function PhotoGallery({ photos }) {
             </div>
 
             {/* Lightbox Modal */}
-            {typeof window !== 'undefined' && createPortal(
-            <AnimatePresence>
-                {lightboxOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
-                        onClick={() => setLightboxOpen(false)}
-                    >
-                        {/* Top bar - label + close */}
-                        <div
-                            className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div />
-                            <span className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-white border border-white/10">
-                                {photoEntries[activeIndex]?.label}
-                                <span className="ml-2 text-white/50">
-                                    {activeIndex + 1} / {photoEntries.length}
-                                </span>
-                            </span>
-                            <button
-                                onClick={() => setLightboxOpen(false)}
-                                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Main image area - fills all remaining space */}
-                        <div
-                            className="flex-1 flex items-center justify-center relative px-16 min-h-0"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Navigation - Previous */}
-                            {photoEntries.length > 1 && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        goPrev();
-                                    }}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                            )}
-
-                            {/* Spinner while lightbox image loads */}
-                            {!lightboxLoaded && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
-                                </div>
-                            )}
-                            <motion.img
-                                key={activeIndex}
-                                src={photoEntries[activeIndex]?.url}
-                                alt={photoEntries[activeIndex]?.label}
+            {typeof window !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        {lightboxOpen && (
+                            <motion.div
                                 initial={{ opacity: 0 }}
-                                animate={{ opacity: lightboxLoaded ? 1 : 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="max-w-full max-h-full object-contain rounded-lg"
-                                style={{ width: 'auto', height: 'auto' }}
-                                onLoad={() => setLightboxLoaded(true)}
-                            />
-
-                            {/* Navigation - Next */}
-                            {photoEntries.length > 1 && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        goNext();
-                                    }}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Bottom thumbnail strip */}
-                        {photoEntries.length > 1 && (
-                            <div
-                                className="flex-shrink-0 flex justify-center py-3"
-                                onClick={(e) => e.stopPropagation()}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
+                                onClick={() => setLightboxOpen(false)}
                             >
-                                <div className="flex gap-2 bg-white/5 p-1.5 rounded-xl border border-white/10">
-                                    {photoEntries.map((photo, idx) => (
+                                {/* Top bar - label + close */}
+                                <div
+                                    className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div />
+                                    <span className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-white border border-white/10">
+                                        {photoEntries[activeIndex]?.label}
+                                        <span className="ml-2 text-white/50">
+                                            {activeIndex + 1} / {photoEntries.length}
+                                        </span>
+                                    </span>
+                                    <button
+                                        onClick={() => setLightboxOpen(false)}
+                                        className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Main image area - fills all remaining space */}
+                                <div
+                                    className="flex-1 flex items-center justify-center relative px-16 min-h-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Navigation - Previous */}
+                                    {photoEntries.length > 1 && (
                                         <button
-                                            key={photo.key}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleNavigation(idx);
+                                                goPrev();
                                             }}
-                                            className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                                                idx === activeIndex
-                                                    ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
-                                                    : 'border-transparent opacity-50 hover:opacity-80'
-                                            }`}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
                                         >
-                                            <img
-                                                src={photo.url}
-                                                alt={photo.label}
-                                                className="w-full h-full object-cover"
-                                            />
+                                            <ChevronLeft className="w-5 h-5" />
                                         </button>
-                                    ))}
+                                    )}
+
+                                    {/* Spinner while lightbox image loads */}
+                                    {!lightboxLoaded && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
+                                        </div>
+                                    )}
+                                    <motion.img
+                                        key={activeIndex}
+                                        src={photoEntries[activeIndex]?.url}
+                                        alt={photoEntries[activeIndex]?.label}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: lightboxLoaded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="max-w-full max-h-full object-contain rounded-lg"
+                                        style={{ width: 'auto', height: 'auto' }}
+                                        onLoad={() => setLightboxLoaded(true)}
+                                    />
+
+                                    {/* Navigation - Next */}
+                                    {photoEntries.length > 1 && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                goNext();
+                                            }}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
-                            </div>
+
+                                {/* Bottom thumbnail strip */}
+                                {photoEntries.length > 1 && (
+                                    <div
+                                        className="flex-shrink-0 flex justify-center py-3"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="flex gap-2 bg-white/5 p-1.5 rounded-xl border border-white/10">
+                                            {photoEntries.map((photo, idx) => (
+                                                <button
+                                                    key={photo.key}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleNavigation(idx);
+                                                    }}
+                                                    className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                                                        idx === activeIndex
+                                                            ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
+                                                            : 'border-transparent opacity-50 hover:opacity-80'
+                                                    }`}
+                                                >
+                                                    <img
+                                                        src={photo.url}
+                                                        alt={photo.label}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
                         )}
-                    </motion.div>
+                    </AnimatePresence>,
+                    document.body
                 )}
-            </AnimatePresence>,
-            document.body
-            )}
         </>
     );
 }
@@ -1835,6 +1838,14 @@ function AdminInquiriesView({ showToast }) {
     const [inquiries, setInquiries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState({});
+    // Owner selection modal states
+    const [ownerSelectInquiryId, setOwnerSelectInquiryId] = useState(null);
+    const [warehousesList, setWarehousesList] = useState([]);
+    const [warehousesLoading, setWarehousesLoading] = useState(false);
+    const [selectedOwners, setSelectedOwners] = useState([]);
+    const [ownerSearch, setOwnerSearch] = useState('');
+
+    const isAlreadyApproved = inquiries.find((i) => i.id === ownerSelectInquiryId)?.status === 'approved';
 
     useEffect(() => {
         const unsub = subscribeToInquiries(null, (data) => {
@@ -1844,17 +1855,124 @@ function AdminInquiriesView({ showToast }) {
         return () => unsub();
     }, []);
 
-    const handleAction = async (id, status) => {
-        setActionLoading((prev) => ({ ...prev, [id]: status }));
+    // Fetch warehouse partner owners when modal opens
+    const openOwnerSelectModal = async (inquiryId) => {
+        setOwnerSelectInquiryId(inquiryId);
+        setSelectedOwners([]);
+        setOwnerSearch('');
+
+        // Pre-select owners if inquiry already has targetOwnerEmails
+        const inq = inquiries.find((i) => i.id === inquiryId);
+        if (inq?.targetOwnerEmails?.length > 0) {
+            setSelectedOwners(inq.targetOwnerEmails);
+        }
+
+        if (warehousesList.length === 0) {
+            setWarehousesLoading(true);
+            try {
+                // Fetch all users
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const partners = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+                // Fetch warehouses
+                const cg = collectionGroup(db, 'warehouses');
+                const snap = await getDocs(cg);
+                const list = snap.docs
+                    .map((d) => {
+                        const data = d.data();
+                        const segments = d.ref.path.split('/');
+                        const email = segments[3]; // Owner email with which the account was created
+                        const partner = partners.find((p) => p.email?.toLowerCase() === email?.toLowerCase());
+                        return {
+                            id: d.id,
+                            ...data,
+                            _role: segments[1], // 'owner' or 'dataentry'
+                            _email: email,
+                            _partnerName: partner?.name || email || 'Unnamed Partner',
+                        };
+                    })
+                    .sort((a, b) => (a.warehouseName || '').localeCompare(b.warehouseName || ''));
+                setWarehousesList(list);
+            } catch (err) {
+                console.error('Failed to fetch warehouses:', err);
+                showToast('Failed to load warehouses list.', 'error');
+            } finally {
+                setWarehousesLoading(false);
+            }
+        }
+    };
+
+    const toggleOwner = (email) => {
+        setSelectedOwners((prev) => (prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]));
+    };
+
+    const handleApproveWithOwners = async () => {
+        const id = ownerSelectInquiryId;
+        const inq = inquiries.find((i) => i.id === id);
+        const isAlreadyApproved = inq?.status === 'approved';
+
+        if (!isAlreadyApproved && selectedOwners.length === 0) {
+            showToast('Please select at least one warehouse partner.', 'error');
+            return;
+        }
+        setOwnerSelectInquiryId(null);
+        setActionLoading((prev) => ({ ...prev, [id]: 'approved' }));
         try {
-            await updateInquiryStatus(id, status);
-            showToast(`Inquiry ${status} successfully.`, status === 'approved' ? 'success' : 'error');
+            await updateInquiryStatus(id, 'approved', selectedOwners);
+            if (isAlreadyApproved) {
+                showToast(`Inquiry assignments updated.`, 'success');
+            } else {
+                showToast(`Inquiry approved & sent to ${selectedOwners.length} partner(s).`, 'success');
+            }
         } catch (err) {
-            showToast('Failed to update status.', 'error');
+            showToast(isAlreadyApproved ? 'Failed to update inquiry.' : 'Failed to approve inquiry.', 'error');
         } finally {
             setActionLoading((prev) => ({ ...prev, [id]: null }));
         }
     };
+
+    const handleUnassignPartner = async (inquiryId, emailToUnassign) => {
+        if (!window.confirm(`Are you sure you want to unassign ${emailToUnassign}?`)) {
+            return;
+        }
+        setActionLoading((prev) => ({ ...prev, [inquiryId]: 'updating' }));
+        try {
+            const inq = inquiries.find((i) => i.id === inquiryId);
+            if (!inq) return;
+            const updatedEmails = (inq.targetOwnerEmails || []).filter((email) => email !== emailToUnassign);
+            await updateInquiryStatus(inquiryId, 'approved', updatedEmails);
+            showToast(`Partner ${emailToUnassign} unassigned successfully.`, 'success');
+        } catch (err) {
+            console.error('Failed to unassign partner:', err);
+            showToast('Failed to unassign partner.', 'error');
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [inquiryId]: null }));
+        }
+    };
+
+    const handleReject = async (id) => {
+        setActionLoading((prev) => ({ ...prev, [id]: 'rejected' }));
+        try {
+            await updateInquiryStatus(id, 'rejected');
+            showToast('Inquiry rejected & removed from all owners.', 'error');
+        } catch (err) {
+            showToast('Failed to reject inquiry.', 'error');
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [id]: null }));
+        }
+    };
+
+    const filteredWarehouses = warehousesList.filter((w) => {
+        if (!ownerSearch) return true;
+        const q = ownerSearch.toLowerCase();
+        return (
+            w.warehouseName?.toLowerCase().includes(q) ||
+            w.contactPerson?.toLowerCase().includes(q) ||
+            w.email?.toLowerCase().includes(q) ||
+            w._email?.toLowerCase().includes(q) ||
+            w._partnerName?.toLowerCase().includes(q)
+        );
+    });
 
     if (loading)
         return (
@@ -1912,7 +2030,7 @@ function AdminInquiriesView({ showToast }) {
                                 <div className="flex gap-2">
                                     {inq.status !== 'approved' && (
                                         <button
-                                            onClick={() => handleAction(inq.id, 'approved')}
+                                            onClick={() => openOwnerSelectModal(inq.id)}
                                             disabled={!!actionLoading[inq.id]}
                                             className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
                                         >
@@ -1924,9 +2042,19 @@ function AdminInquiriesView({ showToast }) {
                                             Approve
                                         </button>
                                     )}
+                                    {inq.status === 'approved' && (
+                                        <button
+                                            onClick={() => openOwnerSelectModal(inq.id)}
+                                            disabled={!!actionLoading[inq.id]}
+                                            className="px-4 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl text-sm font-bold hover:bg-orange-100 transition-all flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            <Edit3 size={16} />
+                                            Reassign
+                                        </button>
+                                    )}
                                     {inq.status !== 'rejected' && (
                                         <button
-                                            onClick={() => handleAction(inq.id, 'rejected')}
+                                            onClick={() => handleReject(inq.id)}
                                             disabled={!!actionLoading[inq.id]}
                                             className="px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold hover:bg-red-100 transition-all flex items-center gap-2 disabled:opacity-50"
                                         >
@@ -1940,6 +2068,30 @@ function AdminInquiriesView({ showToast }) {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Show assigned owners for approved inquiries */}
+                            {inq.status === 'approved' && inq.targetOwnerEmails?.length > 0 && (
+                                <div className="mb-4 flex flex-wrap items-center gap-2">
+                                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                        Assigned to:
+                                    </span>
+                                    {inq.targetOwnerEmails.map((email) => (
+                                        <span
+                                            key={email}
+                                            className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[11px] font-bold"
+                                        >
+                                            {email}
+                                            <button
+                                                onClick={() => handleUnassignPartner(inq.id, email)}
+                                                className="hover:bg-emerald-200/50 rounded-full p-0.5 transition-colors text-emerald-600 hover:text-emerald-800 flex items-center justify-center shrink-0"
+                                                title="Unassign partner"
+                                            >
+                                                <X size={10} strokeWidth={3} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
 
                             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
@@ -2015,6 +2167,163 @@ function AdminInquiriesView({ showToast }) {
                     ))
                 )}
             </div>
+
+            {/* Owner Selection Modal */}
+            <AnimatePresence>
+                {ownerSelectInquiryId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setOwnerSelectInquiryId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal header */}
+                            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-900">Select Warehouse Partners</h3>
+                                    <p className="text-sm text-slate-500 mt-0.5">
+                                        Choose which warehouse partners should see this inquiry
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setOwnerSelectInquiryId(null)}
+                                    className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            {/* Search bar */}
+                            <div className="px-6 py-3 border-b border-slate-100">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search warehouses by name, partner ID or email..."
+                                        value={ownerSearch}
+                                        onChange={(e) => setOwnerSearch(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                                    />
+                                </div>
+                                {/* Select all / Clear all */}
+                                <div className="flex items-center justify-between mt-3">
+                                    <span className="text-xs font-bold text-slate-500">
+                                        {selectedOwners.length} selected
+                                    </span>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const uniqueEmails = Array.from(
+                                                    new Set(
+                                                        filteredWarehouses
+                                                            .map((w) => w._email || w.email)
+                                                            .filter(Boolean)
+                                                    )
+                                                );
+                                                setSelectedOwners(uniqueEmails);
+                                            }}
+                                            className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
+                                        >
+                                            Select All
+                                        </button>
+                                        <span className="text-slate-300">|</span>
+                                        <button
+                                            onClick={() => setSelectedOwners([])}
+                                            className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            Clear All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Warehouses list */}
+                            <div className="flex-1 overflow-y-auto px-6 py-3 space-y-1 min-h-0">
+                                {warehousesLoading ? (
+                                    <div className="py-12 text-center">
+                                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-500 mb-2" />
+                                        <p className="text-sm text-slate-500">Loading warehouses...</p>
+                                    </div>
+                                ) : filteredWarehouses.length === 0 ? (
+                                    <div className="py-12 text-center">
+                                        <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                        <p className="text-sm text-slate-500 font-medium">
+                                            {ownerSearch ? 'No warehouses match your search' : 'No warehouses found'}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    filteredWarehouses.map((wh) => {
+                                        const email = wh._email || wh.email;
+                                        const isSelected = selectedOwners.includes(email);
+                                        return (
+                                            <button
+                                                key={wh.id}
+                                                onClick={() => toggleOwner(email)}
+                                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
+                                                    isSelected
+                                                        ? 'bg-orange-50 border border-orange-200'
+                                                        : 'bg-white border border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                {/* Checkbox */}
+                                                <div
+                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                                        isSelected
+                                                            ? 'bg-orange-500 border-orange-500'
+                                                            : 'border-slate-300'
+                                                    }`}
+                                                >
+                                                    {isSelected && <Check size={12} className="text-white" />}
+                                                </div>
+                                                {/* Avatar */}
+                                                <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                    {(wh.warehouseName || 'W')[0].toUpperCase()}
+                                                </div>
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-slate-900 truncate">
+                                                        {wh.warehouseName || 'Unnamed Warehouse'}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 truncate">
+                                                        Warehouse Partner: {wh._partnerName} ({email})
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {/* Modal footer */}
+                            <div className="p-6 border-t border-slate-100 flex items-center justify-between gap-3">
+                                <button
+                                    onClick={() => setOwnerSelectInquiryId(null)}
+                                    className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleApproveWithOwners}
+                                    disabled={!isAlreadyApproved && selectedOwners.length === 0}
+                                    className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isAlreadyApproved ? <RefreshCw size={16} /> : <CheckCircle2 size={16} />}
+                                    {isAlreadyApproved ? 'Update' : `Approve & Assign (${selectedOwners.length})`}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -290,7 +290,7 @@ export const COUNTRY_CONFIG = {
         locale: 'es-MX',
         phone: '+919167714513',
         email: 'link2logistics001@gmail.com',
-    }
+    },
 };
 
 export const DEFAULT_COUNTRY = 'IN';

@@ -218,7 +218,8 @@ export default function AdminAddWarehouse({ setActiveTab }) {
 
             if (!warehouseDetails.availableMetricTons) e.availableMetricTons = 'Available capacity (MT) is required';
             else if (availableMT < 0) e.availableMetricTons = 'Available capacity cannot be negative';
-            else if (totalMT > 0 && availableMT > totalMT) e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
+            else if (totalMT > 0 && availableMT > totalMT)
+                e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
         }
 
         if (!warehouseDetails.state.trim()) e.state = 'State is required';
@@ -832,24 +833,41 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                                 </label>
                                                 <div className="flex gap-4">
                                                     {['sqft', 'mt', 'both'].map((unit) => (
-                                                        <label key={unit} className="flex items-center gap-2 cursor-pointer">
+                                                        <label
+                                                            key={unit}
+                                                            className="flex items-center gap-2 cursor-pointer"
+                                                        >
                                                             <input
                                                                 type="radio"
                                                                 name="measurementUnit"
                                                                 value={unit}
-                                                                checked={(warehouseDetails.measurementUnit || 'sqft') === unit}
-                                                                onChange={(e) => handleWarehouseChange('measurementUnit', e.target.value)}
+                                                                checked={
+                                                                    (warehouseDetails.measurementUnit || 'sqft') ===
+                                                                    unit
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleWarehouseChange(
+                                                                        'measurementUnit',
+                                                                        e.target.value
+                                                                    )
+                                                                }
                                                                 className="text-orange-500 focus:ring-orange-500"
                                                             />
                                                             <span className="text-sm font-bold text-slate-700">
-                                                                {unit === 'sqft' ? 'SqFt' : unit === 'mt' ? 'Metric Tons' : 'Both'}
+                                                                {unit === 'sqft'
+                                                                    ? 'SqFt'
+                                                                    : unit === 'mt'
+                                                                      ? 'Metric Tons'
+                                                                      : 'Both'}
                                                             </span>
                                                         </label>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            {(warehouseDetails.measurementUnit === 'sqft' || warehouseDetails.measurementUnit === 'both' || !warehouseDetails.measurementUnit) && (
+                                            {(warehouseDetails.measurementUnit === 'sqft' ||
+                                                warehouseDetails.measurementUnit === 'both' ||
+                                                !warehouseDetails.measurementUnit) && (
                                                 <>
                                                     <Field
                                                         label={`Total Area (${countryConfig.unit})`}
@@ -874,7 +892,8 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                                 </>
                                             )}
 
-                                            {(warehouseDetails.measurementUnit === 'mt' || warehouseDetails.measurementUnit === 'both') && (
+                                            {(warehouseDetails.measurementUnit === 'mt' ||
+                                                warehouseDetails.measurementUnit === 'both') && (
                                                 <>
                                                     <Field
                                                         label={`Total Capacity (MT)`}
@@ -892,7 +911,9 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                                         type="number"
                                                         placeholder="e.g. 500"
                                                         value={warehouseDetails.availableMetricTons}
-                                                        onChange={(v) => handleWarehouseChange('availableMetricTons', v)}
+                                                        onChange={(v) =>
+                                                            handleWarehouseChange('availableMetricTons', v)
+                                                        }
                                                         mandatory
                                                         errors={errors}
                                                     />

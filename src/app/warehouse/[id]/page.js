@@ -345,7 +345,7 @@ export default function WarehouseDetailPage({ params }) {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-y border-slate-100 my-8">
                                 <ModernStat
                                     icon={warehouse.measurementUnit === 'mt' ? Layers : Ruler}
-                                    label={warehouse.measurementUnit === 'mt' ? "Total Capacity" : "Total Area"}
+                                    label={warehouse.measurementUnit === 'mt' ? 'Total Capacity' : 'Total Area'}
                                     value={(() => {
                                         const u = warehouse.measurementUnit || 'sqft';
                                         if (u === 'sqft') return `${warehouse.totalArea} ${config.unit}`;
