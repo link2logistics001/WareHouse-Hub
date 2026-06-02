@@ -88,7 +88,7 @@ export default function Availability({ onOpenSidebar }) {
     const [warehouses, setWarehouses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    
+
     // Tab State: 'bookings' | 'calendar'
     const [activeSubTab, setActiveSubTab] = useState('bookings');
     const [expandedWarehouseId, setExpandedWarehouseId] = useState(null);
@@ -115,7 +115,7 @@ export default function Availability({ onOpenSidebar }) {
 
     const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
     const toDateStr = (day) => `${monthKey}-${String(day).padStart(2, '0')}`;
-    
+
     const isToday = (day) => {
         const now = new Date();
         return day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
@@ -133,7 +133,7 @@ export default function Availability({ onOpenSidebar }) {
         if (!user?.uid || !user?.email) return;
         try {
             const data = await fetchUserWarehouses('warehouse_partner', user.email, user.uid);
-            
+
             // Query bookings from warehouse_bookings root collection matching current owner
             const bookingsSnap = await getDocs(
                 query(collection(db, 'warehouse_bookings'), where('owner_id', '==', user.uid))
@@ -169,16 +169,17 @@ export default function Availability({ onOpenSidebar }) {
     }, [fetchWarehouses]);
 
     // Calculate space stats for a single warehouse on any target date
-    const getWarehouseSpaceStats = useCallback((w, targetDateStr = analysisDate) => {
-        const total = Number(w.totalArea) || Number(w.totalSpace) || 0;
-        const bookings = w.bookings || [];
-        const activeBookings = bookings.filter(
-            (b) => b.startDate <= targetDateStr && b.endDate >= targetDateStr
-        );
-        const booked = activeBookings.reduce((sum, b) => sum + (Number(b.bookedSpace) || 0), 0);
-        const left = Math.max(0, total - booked);
-        return { total, booked, left, activeBookings };
-    }, [analysisDate]);
+    const getWarehouseSpaceStats = useCallback(
+        (w, targetDateStr = analysisDate) => {
+            const total = Number(w.totalArea) || Number(w.totalSpace) || 0;
+            const bookings = w.bookings || [];
+            const activeBookings = bookings.filter((b) => b.startDate <= targetDateStr && b.endDate >= targetDateStr);
+            const booked = activeBookings.reduce((sum, b) => sum + (Number(b.bookedSpace) || 0), 0);
+            const left = Math.max(0, total - booked);
+            return { total, booked, left, activeBookings };
+        },
+        [analysisDate]
+    );
 
     // Aggregate portfolio metrics for the analysis date
     const portfolioStats = useMemo(() => {
@@ -195,26 +196,29 @@ export default function Availability({ onOpenSidebar }) {
     }, [warehouses, getWarehouseSpaceStats, analysisDate]);
 
     // Visual indicators generator for calendar cells
-    const getDayStatuses = useCallback((day) => {
-        const dateStr = toDateStr(day);
-        return warehouses.map((w) => {
-            const { total, booked, left } = getWarehouseSpaceStats(w, dateStr);
-            let status = 'available';
-            if (booked >= total && total > 0) {
-                status = 'booked';
-            } else if (booked > 0) {
-                status = 'partial';
-            }
-            return {
-                warehouseId: w.id,
-                warehouseName: w.warehouseName || w.name || 'Warehouse',
-                status,
-                booked,
-                total,
-                left,
-            };
-        });
-    }, [toDateStr, warehouses, getWarehouseSpaceStats]);
+    const getDayStatuses = useCallback(
+        (day) => {
+            const dateStr = toDateStr(day);
+            return warehouses.map((w) => {
+                const { total, booked, left } = getWarehouseSpaceStats(w, dateStr);
+                let status = 'available';
+                if (booked >= total && total > 0) {
+                    status = 'booked';
+                } else if (booked > 0) {
+                    status = 'partial';
+                }
+                return {
+                    warehouseId: w.id,
+                    warehouseName: w.warehouseName || w.name || 'Warehouse',
+                    status,
+                    booked,
+                    total,
+                    left,
+                };
+            });
+        },
+        [toDateStr, warehouses, getWarehouseSpaceStats]
+    );
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -370,7 +374,12 @@ export default function Availability({ onOpenSidebar }) {
                             onClick={onOpenSidebar}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
                             </svg>
                         </button>
                     )}
@@ -412,7 +421,10 @@ export default function Availability({ onOpenSidebar }) {
             <div className="px-6 sm:px-10 pt-10 relative z-10 max-w-7xl mx-auto">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 bg-white/40 border border-white rounded-[3rem] shadow-sm backdrop-blur-xl">
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        >
                             <Loader2 className="w-12 h-12 text-orange-500 mb-4 drop-shadow-md" />
                         </motion.div>
                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
@@ -441,22 +453,37 @@ export default function Availability({ onOpenSidebar }) {
                                 <div className="absolute right-[-20px] bottom-[-20px] opacity-10 group-hover:scale-110 transition-transform duration-500">
                                     <Ruler size={140} />
                                 </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-orange-100 opacity-80">Total Portfolio Space</p>
-                                <h3 className="text-3xl font-black mt-2">{portfolioStats.total.toLocaleString()} <span className="text-sm font-bold">{config.unit}</span></h3>
+                                <p className="text-[10px] uppercase font-black tracking-widest text-orange-100 opacity-80">
+                                    Total Portfolio Space
+                                </p>
+                                <h3 className="text-3xl font-black mt-2">
+                                    {portfolioStats.total.toLocaleString()}{' '}
+                                    <span className="text-sm font-bold">{config.unit}</span>
+                                </h3>
                             </div>
                             <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
                                 <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
                                     <Package size={140} />
                                 </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Total Active Booked</p>
-                                <h3 className="text-3xl font-black mt-2 text-rose-500">{portfolioStats.booked.toLocaleString()} <span className="text-sm font-bold text-slate-400">{config.unit}</span></h3>
+                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                                    Total Active Booked
+                                </p>
+                                <h3 className="text-3xl font-black mt-2 text-rose-500">
+                                    {portfolioStats.booked.toLocaleString()}{' '}
+                                    <span className="text-sm font-bold text-slate-400">{config.unit}</span>
+                                </h3>
                             </div>
                             <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
                                 <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
                                     <Warehouse size={140} />
                                 </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">Total Left (Free) Space</p>
-                                <h3 className="text-3xl font-black mt-2 text-emerald-500">{portfolioStats.left.toLocaleString()} <span className="text-sm font-bold text-slate-400">{config.unit}</span></h3>
+                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                                    Total Left (Free) Space
+                                </p>
+                                <h3 className="text-3xl font-black mt-2 text-emerald-500">
+                                    {portfolioStats.left.toLocaleString()}{' '}
+                                    <span className="text-sm font-bold text-slate-400">{config.unit}</span>
+                                </h3>
                             </div>
                         </div>
 
@@ -466,12 +493,19 @@ export default function Availability({ onOpenSidebar }) {
                                 {/* Sleek Capacity Date Selector */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/70 backdrop-blur-xl p-4 sm:p-6 rounded-[2.5rem] border border-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] mb-8 gap-4">
                                     <div>
-                                        <h4 className="font-extrabold text-slate-800 text-base">Space Capacity Analysis</h4>
-                                        <p className="text-xs font-semibold text-slate-500 mt-1">Select a target date to analyze active allocations and remaining space across your portfolio.</p>
+                                        <h4 className="font-extrabold text-slate-800 text-base">
+                                            Space Capacity Analysis
+                                        </h4>
+                                        <p className="text-xs font-semibold text-slate-500 mt-1">
+                                            Select a target date to analyze active allocations and remaining space
+                                            across your portfolio.
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-inner w-full sm:w-auto">
                                         <CalendarDays size={16} className="text-orange-500 shrink-0" />
-                                        <span className="text-xs font-black text-slate-700 uppercase tracking-wider shrink-0">Analysis Date:</span>
+                                        <span className="text-xs font-black text-slate-700 uppercase tracking-wider shrink-0">
+                                            Analysis Date:
+                                        </span>
                                         <input
                                             type="date"
                                             value={analysisDate}
@@ -482,9 +516,13 @@ export default function Availability({ onOpenSidebar }) {
                                 </div>
 
                                 {warehouses.map((w) => {
-                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(w, analysisDate);
+                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(
+                                        w,
+                                        analysisDate
+                                    );
                                     const bookingsCount = w.bookings?.length || 0;
-                                    const occupancyPercent = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
+                                    const occupancyPercent =
+                                        total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
                                     const isExpanded = expandedWarehouseId === w.id;
 
                                     let barColor = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
@@ -513,7 +551,8 @@ export default function Availability({ onOpenSidebar }) {
                                                             {w.warehouseName || w.name || 'Property'}
                                                         </h3>
                                                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate flex items-center gap-1 mt-1">
-                                                            <MapPin size={12} className="text-orange-400" /> {w.city || 'Location Details'}
+                                                            <MapPin size={12} className="text-orange-400" />{' '}
+                                                            {w.city || 'Location Details'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -522,7 +561,9 @@ export default function Availability({ onOpenSidebar }) {
                                                 <div className="flex-1 max-w-md bg-slate-50/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
                                                     <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-2">
                                                         <span>Space Occupancy ({occupancyPercent}%)</span>
-                                                        <span className="text-slate-400">Total: {total.toLocaleString()} {config.unit}</span>
+                                                        <span className="text-slate-400">
+                                                            Total: {total.toLocaleString()} {config.unit}
+                                                        </span>
                                                     </div>
                                                     <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden relative">
                                                         <div
@@ -531,8 +572,12 @@ export default function Availability({ onOpenSidebar }) {
                                                         />
                                                     </div>
                                                     <div className="flex justify-between items-center text-[10px] font-bold mt-2">
-                                                        <span className="text-rose-500">Booked: {booked.toLocaleString()} {config.unit}</span>
-                                                        <span className="text-emerald-500">Available: {left.toLocaleString()} {config.unit}</span>
+                                                        <span className="text-rose-500">
+                                                            Booked: {booked.toLocaleString()} {config.unit}
+                                                        </span>
+                                                        <span className="text-emerald-500">
+                                                            Available: {left.toLocaleString()} {config.unit}
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -548,7 +593,11 @@ export default function Availability({ onOpenSidebar }) {
                                                         onClick={() => setExpandedWarehouseId(isExpanded ? null : w.id)}
                                                         className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-extrabold transition-all flex items-center gap-1.5"
                                                     >
-                                                        Bookings ({bookingsCount}) <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                        Bookings ({bookingsCount}){' '}
+                                                        <ChevronDown
+                                                            size={14}
+                                                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                                                        />
                                                     </button>
                                                 </div>
                                             </div>
@@ -563,34 +612,55 @@ export default function Availability({ onOpenSidebar }) {
                                                         className="overflow-hidden"
                                                     >
                                                         <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
-                                                            <h4 className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Recorded Space Bookings</h4>
+                                                            <h4 className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">
+                                                                Recorded Space Bookings
+                                                            </h4>
                                                             {bookingsCount === 0 ? (
                                                                 <p className="text-sm font-semibold text-slate-400 italic py-2">
-                                                                    No capacity reservations recorded for this property yet. Click "Book Space" to create one.
+                                                                    No capacity reservations recorded for this property
+                                                                    yet. Click "Book Space" to create one.
                                                                 </p>
                                                             ) : (
                                                                 <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-slate-50/50 shadow-inner">
                                                                     <table className="w-full text-left border-collapse">
                                                                         <thead>
                                                                             <tr className="bg-slate-100/50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400 tracking-wider">
-                                                                                <th className="px-6 py-4">Client / Booking Name</th>
-                                                                                <th className="px-6 py-4">Booked Space</th>
-                                                                                <th className="px-6 py-4">Booking Period</th>
+                                                                                <th className="px-6 py-4">
+                                                                                    Client / Booking Name
+                                                                                </th>
+                                                                                <th className="px-6 py-4">
+                                                                                    Booked Space
+                                                                                </th>
+                                                                                <th className="px-6 py-4">
+                                                                                    Booking Period
+                                                                                </th>
                                                                                 <th className="px-6 py-4">Duration</th>
-                                                                                <th className="px-6 py-4 text-right">Actions</th>
+                                                                                <th className="px-6 py-4 text-right">
+                                                                                    Actions
+                                                                                </th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody className="divide-y divide-slate-100">
                                                                             {(w.bookings || []).map((b) => {
-                                                                                const isActive = b.startDate <= analysisDate && b.endDate >= analysisDate;
-                                                                                const isUpcoming = b.startDate > analysisDate;
+                                                                                const isActive =
+                                                                                    b.startDate <= analysisDate &&
+                                                                                    b.endDate >= analysisDate;
+                                                                                const isUpcoming =
+                                                                                    b.startDate > analysisDate;
                                                                                 return (
-                                                                                    <tr key={b.id} className="text-xs font-semibold text-slate-700 hover:bg-white/40 transition-colors">
+                                                                                    <tr
+                                                                                        key={b.id}
+                                                                                        className="text-xs font-semibold text-slate-700 hover:bg-white/40 transition-colors"
+                                                                                    >
                                                                                         <td className="px-6 py-4">
-                                                                                            <span className="font-extrabold text-slate-800 block">{b.clientName}</span>
+                                                                                            <span className="font-extrabold text-slate-800 block">
+                                                                                                {b.clientName}
+                                                                                            </span>
                                                                                             {isActive ? (
                                                                                                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full mt-1">
-                                                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Active on Selected Date
+                                                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />{' '}
+                                                                                                    Active on Selected
+                                                                                                    Date
                                                                                                 </span>
                                                                                             ) : isUpcoming ? (
                                                                                                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full mt-1">
@@ -603,21 +673,42 @@ export default function Availability({ onOpenSidebar }) {
                                                                                             )}
                                                                                         </td>
                                                                                         <td className="px-6 py-4 font-extrabold text-slate-900">
-                                                                                            {Number(b.bookedSpace).toLocaleString()} {config.unit}
+                                                                                            {Number(
+                                                                                                b.bookedSpace
+                                                                                            ).toLocaleString()}{' '}
+                                                                                            {config.unit}
                                                                                         </td>
                                                                                         <td className="px-6 py-4">
-                                                                                            <span className="text-slate-600">{b.startDate}</span>
-                                                                                            <span className="mx-2 text-slate-300">to</span>
-                                                                                            <span className="text-slate-600">{b.endDate}</span>
+                                                                                            <span className="text-slate-600">
+                                                                                                {b.startDate}
+                                                                                            </span>
+                                                                                            <span className="mx-2 text-slate-300">
+                                                                                                to
+                                                                                            </span>
+                                                                                            <span className="text-slate-600">
+                                                                                                {b.endDate}
+                                                                                            </span>
                                                                                         </td>
                                                                                         <td className="px-6 py-4">
                                                                                             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-150 rounded-xl text-[10px] font-bold text-slate-500 shadow-sm">
-                                                                                                <Clock size={10} className="text-orange-400" /> {calculateDuration(b.startDate, b.endDate)}
+                                                                                                <Clock
+                                                                                                    size={10}
+                                                                                                    className="text-orange-400"
+                                                                                                />{' '}
+                                                                                                {calculateDuration(
+                                                                                                    b.startDate,
+                                                                                                    b.endDate
+                                                                                                )}
                                                                                             </span>
                                                                                         </td>
                                                                                         <td className="px-6 py-4 text-right">
                                                                                             <button
-                                                                                                onClick={() => handleDeleteBooking(w, b.id)}
+                                                                                                onClick={() =>
+                                                                                                    handleDeleteBooking(
+                                                                                                        w,
+                                                                                                        b.id
+                                                                                                    )
+                                                                                                }
                                                                                                 className="w-9 h-9 rounded-full bg-rose-50 hover:bg-rose-500 hover:text-white border border-rose-100 text-rose-500 flex items-center justify-center shadow-sm hover:shadow-md hover:scale-105 transition-all"
                                                                                                 title="Release Booking Space"
                                                                                             >
@@ -712,7 +803,9 @@ export default function Availability({ onOpenSidebar }) {
                                             const day = i + 1;
                                             const today = isToday(day);
                                             const dayStatuses = getDayStatuses(day);
-                                            const activeIndicators = dayStatuses.filter(ds => ds.status !== 'available');
+                                            const activeIndicators = dayStatuses.filter(
+                                                (ds) => ds.status !== 'available'
+                                            );
 
                                             return (
                                                 <motion.div
@@ -750,7 +843,9 @@ export default function Availability({ onOpenSidebar }) {
                                                                     key={ds.warehouseId}
                                                                     className="flex items-center w-full h-6 bg-slate-100/80 rounded-md overflow-hidden border border-slate-200/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
                                                                 >
-                                                                    <div className={`h-full w-2 shrink-0 ${conf.color} ${conf.shadow}`} />
+                                                                    <div
+                                                                        className={`h-full w-2 shrink-0 ${conf.color} ${conf.shadow}`}
+                                                                    />
                                                                     <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 px-2 truncate">
                                                                         {ds.warehouseName}
                                                                     </span>
@@ -807,7 +902,8 @@ export default function Availability({ onOpenSidebar }) {
                                         Book Property Space
                                     </h3>
                                     <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">
-                                        Reserve capacity for {selectedWarehouseForBooking.warehouseName || selectedWarehouseForBooking.name}
+                                        Reserve capacity for{' '}
+                                        {selectedWarehouseForBooking.warehouseName || selectedWarehouseForBooking.name}
                                     </p>
                                 </div>
                                 <button
@@ -959,8 +1055,12 @@ export default function Availability({ onOpenSidebar }) {
                             {/* Date-specific Space Allocation Lists */}
                             <div className="p-6 sm:p-8 space-y-6 overflow-y-auto custom-scrollbar bg-slate-50/50 flex-1 relative z-10">
                                 {warehouses.map((w) => {
-                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(w, modalDate);
-                                    const occupancyPercent = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
+                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(
+                                        w,
+                                        modalDate
+                                    );
+                                    const occupancyPercent =
+                                        total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
                                     let statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]';
                                     let textStatus = 'Available';
                                     let statusBg = 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
@@ -976,42 +1076,73 @@ export default function Availability({ onOpenSidebar }) {
                                     }
 
                                     return (
-                                        <div key={w.id} className="p-5 rounded-3xl bg-white border border-slate-150 shadow-sm space-y-4">
+                                        <div
+                                            key={w.id}
+                                            className="p-5 rounded-3xl bg-white border border-slate-150 shadow-sm space-y-4"
+                                        >
                                             <div className="flex justify-between items-center gap-4">
                                                 <div>
-                                                    <h4 className="font-extrabold text-slate-800 text-base">{w.warehouseName || w.name}</h4>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{w.city}</p>
+                                                    <h4 className="font-extrabold text-slate-800 text-base">
+                                                        {w.warehouseName || w.name}
+                                                    </h4>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                        {w.city}
+                                                    </p>
                                                 </div>
-                                                <div className={`px-3 py-1 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 ${statusBg}`}>
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${statusColor}`} /> {textStatus} ({occupancyPercent}%)
+                                                <div
+                                                    className={`px-3 py-1 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 ${statusBg}`}
+                                                >
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />{' '}
+                                                    {textStatus} ({occupancyPercent}%)
                                                 </div>
                                             </div>
 
                                             {/* Details */}
                                             <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 text-center">
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Space</p>
-                                                    <p className="text-sm font-extrabold text-slate-800 mt-0.5">{total.toLocaleString()} {config.unit}</p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                                        Total Space
+                                                    </p>
+                                                    <p className="text-sm font-extrabold text-slate-800 mt-0.5">
+                                                        {total.toLocaleString()} {config.unit}
+                                                    </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Booked</p>
-                                                    <p className="text-sm font-extrabold text-rose-500 mt-0.5">{booked.toLocaleString()} {config.unit}</p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                                        Booked
+                                                    </p>
+                                                    <p className="text-sm font-extrabold text-rose-500 mt-0.5">
+                                                        {booked.toLocaleString()} {config.unit}
+                                                    </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">Left Space</p>
-                                                    <p className="text-sm font-extrabold text-emerald-500 mt-0.5">{left.toLocaleString()} {config.unit}</p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                                        Left Space
+                                                    </p>
+                                                    <p className="text-sm font-extrabold text-emerald-500 mt-0.5">
+                                                        {left.toLocaleString()} {config.unit}
+                                                    </p>
                                                 </div>
                                             </div>
 
                                             {/* Bookings on this Day */}
                                             {activeBookings.length > 0 && (
                                                 <div className="space-y-2">
-                                                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Active Bookings on this Day</p>
+                                                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+                                                        Active Bookings on this Day
+                                                    </p>
                                                     <div className="space-y-1.5">
                                                         {activeBookings.map((b) => (
-                                                            <div key={b.id} className="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-                                                                <span className="font-extrabold text-slate-700">{b.clientName}</span>
-                                                                <span className="font-black text-slate-900 bg-white px-2 py-1 border border-slate-200 rounded-lg">{b.bookedSpace.toLocaleString()} {config.unit}</span>
+                                                            <div
+                                                                key={b.id}
+                                                                className="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs"
+                                                            >
+                                                                <span className="font-extrabold text-slate-700">
+                                                                    {b.clientName}
+                                                                </span>
+                                                                <span className="font-black text-slate-900 bg-white px-2 py-1 border border-slate-200 rounded-lg">
+                                                                    {b.bookedSpace.toLocaleString()} {config.unit}
+                                                                </span>
                                                             </div>
                                                         ))}
                                                     </div>

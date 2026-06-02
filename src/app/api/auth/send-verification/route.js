@@ -39,7 +39,9 @@ import { sendVerificationEmail } from '@/lib/emailService';
 export async function POST(request) {
     try {
         if (!isServiceAccountConfigured()) {
-            throw new Error('Firebase Admin credentials are not configured. Please add FIREBASE_ADMIN_CLIENT_EMAIL and FIREBASE_ADMIN_PRIVATE_KEY to .env or place service-account.json in the project root.');
+            throw new Error(
+                'Firebase Admin credentials are not configured. Please add FIREBASE_ADMIN_CLIENT_EMAIL and FIREBASE_ADMIN_PRIVATE_KEY to .env or place service-account.json in the project root.'
+            );
         }
 
         // Parse the request body
@@ -71,7 +73,10 @@ export async function POST(request) {
 
         // Check if Resend encountered an error
         if (!result.success) {
-            throw new Error(result.error?.message || (typeof result.error === 'string' ? result.error : JSON.stringify(result.error)));
+            throw new Error(
+                result.error?.message ||
+                    (typeof result.error === 'string' ? result.error : JSON.stringify(result.error))
+            );
         }
 
         return NextResponse.json({ success: true, message: 'Verification email sent' });

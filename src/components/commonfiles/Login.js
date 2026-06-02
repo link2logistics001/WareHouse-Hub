@@ -525,7 +525,14 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
               : 'text-[#E65100] bg-orange-50';
 
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({ email: '', password: '', name: '', company: '', phone: '', countryCode: '+91' });
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+        name: '',
+        company: '',
+        phone: '',
+        countryCode: '+91',
+    });
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState('');
     const [otpVerified, setOtpVerified] = useState(false);
@@ -873,16 +880,25 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                                     type="tel"
                                     name="phone"
                                     placeholder={
-                                        formData.countryCode === '+91' ? '98765 XXXXX' :
-                                        formData.countryCode === '+1' ? '202-555-XXXX' :
-                                        formData.countryCode === '+44' ? '7700 900XXX' :
-                                        formData.countryCode === '+61' ? '412 345 XXX' :
-                                        formData.countryCode === '+971' ? '50 123 XXXX' :
-                                        formData.countryCode === '+65' ? '8123 XXXX' :
-                                        formData.countryCode === '+81' ? '90-1234-XXXX' :
-                                        formData.countryCode === '+49' ? '151 2345XXXX' :
-                                        formData.countryCode === '+33' ? '6 12 34 XX XX' :
-                                        'Phone Number'
+                                        formData.countryCode === '+91'
+                                            ? '98765 XXXXX'
+                                            : formData.countryCode === '+1'
+                                              ? '202-555-XXXX'
+                                              : formData.countryCode === '+44'
+                                                ? '7700 900XXX'
+                                                : formData.countryCode === '+61'
+                                                  ? '412 345 XXX'
+                                                  : formData.countryCode === '+971'
+                                                    ? '50 123 XXXX'
+                                                    : formData.countryCode === '+65'
+                                                      ? '8123 XXXX'
+                                                      : formData.countryCode === '+81'
+                                                        ? '90-1234-XXXX'
+                                                        : formData.countryCode === '+49'
+                                                          ? '151 2345XXXX'
+                                                          : formData.countryCode === '+33'
+                                                            ? '6 12 34 XX XX'
+                                                            : 'Phone Number'
                                     }
                                     value={formData.phone}
                                     onChange={(e) => {
@@ -913,7 +929,11 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                                                 <button
                                                     type="button"
                                                     onClick={handleSendOtp}
-                                                    disabled={sendingOtp || !formData.phone || formData.phone.replace(/\D/g, '').length < 10}
+                                                    disabled={
+                                                        sendingOtp ||
+                                                        !formData.phone ||
+                                                        formData.phone.replace(/\D/g, '').length < 10
+                                                    }
                                                     className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 shadow-md"
                                                 >
                                                     {sendingOtp && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -934,7 +954,9 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                                                             maxLength={6}
                                                             placeholder="123456"
                                                             value={otp}
-                                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                            onChange={(e) =>
+                                                                setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                                                            }
                                                             className="w-full p-2.5 bg-white border border-slate-200 rounded-xl focus:border-[#E65100] outline-none transition-all tracking-widest text-center font-mono font-bold text-lg shadow-inner"
                                                         />
                                                     </div>
@@ -944,7 +966,11 @@ function AuthFormStep({ userType, onBack, onLoginSuccess }) {
                                                         disabled={verifyingOtp || otp.length < 6}
                                                         className="self-end px-5 py-3.5 bg-[#E65100] text-white text-sm font-bold rounded-xl hover:bg-[#BF360C] disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md"
                                                     >
-                                                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                                                        {verifyingOtp ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            'Verify'
+                                                        )}
                                                     </button>
                                                 </div>
                                                 {!verifyingOtp && (

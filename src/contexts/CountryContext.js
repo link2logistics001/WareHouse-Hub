@@ -47,13 +47,17 @@ export function CountryProvider({ children }) {
 
     // Listen to Firestore for enabled countries
     useEffect(() => {
-        const unsub = onSnapshot(doc(db, 'settings', 'countries'), (snap) => {
-            if (snap.exists() && Array.isArray(snap.data().enabled)) {
-                setEnabledCountries(snap.data().enabled);
+        const unsub = onSnapshot(
+            doc(db, 'settings', 'countries'),
+            (snap) => {
+                if (snap.exists() && Array.isArray(snap.data().enabled)) {
+                    setEnabledCountries(snap.data().enabled);
+                }
+            },
+            (err) => {
+                console.error('Failed to fetch enabled countries:', err);
             }
-        }, (err) => {
-            console.error('Failed to fetch enabled countries:', err);
-        });
+        );
         return () => unsub();
     }, []);
 

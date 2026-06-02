@@ -215,7 +215,8 @@ function DEWarehouseCard({ w, onDelete }) {
                             ) : w.measurementUnit === 'both' ? (
                                 <span className="flex items-center gap-1">
                                     <Layers className="w-3 h-3" />
-                                    {Number(w.totalArea || 0).toLocaleString()} {config.unit} | {Number(w.totalMetricTons || 0).toLocaleString()} MT
+                                    {Number(w.totalArea || 0).toLocaleString()} {config.unit} |{' '}
+                                    {Number(w.totalMetricTons || 0).toLocaleString()} MT
                                 </span>
                             ) : (
                                 w.totalArea && (
@@ -280,8 +281,14 @@ function DEWarehouseCard({ w, onDelete }) {
                                         label: 'Available',
                                         value: (() => {
                                             const u = w.measurementUnit || 'sqft';
-                                            if (u === 'sqft') return w.availableArea ? `${Number(w.availableArea).toLocaleString()} ${config.unit}` : '—';
-                                            if (u === 'mt') return w.availableMetricTons ? `${Number(w.availableMetricTons).toLocaleString()} MT` : '—';
+                                            if (u === 'sqft')
+                                                return w.availableArea
+                                                    ? `${Number(w.availableArea).toLocaleString()} ${config.unit}`
+                                                    : '—';
+                                            if (u === 'mt')
+                                                return w.availableMetricTons
+                                                    ? `${Number(w.availableMetricTons).toLocaleString()} MT`
+                                                    : '—';
                                             return `${Number(w.availableArea || 0).toLocaleString()} ${config.unit} | ${Number(w.availableMetricTons || 0).toLocaleString()} MT`;
                                         })(),
                                     },

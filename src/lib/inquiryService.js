@@ -75,8 +75,12 @@ export const updateInquiryStatus = async (inquiryId, status, targetOwnerEmails =
             status,
             updatedAt: serverTimestamp(),
         };
-        if (status === 'approved' && targetOwnerEmails.length > 0) {
+        if (status === 'approved') {
+            // Save selected owner emails — only these owners will see the inquiry
             updateData.targetOwnerEmails = targetOwnerEmails;
+        } else if (status === 'rejected') {
+            // Clear owner assignments on rejection so no owner sees it
+            updateData.targetOwnerEmails = [];
         }
         await updateDoc(docRef, updateData);
         return { success: true };
