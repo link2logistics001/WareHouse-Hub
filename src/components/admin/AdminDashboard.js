@@ -113,8 +113,10 @@ import {
 import { blockUser } from '@/lib/auth';
 import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
+import BulkWarehouseUpload from '../admin/BulkWarehouseUpload';
 import AdminAddWarehouse from './AdminAddWarehouse';
-import { PlusCircle } from 'lucide-react';
+import AdminEditWarehouse from '../admin/AdminEditWarehouse';
+import { PlusCircle, Edit } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
@@ -124,6 +126,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount 
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'add-warehouse', label: 'Add Warehouse', icon: PlusCircle },
+        { id: 'bulk-upload', label: 'Bulk CSV Upload', icon: FileUp },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
         { id: 'block-people', label: 'Block People', icon: Users },
     ];
@@ -243,6 +246,7 @@ export default function AdminDashboard({ user, onLogout }) {
         return 'warehouses';
     });
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [editTarget, setEditTarget] = useState(null);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -313,6 +317,11 @@ export default function AdminDashboard({ user, onLogout }) {
     const showToast = (msg, type = 'success') => {
         setToast({ msg, type });
         setTimeout(() => setToast(null), 3500);
+    };
+
+    const handleEdit = (warehouse) => {
+        setEditTarget(warehouse);
+        setActiveView('edit-warehouse');
     };
 
     const handleAction = async (warehouseId, newStatus, docPath) => {
@@ -511,10 +520,22 @@ export default function AdminDashboard({ user, onLogout }) {
                                     setSearch={setSearch}
                                     counts={counts}
                                     handleAction={handleAction}
+                                    onEdit={handleEdit}
                                     actionLoading={actionLoading}
                                     expandedRow={expandedRow}
                                     setExpandedRow={setExpandedRow}
                                 />
+                            </motion.div>
+                        ) : activeView === 'edit-warehouse' ? (
+                            <motion.div
+                                key="edit-warehouse"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="h-full"
+                            >
+                                <AdminEditWarehouse setActiveTab={setActiveView} initialData={editTarget} />
                             </motion.div>
                         ) : activeView === 'block-people' ? (
                             <motion.div
@@ -555,6 +576,17 @@ export default function AdminDashboard({ user, onLogout }) {
                                 className="h-full"
                             >
                                 <AdminAddWarehouse setActiveTab={setActiveView} />
+                            </motion.div>
+                        ) : activeView === 'bulk-upload' ? (
+                            <motion.div
+                                key="bulk-upload"
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="h-full"
+                            >
+                                <BulkWarehouseUpload role="admin" user={user} setActiveTab={setActiveView} />
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
@@ -678,6 +710,7 @@ function WarehouseListView({
     setSearch,
     counts,
     handleAction,
+    onEdit,
     actionLoading,
     expandedRow,
     setExpandedRow,
@@ -761,6 +794,7 @@ function WarehouseListView({
                                 key={w.id}
                                 warehouse={w}
                                 handleAction={handleAction}
+                                onEdit={onEdit}
                                 actionLoading={actionLoading}
                                 isExpanded={expandedRow === w.id}
                                 onToggleExpand={() => setExpandedRow(expandedRow === w.id ? null : w.id)}
@@ -781,7 +815,7 @@ function WarehouseListView({
 // ---------------------------------------------------------------------
 // Warehouse Row
 // ---------------------------------------------------------------------
-function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, onToggleExpand }) {
+function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExpanded, onToggleExpand }) {
     const status = w.status || 'pending';
     const isActing = actionLoading[w.id];
 
@@ -845,7 +879,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
                         </span>
                         {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} sq ft</span>}
                     </div>
-                    <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
+                    <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} onEdit={onEdit} />
                 </div>
 
                 {/* Desktop grid layout */}
@@ -919,7 +953,7 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
 
                     {/* Actions */}
                     <div>
-                        <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} />
+                        <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} onEdit={onEdit} />
                     </div>
                 </div>
             </div>
@@ -999,9 +1033,18 @@ function WarehouseRow({ warehouse: w, handleAction, actionLoading, isExpanded, o
     );
 }
 
-function ActionButtons({ w, status, isActing, handleAction }) {
+function ActionButtons({ w, status, isActing, handleAction, onEdit }) {
     return (
         <div className="flex flex-wrap gap-2">
+            {onEdit && (
+                <button
+                    onClick={() => onEdit(w)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold transition-all"
+                >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                </button>
+            )}
             {status !== 'approved' && (
                 <button
                     onClick={() => handleAction(w.id, 'approved', w._docPath)}
