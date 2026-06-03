@@ -57,7 +57,7 @@ import {
     ArrowUpRight,
     Edit2,
 } from 'lucide-react';
-import OptimizedImage from '../commonfiles/OptimizedImage';
+import OptimizedImage from '../common/OptimizedImage';
 import Link from 'next/link';
 import { encodeWarehouseId } from '@/lib/warehouseId';
 

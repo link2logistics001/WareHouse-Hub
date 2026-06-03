@@ -23,8 +23,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import Navbar from '@/components/commonfiles/Navbar';
-import Footer from '@/components/commonfiles/Footer';
+import Navbar from '@/components/common/Navbar';
+import Footer from '@/components/common/Footer';
 import { useCountry } from '@/contexts/CountryContext';
 import { Phone, Mail, MessageCircle, ArrowRight } from 'lucide-react';
 

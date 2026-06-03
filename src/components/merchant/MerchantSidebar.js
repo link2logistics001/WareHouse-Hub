@@ -28,7 +28,7 @@
 'use client';
 import { useState } from 'react';
 import { Building2, MessageSquare, Star, FileText, LogOut, Settings, Sparkles } from 'lucide-react';
-import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
+import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false }) {
     const menuItems = [

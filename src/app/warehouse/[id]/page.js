@@ -33,8 +33,8 @@
 import { useState, useEffect, use } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import Navbar from '@/components/commonfiles/Navbar';
-import Footer from '@/components/commonfiles/Footer';
+import Navbar from '@/components/common/Navbar';
+import Footer from '@/components/common/Footer';
 import {
     MapPin,
     Ruler,
@@ -61,8 +61,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
 import { checkAccessStatus } from '@/lib/messaging';
 import { decodeWarehouseId } from '@/lib/warehouseId';
-import ChatBox from '@/components/commonfiles/ChatBox';
-import OptimizedImage from '@/components/commonfiles/OptimizedImage';
+import ChatBox from '@/components/common/ChatBox';
+import OptimizedImage from '@/components/common/OptimizedImage';
 
 export default function WarehouseDetailPage({ params }) {
     const { id: encodedId } = use(params);

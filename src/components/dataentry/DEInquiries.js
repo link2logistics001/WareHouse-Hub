@@ -28,7 +28,7 @@ import {
     Unlock,
     Trash2,
 } from 'lucide-react';
-import ChatBox from '../commonfiles/ChatBox';
+import ChatBox from '../common/ChatBox';
 import { getOrCreateConversation, grantContactAccess, deleteConversation } from '@/lib/messaging';
 
 export default function DEInquiries() {

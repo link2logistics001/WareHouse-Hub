@@ -31,15 +31,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logoutUser } from '@/lib/auth';
 
 // ── Landing Page Sections ──
-import Navbar from '@/components/commonfiles/Navbar';
-import HeroSection from '@/components/commonfiles/HeroSection';
-import HowItWorks from '@/components/commonfiles/HowItWorks';
-import WhyWarehouseHub from '@/components/commonfiles/WhyWarehouseHub';
-import Login from '@/components/commonfiles/Login';
-import TheProblem from '@/components/commonfiles/TheProblem';
-import UserSegments from '@/components/commonfiles/UserSegments';
-import FinalCTA from '@/components/commonfiles/FinalCTA';
-import Footer from '@/components/commonfiles/Footer';
+import Navbar from '@/components/common/Navbar';
+import HeroSection from '@/components/common/HeroSection';
+import HowItWorks from '@/components/common/HowItWorks';
+import WhyWarehouseHub from '@/components/common/WhyWarehouseHub';
+import Login from '@/components/common/Login';
+import TheProblem from '@/components/common/TheProblem';
+import UserSegments from '@/components/common/UserSegments';
+import FinalCTA from '@/components/common/FinalCTA';
+import Footer from '@/components/common/Footer';
 
 // ── Role-Specific Dashboards ──
 import MerchantDashboard from '@/components/merchant/MerchantDashboard';
@@ -49,10 +49,10 @@ import AdminDashboard from '@/components/admin/AdminDashboard';
 import SuperAdminDashboard from '@/components/superadmin/SuperAdminDashboard';
 
 // ── Shared Components ──
-import ChatBox from '@/components/commonfiles/ChatBox';
-import FeedbackWidget from '@/components/commonfiles/FeedbackWidget';
-import VerificationBarrier from '@/components/commonfiles/VerificationBarrier';
-import AccountBlocked from '@/components/commonfiles/AccountBlocked';
+import ChatBox from '@/components/common/ChatBox';
+import FeedbackWidget from '@/components/common/FeedbackWidget';
+import VerificationBarrier from '@/components/common/VerificationBarrier';
+import AccountBlocked from '@/components/common/AccountBlocked';
 
 export default function Home() {
     // Get authentication state from the global AuthContext

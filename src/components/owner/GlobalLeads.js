@@ -54,7 +54,7 @@ import {
 } from 'lucide-react';
 import { getApprovedInquiries } from '@/lib/inquiryService';
 import { useAuth } from '@/contexts/AuthContext';
-import ChatBox from '../commonfiles/ChatBox';
+import ChatBox from '../common/ChatBox';
 
 export default function GlobalLeads() {
     const { user } = useAuth();

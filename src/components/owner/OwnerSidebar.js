@@ -40,7 +40,7 @@ import {
     Monitor,
     MessageSquarePlus,
 } from 'lucide-react';
-import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
+import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
     const menuItems = [

@@ -48,7 +48,7 @@ import {
     Unlock,
     Trash2,
 } from 'lucide-react';
-import ChatBox from '../commonfiles/ChatBox';
+import ChatBox from '../common/ChatBox';
 import { getOrCreateConversation, grantContactAccess, deleteConversation, sendMessage } from '@/lib/messaging';
 import { getContactDetails } from '@/lib/contactDetails';
 

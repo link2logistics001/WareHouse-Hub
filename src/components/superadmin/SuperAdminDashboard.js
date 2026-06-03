@@ -116,7 +116,7 @@ import {
 } from 'lucide-react';
 import AdminEditWarehouse from '../admin/AdminEditWarehouse';
 import { blockUser } from '@/lib/auth';
-import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
+import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
 import { useCountry } from '@/contexts/CountryContext';
 import { COUNTRY_CONFIG } from '@/lib/locale';

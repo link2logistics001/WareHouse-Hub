@@ -47,11 +47,11 @@ import {
 import { useWishlist } from '@/hooks/useWishlist';
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
 
-import SearchFilters from '../commonfiles/SearchFilters';
-import WarehouseCard from '../commonfiles/WarehouseCard';
+import SearchFilters from '../common/SearchFilters';
+import WarehouseCard from '../common/WarehouseCard';
 import MerchantSidebar from './MerchantSidebar';
-import ChatBox from '../commonfiles/ChatBox';
-import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../commonfiles/InquiryModals';
+import ChatBox from '../common/ChatBox';
+import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../common/InquiryModals';
 
 import {
     Building2,

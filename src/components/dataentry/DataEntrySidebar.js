@@ -25,7 +25,7 @@
  */
 'use client';
 import { LayoutDashboard, Building2, PlusCircle, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
-import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
+import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout }) {
     const menuItems = [

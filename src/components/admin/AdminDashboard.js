@@ -111,7 +111,7 @@ import {
     Check,
 } from 'lucide-react';
 import { blockUser } from '@/lib/auth';
-import SidebarCountrySelector from '@/components/commonfiles/SidebarCountrySelector';
+import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 import { subscribeToInquiries, updateInquiryStatus } from '@/lib/inquiryService';
 import BulkWarehouseUpload from '../admin/BulkWarehouseUpload';
 import AdminAddWarehouse from './AdminAddWarehouse';

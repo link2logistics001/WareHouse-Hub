@@ -28,12 +28,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { collection, collectionGroup, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Fuse from 'fuse.js';
-import Navbar from '@/components/commonfiles/Navbar';
-import Footer from '@/components/commonfiles/Footer';
-import WarehouseCard from '@/components/commonfiles/WarehouseCard';
+import Navbar from '@/components/common/Navbar';
+import Footer from '@/components/common/Footer';
+import WarehouseCard from '@/components/common/WarehouseCard';
 import { Loader2, Search } from 'lucide-react';
 import { useCityAutocomplete } from '@/hooks/useCityAutocomplete';
-import CityDropdown from '@/components/commonfiles/CityDropdown';
+import CityDropdown from '@/components/common/CityDropdown';
 
 /**
  * SearchResults — Main search component with all logic and UI.

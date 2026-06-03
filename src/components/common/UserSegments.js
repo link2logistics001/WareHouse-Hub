@@ -33,7 +33,7 @@ import {
     Bell,
     MessageSquarePlus,
 } from 'lucide-react';
-import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '@/components/commonfiles/InquiryModals';
+import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '@/components/common/InquiryModals';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FLOATING UI ABSTRACTIONS (Visual Elements)

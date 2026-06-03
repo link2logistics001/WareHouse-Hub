@@ -28,8 +28,8 @@ import { db } from '@/lib/firebase';
 import { collectionGroup, query, where, getDocs } from 'firebase/firestore';
 import { useCityAutocomplete } from '@/hooks/useCityAutocomplete';
 import { useCountry } from '@/contexts/CountryContext';
-import CityDropdown from '@/components/commonfiles/CityDropdown';
-import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '@/components/commonfiles/InquiryModals';
+import CityDropdown from '@/components/common/CityDropdown';
+import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '@/components/common/InquiryModals';
 
 export default function HeroSection() {
     const videoRef = useRef(null);
