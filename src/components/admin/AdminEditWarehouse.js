@@ -247,7 +247,6 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
         if (!ownerDetails.companyName.trim()) e.companyName = 'Company name is required';
         if (!ownerDetails.contactPerson.trim()) e.contactPerson = 'Contact person is required';
         if (!ownerDetails.mobile.trim()) e.mobile = 'Mobile number is required';
-        else if (!otpVerified) e.mobile = 'Mobile number must be OTP verified';
         if (!ownerDetails.email.trim()) e.email = 'Email is required';
         return e;
     };
@@ -697,125 +696,16 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                                                 mandatory
                                                 errors={errors}
                                             />
-                                            <div className="flex flex-col relative w-full">
-                                                <Field
-                                                    label="Mobile"
-                                                    id="mobile"
-                                                    type="tel"
-                                                    placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`}
-                                                    value={ownerDetails.mobile}
-                                                    onChange={(v) => {
-                                                        handleOwnerChange('mobile', v);
-                                                        if (otpVerified) setOtpVerified(false);
-                                                        if (otpSent) {
-                                                            setOtpSent(false);
-                                                            setResendCountdown(0);
-                                                        }
-                                                    }}
-                                                    mandatory
-                                                    errors={errors}
-                                                />
-                                                <div className="mt-2">
-                                                    {otpVerified ? (
-                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit border border-emerald-100">
-                                                            <CheckCircle className="w-4 h-4" /> Phone Verified
-                                                        </span>
-                                                    ) : (
-                                                        <div className="flex flex-col gap-2">
-                                                            {!otpSent ? (
-                                                                <div className="flex items-center justify-between bg-white/50 p-2 rounded-xl border border-white">
-                                                                    <span className="text-slate-500 text-xs font-semibold px-2">
-                                                                        Verification Required
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={handleSendOtp}
-                                                                        disabled={
-                                                                            sendingOtp ||
-                                                                            !ownerDetails.mobile ||
-                                                                            ownerDetails.mobile.replace(/\D/g, '')
-                                                                                .length < 10
-                                                                        }
-                                                                        className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 shadow-md"
-                                                                    >
-                                                                        {sendingOtp && (
-                                                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                                                        )}{' '}
-                                                                        {sendingOtp ? 'Sending...' : 'Send OTP'}
-                                                                    </button>
-                                                                    <div
-                                                                        id="recaptcha-container"
-                                                                        style={{ display: 'none' }}
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <div className="bg-white/80 p-4 rounded-2xl border border-white shadow-sm backdrop-blur-md">
-                                                                    <div className="flex gap-3">
-                                                                        <div className="flex-1">
-                                                                            <label
-                                                                                htmlFor="otpCode"
-                                                                                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
-                                                                            >
-                                                                                Enter OTP
-                                                                            </label>
-                                                                            <input
-                                                                                id="otpCode"
-                                                                                type="text"
-                                                                                inputMode="numeric"
-                                                                                maxLength={6}
-                                                                                autoComplete="one-time-code"
-                                                                                placeholder="123456"
-                                                                                value={otp}
-                                                                                onChange={(e) =>
-                                                                                    setOtp(
-                                                                                        e.target.value
-                                                                                            .replace(/\D/g, '')
-                                                                                            .slice(0, 6)
-                                                                                    )
-                                                                                }
-                                                                                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all tracking-widest text-center font-mono font-bold text-lg shadow-inner"
-                                                                            />
-                                                                        </div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={handleVerifyOtp}
-                                                                            disabled={verifyingOtp || otp.length < 6}
-                                                                            className="self-end px-5 py-3.5 bg-orange-500 text-white text-sm font-bold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md"
-                                                                        >
-                                                                            {verifyingOtp ? (
-                                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                            ) : (
-                                                                                'Verify'
-                                                                            )}
-                                                                        </button>
-                                                                    </div>
-                                                                    {!verifyingOtp && (
-                                                                        <div className="mt-3 text-center">
-                                                                            {resendCountdown > 0 ? (
-                                                                                <span className="text-[11px] font-semibold text-slate-400">
-                                                                                    Resend OTP in {resendCountdown}s
-                                                                                </span>
-                                                                            ) : (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={handleSendOtp}
-                                                                                    disabled={sendingOtp}
-                                                                                    className="text-[11px] text-orange-600 hover:text-orange-700 font-bold underline transition-colors"
-                                                                                >
-                                                                                    {sendingOtp
-                                                                                        ? 'Sending...'
-                                                                                        : 'Resend OTP'}
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            {otpError && <ErrMsg msg={otpError} />}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <Field
+                                                label="Mobile"
+                                                id="mobile"
+                                                type="tel"
+                                                placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`}
+                                                value={ownerDetails.mobile}
+                                                onChange={(v) => handleOwnerChange('mobile', v)}
+                                                mandatory
+                                                errors={errors}
+                                            />
                                             <Field
                                                 label="Email"
                                                 id="email"
