@@ -35,6 +35,27 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
     const [errorMsg, setErrorMsg] = useState('');
     const fileInputRef = useRef(null);
 
+    const isDE = role === 'dataentry';
+    const backTab = isDE ? 'dashboard' : 'overview';
+    
+    const theme = isDE ? {
+        hoverText: 'hover:text-cyan-600',
+        bgLight: 'bg-cyan-100',
+        textAccent: 'text-cyan-600',
+        iconColor: 'text-cyan-500',
+        codeText: 'text-cyan-600',
+        hoverBorder: 'hover:border-cyan-400',
+        bgButton: 'bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500/20',
+    } : {
+        hoverText: 'hover:text-orange-600',
+        bgLight: 'bg-orange-100',
+        textAccent: 'text-orange-600',
+        iconColor: 'text-orange-500',
+        codeText: 'text-orange-600',
+        hoverBorder: 'hover:border-orange-400',
+        bgButton: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500/20',
+    };
+
     const handleDownloadTemplate = () => {
         const csv = Papa.unparse({
             fields: EXPECTED_HEADERS,
@@ -189,7 +210,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                             email: String(row.email).trim(),
                             ownerGstPan: row.ownerGstPan ? String(row.ownerGstPan).trim() : null,
                             ownerId: user.uid,
-                            status: 'approved',
+                            status: role === 'admin' ? 'approved' : 'pending',
                             createdAt: serverTimestamp(),
                             source: role,
                             submittedBy: user.email,
@@ -218,13 +239,13 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
         <div className="max-w-5xl mx-auto px-6 pt-10">
             <div className="mb-10">
                 <button
-                    onClick={() => setActiveTab('overview')}
-                    className="text-slate-500 hover:text-orange-600 flex items-center gap-2 mb-6 transition-colors font-semibold bg-white px-4 py-2 rounded-lg w-fit border border-slate-200 shadow-sm"
+                    onClick={() => setActiveTab(backTab)}
+                    className={`text-slate-500 ${theme.hoverText} flex items-center gap-2 mb-6 transition-colors font-semibold bg-white px-4 py-2 rounded-lg w-fit border border-slate-200 shadow-sm`}
                 >
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </button>
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
+                    <div className={`w-12 h-12 ${theme.bgLight} rounded-xl flex items-center justify-center ${theme.textAccent}`}>
                         <FileUp className="w-6 h-6" />
                     </div>
                     <div>
@@ -241,14 +262,14 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                 <div className="md:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-                            <Info className="w-5 h-5 text-orange-500" />
+                            <Info className={`w-5 h-5 ${theme.iconColor}`} />
                             How it works
                         </h3>
                         <ol className="list-decimal pl-4 space-y-3 text-sm text-slate-600 font-medium">
                             <li>Download the CSV Template below.</li>
                             <li>Fill in your warehouse details. Do not change the column headers.</li>
                             <li>Multiple values (like Storage Types, Security Features) should be separated by commas within the cell.</li>
-                            <li>Save the file as <code className="bg-slate-100 px-1.5 py-0.5 rounded text-orange-600">.csv</code> and upload it here.</li>
+                            <li>Save the file as <code className={`bg-slate-100 px-1.5 py-0.5 rounded ${theme.codeText}`}>.csv</code> and upload it here.</li>
                         </ol>
                         
                         <button
@@ -265,7 +286,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                 <div className="md:col-span-2 space-y-6">
                     <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div 
-                            className="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 hover:border-orange-400 transition-all"
+                            className={`border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 ${theme.hoverBorder} transition-all`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             <input
@@ -297,7 +318,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                             <button
                                 onClick={processUpload}
                                 disabled={!file || uploading}
-                                className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`px-6 py-3 ${theme.bgButton} text-white font-bold rounded-xl transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileUp className="w-5 h-5" />}
                                 {uploading ? 'Processing...' : 'Upload Data'}

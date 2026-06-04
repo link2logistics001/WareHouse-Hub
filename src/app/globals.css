@@ -36,11 +36,13 @@
    ─────────────────────────────────────────────────────────────── */
 
 html {
+    position: relative;
     scroll-behavior: smooth; /* Enables smooth scrolling for anchor links (#login, #features, etc.) */
     font-size: var(--font-size-base); /* Sets the base font size for rem calculations */
 }
 
 body {
+    position: relative;
     color: var(--foreground); /* Default text color (dark slate) */
     background: var(--background); /* Page background color (white) */
     line-height: var(--line-height-base); /* Default line height for body text */

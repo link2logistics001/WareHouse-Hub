@@ -187,6 +187,13 @@ export default function WarehouseDetailPage({ params }) {
                     <span className="text-slate-900 truncate max-w-[200px]">{warehouse.warehouseName}</span>
                 </nav>
 
+                {warehouse.isOnline === false && (
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl flex items-center gap-3 font-medium text-sm">
+                        <Info className="w-5 h-5 text-amber-500 shrink-0" />
+                        This warehouse is currently offline and not accepting inquiries.
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Photos & Primary Details */}
                     <div className="lg:col-span-2 space-y-8">
@@ -507,6 +514,11 @@ export default function WarehouseDetailPage({ params }) {
                                             <Home className="w-5 h-5" />
                                             Go to Dashboard
                                         </motion.a>
+                                    </div>
+                                ) : warehouse.isOnline === false ? (
+                                    <div className="w-full py-5 bg-slate-100 text-slate-400 font-black rounded-2xl flex items-center justify-center gap-3 border border-slate-200 cursor-not-allowed">
+                                        <Lock className="w-5 h-5 text-slate-300" />
+                                        Currently Offline
                                     </div>
                                 ) : (
                                     <motion.button

@@ -52,6 +52,7 @@ import WarehouseCard from '../common/WarehouseCard';
 import MerchantSidebar from './MerchantSidebar';
 import ChatBox from '../common/ChatBox';
 import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../common/InquiryModals';
+import { useCountry } from '@/contexts/CountryContext';
 
 import {
     Building2,
@@ -131,6 +132,7 @@ const SkeletonCard = () => (
 );
 
 export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
+    const { config } = useCountry();
     const [activeTab, setActiveTab] = useState('browse');
     const [selectedWarehouse, setSelectedWarehouse] = useState(null);
     const [filters, setFilters] = useState({ city: '', category: '', minArea: '', maxBudget: '' });
@@ -198,7 +200,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             (snapshot) => {
                 const whList = snapshot.docs
                     .map((doc) => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path }))
-                    .filter((w) => w.status === 'approved');
+                    .filter((w) => w.status === 'approved' && w.isOnline !== false);
                 setRealWarehouses(whList);
                 setWarehousesLoading(false);
             },
@@ -280,7 +282,19 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const filteredWarehouses = realWarehouses.filter((wh) => {
         const cityMatch = !filters.city || (wh.city && wh.city.toLowerCase().includes(filters.city.toLowerCase()));
         const categoryMatch = !filters.category || wh.warehouseCategory === filters.category;
-        const areaMatch = !filters.minArea || parseInt(wh.totalArea) >= parseInt(filters.minArea);
+        
+        // Resolve available capacity with fallback to total capacity
+        const whAvailableArea = wh.availableArea !== undefined && wh.availableArea !== '' ? parseInt(wh.availableArea) : parseInt(wh.totalArea || 0);
+        const whAvailableMT = wh.availableMetricTons !== undefined && wh.availableMetricTons !== '' ? parseInt(wh.availableMetricTons) : parseInt(wh.totalMetricTons || 0);
+        
+        let effectiveCapacity = whAvailableArea;
+        if (wh.measurementUnit === 'mt') {
+            // Convert Metric Tons to equivalent Area based on regional unit config (1 MT ≈ 10 sq ft or 1 sq m)
+            const factor = config.unit === 'sq m' ? 1 : 10;
+            effectiveCapacity = whAvailableMT * factor;
+        }
+        
+        const areaMatch = !filters.minArea || effectiveCapacity >= parseInt(filters.minArea);
         const priceMatch = !filters.maxBudget || parseInt(wh.pricingAmount) <= parseInt(filters.maxBudget);
         return cityMatch && categoryMatch && areaMatch && priceMatch;
     });
@@ -371,7 +385,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             </AnimatePresence>
 
             {/* Main Content Area */}
-            <div className="flex-1 lg:ml-20 flex flex-col h-screen overflow-y-auto custom-scrollbar relative z-10">
+            <div className="flex-1 flex flex-col h-screen overflow-y-auto custom-scrollbar relative z-10">
                 <main className="p-6 lg:p-10">
                     <div className="max-w-7xl mx-auto">
                         {/* REFINED HEADER */}

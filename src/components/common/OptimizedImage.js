@@ -58,7 +58,7 @@ export default function OptimizedImage({
         quality,
         sizes,
         priority,
-        loading: priority ? undefined : 'lazy',
+        loading: priority ? 'eager' : 'lazy',
         onError: handleError,
         className: imgClassName,
         style: fill ? { objectFit: 'cover' } : undefined,

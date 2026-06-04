@@ -83,7 +83,7 @@ function SearchResults() {
                 const snap = await getDocs(cg);
                 const data = snap.docs
                     .map((doc) => ({ id: doc.id, ...doc.data(), _docPath: doc.ref.path }))
-                    .filter((w) => w.status === 'approved'); // Only show admin-approved warehouses
+                    .filter((w) => w.status === 'approved' && w.isOnline !== false); // Only show admin-approved and online warehouses
                 setAllWarehouses(data);
             } catch (error) {
                 console.error('Search fetch error:', error);

@@ -66,7 +66,7 @@ export default function HeroSection() {
 
             const exists = snap.docs.some((d) => {
                 const data = d.data();
-                if (data.status !== 'approved') return false; // Client-side status check
+                if (data.status !== 'approved' || data.isOnline === false) return false; // Client-side status and online check
                 const city = (data.city || data.location?.city || '').toLowerCase();
                 return city === cityName || cityName.includes(city) || city.includes(cityName);
             });
