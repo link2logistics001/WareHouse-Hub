@@ -40,6 +40,7 @@ import DEAddWarehouse from './DEAddWarehouse';
 import DEMyWarehouses from './DEMyWarehouses';
 import DEInquiries from './DEInquiries';
 import DECalendar from './DECalendar';
+import BulkWarehouseUpload from '@/components/admin/BulkWarehouseUpload';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Camera,
@@ -306,6 +307,8 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
                 return <DECalendar />;
             case 'settings':
                 return <SettingsPanel user={user} setUser={setUser} />;
+            case 'bulk-upload':
+                return <BulkWarehouseUpload role="dataentry" user={user} setActiveTab={setActiveTab} />;
             default:
                 return <DEDashboardHome setActiveTab={setActiveTab} />;
         }
@@ -348,6 +351,7 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
                                     setSidebarOpen(false);
                                 }}
                                 onLogout={handleLogout}
+                                isDrawer={true}
                             />
                         </motion.div>
                     </motion.div>
@@ -355,7 +359,7 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
             </AnimatePresence>
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-20 transition-all duration-300">
+            <main className="flex-1 transition-all duration-300">
                 {/* Mobile Header */}
                 <header className="md:hidden bg-white/90 backdrop-blur-sm border-b border-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
                     <button

@@ -14,7 +14,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
 import { fetchUserWarehouses } from '@/lib/warehouseCollections';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import {
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    Loader2,
+    Clock,
+    Building2,
+    MapPin,
+    Layers,
+    Wifi,
+    WifiOff,
+    Trash2,
+    ChevronDown
+} from 'lucide-react';
 
 export default function DEMyWarehouses({ setActiveTab }) {
     const { user } = useAuth();

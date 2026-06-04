@@ -1,33 +1,6 @@
-/**
- * MerchantSidebar.js — Business Client Navigation Sidebar
- *
- * Dark-themed sidebar for the MerchantDashboard with auto-expand on hover.
- * Collapsed state (80px) shows only icons; expanded state (256px) reveals labels.
- *
- * ── Menu Items ──────────────────────────────────────────────────────
- *  - Browse Directory — Search and view available warehouses
- *  - Active Chats — View ongoing conversations with warehouse owners
- *  - Saved Properties — Wishlisted warehouses
- *  - My Requirements — Post storage requirements via inquiry forms
- *
- * ── Features ────────────────────────────────────────────────────────
- *  - Collapsible sidebar: 80px → 256px on hover (CSS transition)
- *  - Can also render as full-width drawer (for mobile via `isDrawer` prop)
- *  - "Send Custom Enquiry" button with sparkle icon
- *  - Country selector (SidebarCountrySelector) at the bottom
- *  - Sign out button with danger hover state
- *  - Ambient glow effects in the dark background
- *
- * @param {Object} props
- * @param {string} props.activeTab — Currently active tab ID
- * @param {Function} props.setActiveTab — Tab change handler
- * @param {Function} props.onLogout — Sign out callback
- * @param {Function} props.onSendEnquiry — Opens the inquiry modal
- * @param {boolean} props.isDrawer — If true, renders as full-width mobile drawer
- */
 'use client';
-import { useState } from 'react';
-import { Building2, MessageSquare, Star, FileText, LogOut, Settings, Sparkles } from 'lucide-react';
+
+import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false }) {
@@ -54,46 +27,43 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
 
             {/* ── Brand Logo Area ── */}
             <div
-                className={`h-24 flex items-center border-b border-white/10 shrink-0 bg-white/5 relative z-10 cursor-pointer ${isDrawer ? 'px-8' : 'px-[1.375rem]'}`}
+                className={`h-20 flex items-center border-b border-white/5 shrink-0 bg-white/[0.02] relative z-10 cursor-pointer ${isDrawer ? 'px-8' : 'px-[1.375rem]'}`}
                 onClick={() => window.location.reload()}
             >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-white/20">
-                    WH
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shrink-0 shadow-lg shadow-blue-600/20 overflow-hidden p-0.5 border border-white/10">
+                    <img src="/android-chrome-192x192.png" alt="L2L Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className={`ml-4 flex flex-col justify-center ${containerClasses}`}>
-                    <span className="text-lg font-black text-white tracking-tight leading-none">WarehouseHub</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 mt-1 flex items-center gap-1">
+                    <span className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 whitespace-nowrap">
+                        Link2Logistics
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-blue-400 mt-0.5">
                         Client Portal
                     </span>
                 </div>
             </div>
 
             {/* ── Navigation Menu ── */}
-            <nav className="flex-1 py-8 flex flex-col gap-2 px-4 overflow-y-auto overflow-x-hidden custom-scrollbar relative z-10">
+            <nav className="flex-1 py-8 flex flex-col gap-1.5 px-3 overflow-y-auto overflow-x-hidden custom-scrollbar relative z-10">
                 {menuItems.map((item) => {
                     const isActive = activeTab === item.id;
                     return (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center px-3.5 py-3.5 rounded-2xl transition-all duration-300 group/item relative overflow-hidden ${
+                            className={`w-full flex items-center px-3.5 py-3 rounded-xl transition-all duration-300 whitespace-nowrap group/item ${
                                 isActive
-                                    ? 'text-white shadow-lg shadow-blue-500/20'
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 translate-x-1'
+                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                             }`}
                         >
-                            {/* Active Gradient Background */}
-                            {isActive && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-100" />
-                            )}
-
                             <item.icon
                                 className={`w-5 h-5 shrink-0 transition-transform duration-300 relative z-10 ${
-                                    isActive ? 'text-white drop-shadow-md scale-110' : 'group-hover/item:scale-110'
+                                    isActive ? 'scale-110 text-white' : 'group-hover/item:scale-110 text-slate-400'
                                 }`}
                             />
 
-                            <span className={`ml-4 text-sm font-bold tracking-wide relative z-10 ${containerClasses}`}>
+                            <span className={`ml-4 text-sm font-semibold tracking-wide ${containerClasses}`}>
                                 {item.label}
                             </span>
                         </button>
@@ -104,34 +74,34 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
                 <div className="mt-4 pt-4 border-t border-white/10">
                     <button
                         onClick={() => onSendEnquiry && onSendEnquiry()}
-                        className="w-full flex items-center px-3.5 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 hover:scale-[1.02] transition-all duration-300 group/enquiry relative overflow-hidden"
+                        className="w-full flex items-center px-3.5 py-3 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all duration-300 whitespace-nowrap group/enquiry"
                     >
-                        <span className={`ml-4 text-sm font-black tracking-wide ${containerClasses}`}>
+                        <Sparkles className="w-5 h-5 shrink-0 transition-transform duration-300 relative z-10 group-hover/enquiry:scale-110 text-slate-400" />
+                        <span className={`ml-4 text-sm font-semibold tracking-wide ${containerClasses}`}>
                             Send Enquiry
                         </span>
-                        <div className="absolute top-0 right-0 w-12 h-full bg-white/20 -skew-x-12 translate-x-12 group-hover:translate-x-[-150%] transition-transform duration-1000" />
                     </button>
                 </div>
             </nav>
 
             {/* ── Bottom Actions ── */}
-            <div className="p-4 border-t border-white/10 bg-black/20 relative z-10 space-y-1">
+            <div className="p-4 border-t border-white/5 bg-white/[0.01] relative z-10 space-y-1">
                 <SidebarCountrySelector containerClasses={containerClasses} accentColor="blue" />
 
                 <button
                     onClick={() => setActiveTab && setActiveTab('settings')}
-                    className="w-full flex items-center px-3.5 py-3.5 text-slate-400 hover:bg-white/5 hover:text-slate-200 rounded-2xl transition-all duration-200 group/settings"
+                    className="w-full flex items-center px-3.5 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group/settings"
                 >
                     <Settings className="w-5 h-5 shrink-0 group-hover/settings:rotate-45 transition-transform duration-500" />
-                    <span className={`ml-4 text-sm font-bold tracking-wide ${containerClasses}`}>Settings</span>
+                    <span className={`ml-4 text-sm font-semibold ${containerClasses}`}>Settings</span>
                 </button>
 
                 <button
                     onClick={onLogout}
-                    className="w-full flex items-center px-3.5 py-3.5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 rounded-2xl transition-all duration-200 group/logout mt-1"
+                    className="w-full flex items-center px-3.5 py-3 text-slate-400 hover:bg-rose-500/10 hover:text-rose-500 rounded-xl transition-all duration-200 group/logout mt-1"
                 >
-                    <LogOut className="w-5 h-5 shrink-0 group-hover/logout:-translate-x-1 transition-transform" />
-                    <span className={`ml-4 text-sm font-bold tracking-wide ${containerClasses}`}>Secure Log Out</span>
+                    <LogOut className="w-5 h-5 shrink-0 group-hover/logout:-translate-x-0.5 transition-transform" />
+                    <span className={`ml-4 text-sm font-semibold ${containerClasses}`}>Sign Out</span>
                 </button>
             </div>
         </div>

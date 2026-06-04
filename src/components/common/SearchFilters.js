@@ -107,10 +107,10 @@ export default function SearchFilters({ filters, setFilters }) {
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-700 font-medium appearance-none cursor-pointer"
                     >
                         <option value="">All Categories</option>
-                        <option value="General Storage">General Storage</option>
-                        <option value="Cold Storage">Cold Storage</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Pharmaceutical">Pharmaceutical</option>
+                        <option value="Bonded">Bonded</option>
+                        <option value="General">General</option>
+                        <option value="FTWZ">FTWZ</option>
+                        <option value="Government">Government</option>
                     </select>
                     {/* Custom dropdown arrow */}
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
