@@ -258,7 +258,7 @@ export default function AdminDashboard({ user, onLogout }) {
         sessionStorage.setItem('admin_activeView', activeView);
     }, [activeView]);
 
-    // Real-time Firestore subscription - listen to collectionGroup 'warehouses'
+    // Real-time Firestore subscription - listen to collectionGroup 'warehouses'
     // which pulls docs from warehouse_details/owner/emails/*/warehouses AND warehouse_details/dataentry/emails/*/warehouses
     useEffect(() => {
         if (!user) return;
@@ -638,7 +638,7 @@ function OverviewView({ counts, warehouses }) {
 
     return (
         <div className="space-y-6">
-            {/* Stat cards - matches merchant/owner dashboard style */}
+            {/* Stat cards - matches merchant/owner dashboard style */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {stats.map((s) => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
@@ -672,7 +672,7 @@ function OverviewView({ counts, warehouses }) {
                                         {w.warehouseName || 'Unnamed Warehouse'}
                                     </p>
                                     <p className="text-slate-500 text-xs mt-0.5">
-                                        {[w.city, w.state].filter(Boolean).join(', ')} · {w.contactPerson || '-'}
+                                        {[w.city, w.state].filter(Boolean).join(', ')} · {w.contactPerson || '-'}
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
@@ -849,7 +849,7 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
+                                <p className="font-bold text-slate-900 text-sm truncate">{w.warehouseName || '-'}</p>
                                 <button
                                     onClick={onToggleExpand}
                                     className="text-slate-400 hover:text-slate-600 flex-shrink-0"
@@ -875,7 +875,7 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                     <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
-                            {[w.city, w.state].filter(Boolean).join(', ') || '-'}
+                            {[w.city, w.state].filter(Boolean).join(', ') || '-'}
                         </span>
                         {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} sq ft</span>}
                     </div>
@@ -947,7 +947,7 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                       month: 'short',
                                       year: 'numeric',
                                   })
-                                : '-'}
+                                : '-'}
                         </p>
                     </div>
 
@@ -1236,7 +1236,7 @@ function PhotoThumb({ src, alt, onClick, className = '' }) {
             onClick={onClick}
             className={`group relative bg-white rounded-xl overflow-hidden border-2 border-white shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-200 cursor-pointer ${className}`}
         >
-            {/* Skeleton shimmer - visible until image loads */}
+            {/* Skeleton shimmer - visible until image loads */}
             {!loaded && !error && (
                 <div className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
                     <Image className="w-5 h-5 text-slate-300" />
@@ -1359,7 +1359,7 @@ function PhotoGallery({ photos }) {
                                 className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
                                 onClick={() => setLightboxOpen(false)}
                             >
-                                {/* Top bar - label + close */}
+                                {/* Top bar - label + close */}
                                 <div
                                     className="flex items-center justify-between px-4 py-3 flex-shrink-0"
                                     onClick={(e) => e.stopPropagation()}
@@ -1379,7 +1379,7 @@ function PhotoGallery({ photos }) {
                                     </button>
                                 </div>
 
-                                {/* Main image area - fills all remaining space */}
+                                {/* Main image area - fills all remaining space */}
                                 <div
                                     className="flex-1 flex items-center justify-center relative px-16 min-h-0"
                                     onClick={(e) => e.stopPropagation()}
@@ -1468,7 +1468,7 @@ function PhotoGallery({ photos }) {
     );
 }
 // ---------------------------------------------------------------------
-// Migration View - Migrate legacy owner/merchant -> warehouse_partner/business_client
+// Migration View - Migrate legacy owner/merchant -> warehouse_partner/business_client
 // ---------------------------------------------------------------------
 function MigrationView({ showToast }) {
     const [migrating, setMigrating] = useState(false);
@@ -1555,7 +1555,7 @@ function MigrationView({ showToast }) {
                 updated > 0 ? 'success' : 'info'
             );
 
-            // Step 2: Migrate contact_details - copy owner -> warehouse_partner, merchant -> business_client
+            // Step 2: Migrate contact_details - copy owner -> warehouse_partner, merchant -> business_client
             addLog('\n[INFO] Scanning contact_details collections...', 'info');
 
             const roleMappings = [
@@ -1749,10 +1749,10 @@ function MigrationView({ showToast }) {
                     </div>
                     <ul className="text-sm text-amber-700 space-y-1 ml-6 list-disc">
                         <li>
-                            <code className="bg-white/80 px-1 rounded text-xs">users</code> - userType field
+                            <code className="bg-white/80 px-1 rounded text-xs">users</code> - userType field
                         </li>
                         <li>
-                            <code className="bg-white/80 px-1 rounded text-xs">contact_details</code> - documents copied
+                            <code className="bg-white/80 px-1 rounded text-xs">contact_details</code> - documents copied
                             to new role subcollections
                         </li>
                     </ul>
