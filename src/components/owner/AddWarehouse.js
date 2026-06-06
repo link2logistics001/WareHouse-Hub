@@ -1320,7 +1320,9 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                                                             />
                                                             <span className="text-sm font-bold text-slate-700">
                                                                 {unit === 'sqft'
-                                                                    ? 'SqFt'
+                                                                    ? countryConfig.unit === 'sq ft'
+                                                                        ? 'SqFt'
+                                                                        : 'SqM'
                                                                     : unit === 'mt'
                                                                       ? 'Metric Tons'
                                                                       : 'Both'}

@@ -102,7 +102,8 @@ export default function AdminAddWarehouse({ setActiveTab }) {
         warehouseGstPan: '',
         state: '',
         city: '',
-        addressWithZip: '',
+        address: '',
+        zipCode: '',
         googleMapPin: '',
     });
     const [operationsDetails, setOperationsDetails] = useState({
@@ -223,7 +224,10 @@ export default function AdminAddWarehouse({ setActiveTab }) {
 
         if (!warehouseDetails.state.trim()) e.state = 'State is required';
         if (!warehouseDetails.city.trim()) e.city = 'City is required';
-        if (!warehouseDetails.addressWithZip.trim()) e.addressWithZip = 'Address with zip is required';
+        if (!warehouseDetails.address.trim()) e.address = 'Address is required';
+        if (!warehouseDetails.zipCode.trim()) e.zipCode = `${countryConfig.postalLabel} is required`;
+        else if (!countryConfig.postalRegex.test(warehouseDetails.zipCode.trim()))
+            e.zipCode = `Enter a valid ${countryConfig.postalLabel}`;
         return e;
     };
     const validateStep3 = () => {
@@ -432,7 +436,9 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                 warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null,
                 state: warehouseDetails.state.trim(),
                 city: warehouseDetails.city.trim(),
-                addressWithZip: warehouseDetails.addressWithZip.trim(),
+                address: warehouseDetails.address.trim(),
+                zipCode: warehouseDetails.zipCode.trim(),
+                addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`,
                 googleMapPin: warehouseDetails.googleMapPin.trim(),
                 inboundHandling: operationsDetails.inboundHandling || null,
                 outboundHandling: operationsDetails.outboundHandling || null,
@@ -745,7 +751,9 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                                             />
                                                             <span className="text-sm font-bold text-slate-700">
                                                                 {unit === 'sqft'
-                                                                    ? 'SqFt'
+                                                                    ? countryConfig.unit === 'sq ft'
+                                                                        ? 'SqFt'
+                                                                        : 'SqM'
                                                                     : unit === 'mt'
                                                                       ? 'Metric Tons'
                                                                       : 'Both'}
@@ -880,15 +888,26 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                             />
                                             <div className="md:col-span-2">
                                                 <Field
-                                                    label="Address with Zip Code"
-                                                    id="addressWithZip"
-                                                    placeholder="Plot No, Street, City - 400001"
-                                                    value={warehouseDetails.addressWithZip}
-                                                    onChange={(v) => handleWarehouseChange('addressWithZip', v)}
+                                                    label="Address"
+                                                    id="address"
+                                                    placeholder="Plot No, Street, Landmark"
+                                                    value={warehouseDetails.address}
+                                                    onChange={(v) => handleWarehouseChange('address', v)}
                                                     mandatory
                                                     errors={errors}
                                                 />
                                             </div>
+                                            <Field
+                                                label="Zip / PIN Code"
+                                                id="zipCode"
+                                                placeholder="e.g. 400001"
+                                                value={warehouseDetails.zipCode}
+                                                onChange={(v) =>
+                                                    handleWarehouseChange('zipCode', v.replace(/\D/g, '').slice(0, 6))
+                                                }
+                                                mandatory
+                                                errors={errors}
+                                            />
                                             <Field
                                                 label="Map Location Link"
                                                 id="googleMapPin"
