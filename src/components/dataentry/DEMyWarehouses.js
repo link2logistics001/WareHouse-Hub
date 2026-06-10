@@ -26,10 +26,11 @@ import {
     Wifi,
     WifiOff,
     Trash2,
+    Edit,
     ChevronDown
 } from 'lucide-react';
 
-export default function DEMyWarehouses({ setActiveTab }) {
+export default function DEMyWarehouses({ setActiveTab, onEdit }) {
     const { user } = useAuth();
     const [warehouses, setWarehouses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -132,7 +133,7 @@ export default function DEMyWarehouses({ setActiveTab }) {
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
                         {warehouses.map((wh) => (
-                            <DEWarehouseCard key={wh.id} w={wh} onDelete={handleDelete} />
+                            <DEWarehouseCard key={wh.id} w={wh} onDelete={handleDelete} onEdit={onEdit} />
                         ))}
                     </div>
                 )}
@@ -141,7 +142,7 @@ export default function DEMyWarehouses({ setActiveTab }) {
     );
 }
 
-function DEWarehouseCard({ w, onDelete }) {
+function DEWarehouseCard({ w, onDelete, onEdit }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isOnline, setIsOnline] = useState(w.isOnline !== undefined ? w.isOnline : true);
@@ -257,6 +258,14 @@ function DEWarehouseCard({ w, onDelete }) {
                         className={`p-2 rounded-lg transition-all ${isOnline ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 bg-slate-100'}`}
                     >
                         {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+                    </button>
+
+                    <button
+                        onClick={() => onEdit && onEdit(w)}
+                        title="Edit"
+                        className="p-2 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all"
+                    >
+                        <Edit className="w-4 h-4" />
                     </button>
 
                     <button
