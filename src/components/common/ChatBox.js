@@ -33,8 +33,60 @@ export default function ChatBox({ warehouse, user, onClose }) {
     const [conversation, setConversation] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [copiedId, setCopiedId] = useState(null);
+    const [uploadingFile, setUploadingFile] = useState(false);
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
     const { fmtPrice, config } = useCountry();
+
+    const handleCopyMessage = async (text, msgId) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedId(msgId);
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch (err) {
+            console.error('Failed to copy message:', err);
+        }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 20 * 1024 * 1024) {
+            alert('File is too large. Maximum size is 20MB.');
+            return;
+        }
+
+        setUploadingFile(true);
+        try {
+            const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+            const { storage } = await import('@/lib/firebase');
+            
+            const storagePath = `chat_attachments/${conversation.id}/${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            await sendMessage(
+                conversation.id,
+                user.id || user.uid,
+                '',
+                user.userType || 'business_client',
+                {
+                    url: downloadURL,
+                    name: file.name,
+                    type: file.type,
+                }
+            );
+        } catch (err) {
+            console.error('Attachment upload failed:', err);
+            alert('Failed to upload attachment: ' + err.message);
+        } finally {
+            setUploadingFile(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
 
     // Initialize/Fetch conversation and listen for messages
     useEffect(() => {
@@ -123,11 +175,13 @@ export default function ChatBox({ warehouse, user, onClose }) {
 
     return (
         <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 select-text"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            onCopy={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.stopPropagation()}
         >
             <motion.div
                 className="bg-white rounded-[2.5rem] w-full max-w-4xl h-[80vh] flex flex-col shadow-[0_32px_64px_-15px_rgba(0,0,0,0.2)] overflow-hidden border border-slate-100"
@@ -229,21 +283,73 @@ export default function ChatBox({ warehouse, user, onClose }) {
                                         className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}
                                     >
                                         <div
-                                            className={`px-4 py-3 rounded-2xl ${
+                                            className={`px-4 py-3 rounded-2xl overflow-hidden ${
                                                 isOwn
                                                     ? 'bg-gradient-to-r from-primary-600 to-orange-500 text-white'
                                                     : 'bg-white text-slate-900 border border-slate-200'
                                             }`}
                                         >
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                                            {msg.fileUrl ? (
+                                                <div className="space-y-2 max-w-[260px] sm:max-w-[320px]">
+                                                    {msg.fileType?.startsWith('image/') ? (
+                                                        <a
+                                                            href={msg.fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="block rounded-lg overflow-hidden border border-black/5 hover:opacity-95 transition-opacity"
+                                                        >
+                                                            <img
+                                                                src={msg.fileUrl}
+                                                                alt={msg.fileName || 'Attachment'}
+                                                                className="max-h-60 w-full object-cover"
+                                                            />
+                                                        </a>
+                                                    ) : (
+                                                        <a
+                                                            href={msg.fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                                                                isOwn
+                                                                    ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
+                                                                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                                                            }`}
+                                                        >
+                                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isOwn ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500'}`}>
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-xs font-bold truncate leading-tight">{msg.fileName || 'Document.pdf'}</p>
+                                                                <p className={`text-[10px] ${isOwn ? 'text-white/60' : 'text-slate-400'}`}>PDF Document</p>
+                                                            </div>
+                                                        </a>
+                                                    )}
+                                                    {msg.message && (
+                                                        <p className="text-sm leading-relaxed whitespace-pre-wrap pt-1">{msg.message}</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                                            )}
                                         </div>
-                                        <span className="text-xs text-slate-400 px-2">
-                                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                            {isOwn && msg.read && ' • Read'}
-                                        </span>
+                                        <div className="flex items-center gap-1 text-xs text-slate-400 px-2">
+                                            <span>
+                                                {new Date(msg.timestamp).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </span>
+                                            {isOwn && msg.read && <span> • Read</span>}
+                                            <span> • </span>
+                                            <button
+                                                onClick={() => handleCopyMessage(msg.message, msg.id)}
+                                                className="hover:text-slate-600 transition-colors font-semibold"
+                                            >
+                                                {copiedId === msg.id ? 'Copied!' : 'Copy'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             );
@@ -292,21 +398,37 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 {/* Message Input */}
                 <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white">
                     <div className="flex items-end gap-3">
-                        <motion.button
-                            type="button"
-                            className="p-3 text-slate-400 hover:text-slate-600 transition-colors"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                                />
-                            </svg>
-                        </motion.button>
+                        <input
+                                                            type="file"
+                                                            ref={fileInputRef}
+                                                            onChange={handleFileChange}
+                                                            accept="image/*,application/pdf"
+                                                            className="hidden"
+                                                        />
+                                                        <motion.button
+                                                            type="button"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            disabled={uploadingFile || !conversation}
+                                                            className="p-3 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                                                            whileHover={{ scale: 1.1 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                        >
+                                                            {uploadingFile ? (
+                                                                <svg className="w-6 h-6 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                </svg>
+                                                            ) : (
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                                                                    />
+                                                                </svg>
+                                                            )}
+                                                        </motion.button>
 
                         <div className="flex-1">
                             <textarea

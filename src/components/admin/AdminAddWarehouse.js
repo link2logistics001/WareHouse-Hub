@@ -105,6 +105,7 @@ export default function AdminAddWarehouse({ setActiveTab }) {
         address: '',
         zipCode: '',
         googleMapPin: '',
+        description: '',
     });
     const [operationsDetails, setOperationsDetails] = useState({
         inboundHandling: '',
@@ -228,6 +229,8 @@ export default function AdminAddWarehouse({ setActiveTab }) {
         if (!warehouseDetails.zipCode.trim()) e.zipCode = `${countryConfig.postalLabel} is required`;
         else if (!countryConfig.postalRegex.test(warehouseDetails.zipCode.trim()))
             e.zipCode = `Enter a valid ${countryConfig.postalLabel}`;
+        if (!warehouseDetails.description || !warehouseDetails.description.trim())
+            e.description = 'Warehouse description is required';
         return e;
     };
     const validateStep3 = () => {
@@ -440,6 +443,7 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                 zipCode: warehouseDetails.zipCode.trim(),
                 addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`,
                 googleMapPin: warehouseDetails.googleMapPin.trim(),
+                description: warehouseDetails.description.trim(),
                 inboundHandling: operationsDetails.inboundHandling || null,
                 outboundHandling: operationsDetails.outboundHandling || null,
                 wmsAvailable: operationsDetails.wmsAvailable || null,
@@ -914,6 +918,15 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                                                 placeholder="e.g. https://maps.app.goo.gl/..."
                                                 value={warehouseDetails.googleMapPin}
                                                 onChange={(v) => handleWarehouseChange('googleMapPin', v)}
+                                                errors={errors}
+                                            />
+                                            <TextAreaField
+                                                label="Warehouse Description"
+                                                id="description"
+                                                placeholder="Describe your warehouse's key features, location highlights, security, target client types, etc."
+                                                value={warehouseDetails.description}
+                                                onChange={(v) => handleWarehouseChange('description', v)}
+                                                mandatory
                                                 errors={errors}
                                             />
                                         </div>
@@ -1556,6 +1569,25 @@ function PhotoUpload({ label, id, fileRef, file, onFileChange, mandatory = false
                     </div>
                 </button>
             )}
+            {errors[id] && <ErrMsg msg={errors[id]} />}
+        </div>
+    );
+}
+
+function TextAreaField({ label, id, placeholder, value, onChange, mandatory = false, errors = {}, rows = 4 }) {
+    return (
+        <div className="space-y-1.5 md:col-span-2">
+            <label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
+                {label} {mandatory && <span className="text-orange-500">*</span>}
+            </label>
+            <textarea
+                id={id}
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                rows={rows}
+                className={`w-full p-3.5 bg-white/70 backdrop-blur-sm border rounded-xl focus:ring-2 focus:ring-orange-500/50 outline-none transition-all shadow-inner text-slate-800 font-medium ${errors[id] ? 'border-rose-400 bg-rose-50/50' : 'border-white hover:border-orange-200/60'}`}
+            />
             {errors[id] && <ErrMsg msg={errors[id]} />}
         </div>
     );
