@@ -10,10 +10,9 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { addDoc, serverTimestamp } from 'firebase/firestore';
+import { addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
-import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/phoneAuth';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
 import { getWarehouseCollection } from '@/lib/warehouseCollections';
@@ -69,7 +68,7 @@ const STEP_LABELS = {
 // Use cyan accent color
 const ACCENT = 'cyan';
 
-export default function DEAddWarehouse({ setActiveTab }) {
+export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
     const { user } = useAuth();
     const { config: countryConfig } = useCountry();
     const [step, setStep] = useState(1);
@@ -104,6 +103,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
         address: '',
         zipCode: '',
         googleMapPin: '',
+        description: '',
     });
     const [operationsDetails, setOperationsDetails] = useState({
         inboundHandling: '',
@@ -128,15 +128,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
         shortTermStorage: '',
     });
     const [photos, setPhotos] = useState({ frontView: null, insideView: null, dockArea: null, rateCard: null });
-
-    const [otpSent, setOtpSent] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [otpVerified, setOtpVerified] = useState(false);
-    const [otpError, setOtpError] = useState('');
-    const [sendingOtp, setSendingOtp] = useState(false);
-    const [verifyingOtp, setVerifyingOtp] = useState(false);
-    const [resendCountdown, setResendCountdown] = useState(0);
-    const countdownRef = useRef(null);
+    const [existingPhotos, setExistingPhotos] = useState({ frontView: null, insideView: null, dockArea: null, rateCard: null });
 
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -148,6 +140,74 @@ export default function DEAddWarehouse({ setActiveTab }) {
     const insideViewRef = useRef(null);
     const dockAreaRef = useRef(null);
     const rateCardRef = useRef(null);
+
+    // ── Prefill form when editing ──
+    useEffect(() => {
+        if (!editingWarehouse) return;
+        const w = editingWarehouse;
+        setOwnerDetails({
+            businessType: w.businessType || '',
+            companyName: w.companyName || '',
+            contactPerson: w.contactPerson || '',
+            mobile: w.mobile || '',
+            email: w.email || '',
+            ownerGstPan: w.ownerGstPan || '',
+        });
+        setWarehouseDetails({
+            warehouseName: w.warehouseName || '',
+            warehouseCategory: w.warehouseCategory || '',
+            measurementUnit: w.measurementUnit || 'sqft',
+            totalArea: w.totalArea ? String(w.totalArea) : '',
+            availableArea: w.availableArea ? String(w.availableArea) : '',
+            totalMetricTons: w.totalMetricTons ? String(w.totalMetricTons) : '',
+            availableMetricTons: w.availableMetricTons ? String(w.availableMetricTons) : '',
+            clearHeight: w.clearHeight ? String(w.clearHeight) : '',
+            numberOfDockDoors: w.numberOfDockDoors ? String(w.numberOfDockDoors) : '',
+            containerHandling: w.containerHandling || '',
+            typeOfConstruction: w.typeOfConstruction || '',
+            customTypeOfConstruction: '',
+            storageTypes: w.storageTypes || [],
+            warehouseAge: w.warehouseAge || '',
+            warehouseGstPan: w.warehouseGstPan || '',
+            state: w.state || '',
+            city: w.city || '',
+            address: w.address || '',
+            zipCode: w.zipCode || '',
+            googleMapPin: w.googleMapPin || '',
+            description: w.description || '',
+        });
+        setOperationsDetails({
+            inboundHandling: w.inboundHandling || '',
+            outboundHandling: w.outboundHandling || '',
+            wmsAvailable: w.wmsAvailable || '',
+            daysOfOperation: w.daysOfOperation || '',
+            operationTime: w.operationTime || '',
+            customOperationTime: '',
+            securityFeatures: w.securityFeatures || [],
+            customSecurityFeature: '',
+            suitableGoods: w.suitableGoods || [],
+            customSuitableGood: '',
+            valueAddedServices: w.valueAddedServices || [],
+            customValueAddedService: '',
+        });
+        setPricingDetails({
+            pricingUnit: w.pricingUnit || '',
+            customPricingUnit: '',
+            storageRate: w.storageRate ? String(w.storageRate) : '',
+            handlingFees: w.handlingFees ? String(w.handlingFees) : '',
+            minCommitment: w.minCommitment || '',
+            shortTermStorage: w.shortTermStorage || '',
+        });
+        if (w.photos) {
+            setExistingPhotos({
+                frontView: w.photos.frontView || null,
+                insideView: w.photos.insideView || null,
+                dockArea: w.photos.dockArea || null,
+                rateCard: w.photos.rateCard || null,
+            });
+        }
+        setStep(1);
+    }, [editingWarehouse]);
 
     const handleWarehouseChange = (field, value) => {
         setWarehouseDetails((prev) => ({ ...prev, [field]: value }));
@@ -189,7 +249,6 @@ export default function DEAddWarehouse({ setActiveTab }) {
         if (!ownerDetails.companyName.trim()) e.companyName = 'Company name is required';
         if (!ownerDetails.contactPerson.trim()) e.contactPerson = 'Contact person is required';
         if (!ownerDetails.mobile.trim()) e.mobile = 'Mobile number is required';
-        else if (!otpVerified) e.mobile = 'Mobile number must be OTP verified';
         if (!ownerDetails.email.trim()) e.email = 'Email is required';
         return e;
     };
@@ -228,6 +287,8 @@ export default function DEAddWarehouse({ setActiveTab }) {
         if (!warehouseDetails.zipCode.trim()) e.zipCode = `${countryConfig.postalLabel} is required`;
         else if (!countryConfig.postalRegex.test(warehouseDetails.zipCode.trim()))
             e.zipCode = `Enter a valid ${countryConfig.postalLabel}`;
+        if (!warehouseDetails.description || !warehouseDetails.description.trim())
+            e.description = 'Warehouse description is required';
         return e;
     };
     const validateStep3 = () => {
@@ -253,66 +314,6 @@ export default function DEAddWarehouse({ setActiveTab }) {
         return e;
     };
 
-    // ── OTP handlers ──
-    const startCountdown = () => {
-        if (countdownRef.current) clearInterval(countdownRef.current);
-        setResendCountdown(60);
-        countdownRef.current = setInterval(() => {
-            setResendCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(countdownRef.current);
-                    countdownRef.current = null;
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-    };
-    useEffect(() => {
-        return () => {
-            if (countdownRef.current) clearInterval(countdownRef.current);
-        };
-    }, []);
-    const handleSendOtp = async () => {
-        const mobile = ownerDetails.mobile.trim();
-        if (!mobile || mobile.length < 10) {
-            setOtpError('Enter a valid mobile number.');
-            return;
-        }
-        setOtpError('');
-        setSendingOtp(true);
-        try {
-            const formatted = mobile.startsWith('+') ? mobile : countryConfig.phonePrefix + mobile;
-            await sendPhoneOtp(formatted);
-            setOtpSent(true);
-            setOtp('');
-            startCountdown();
-        } catch (error) {
-            setOtpError(error.message);
-        } finally {
-            setSendingOtp(false);
-        }
-    };
-    const handleVerifyOtp = async () => {
-        if (!otp || otp.trim().length < 6) {
-            setOtpError('Enter the 6-digit OTP.');
-            return;
-        }
-        setOtpError('');
-        setVerifyingOtp(true);
-        try {
-            await verifyPhoneOtp(otp.trim());
-            setOtpVerified(true);
-            setOtpSent(false);
-            setOtp('');
-            if (countdownRef.current) clearInterval(countdownRef.current);
-            setResendCountdown(0);
-        } catch (error) {
-            setOtpError(error.message);
-        } finally {
-            setVerifyingOtp(false);
-        }
-    };
 
     const handleNext = () => {
         const validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 };
@@ -440,6 +441,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
                 zipCode: warehouseDetails.zipCode.trim(),
                 addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`,
                 googleMapPin: warehouseDetails.googleMapPin.trim(),
+                description: warehouseDetails.description.trim(),
                 inboundHandling: operationsDetails.inboundHandling || null,
                 outboundHandling: operationsDetails.outboundHandling || null,
                 wmsAvailable: operationsDetails.wmsAvailable || null,
@@ -472,10 +474,10 @@ export default function DEAddWarehouse({ setActiveTab }) {
                 minCommitment: pricingDetails.minCommitment,
                 shortTermStorage: pricingDetails.shortTermStorage,
                 photos: {
-                    frontView: frontViewURL,
-                    insideView: insideViewURL,
-                    dockArea: dockAreaURL,
-                    rateCard: rateCardURL,
+                    frontView: frontViewURL || (editingWarehouse ? existingPhotos.frontView : null),
+                    insideView: insideViewURL || (editingWarehouse ? existingPhotos.insideView : null),
+                    dockArea: dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null),
+                    rateCard: rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null),
                 },
                 businessType: ownerDetails.businessType,
                 companyName: ownerDetails.companyName.trim(),
@@ -485,13 +487,25 @@ export default function DEAddWarehouse({ setActiveTab }) {
                 ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
                 ownerId: uid,
                 status: 'pending',
-                createdAt: serverTimestamp(),
                 source: 'dataentry',
                 submittedBy: user.email,
             };
 
             const dataEntryEmail = user.email.toLowerCase().trim();
-            await addDoc(getWarehouseCollection('dataentry', dataEntryEmail), docData);
+
+            if (editingWarehouse) {
+                // Editing: preserve original createdAt, update the existing document
+                docData.createdAt = editingWarehouse.createdAt || serverTimestamp();
+                docData.updatedAt = serverTimestamp();
+                const docRef = editingWarehouse._docPath
+                    ? doc(db, editingWarehouse._docPath)
+                    : doc(db, `warehouse_details/dataentry/emails/${dataEntryEmail}/warehouses`, editingWarehouse.id);
+                await updateDoc(docRef, docData);
+            } else {
+                // Creating new
+                docData.createdAt = serverTimestamp();
+                await addDoc(getWarehouseCollection('dataentry', dataEntryEmail), docData);
+            }
             setSubmitted(true);
         } catch (err) {
             if (err.code === 'storage/unauthorized') {
@@ -524,9 +538,11 @@ export default function DEAddWarehouse({ setActiveTab }) {
                         <div className="w-20 h-20 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                             <CheckCircle className="w-10 h-10 text-emerald-500" />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-800 mb-3">Entry Submitted!</h2>
+                        <h2 className="text-3xl font-bold text-slate-800 mb-3">{editingWarehouse ? 'Entry Updated!' : 'Entry Submitted!'}</h2>
                         <p className="text-slate-500 mb-10 font-medium">
-                            Your warehouse entry has been saved and is now in the admin review queue.
+                            {editingWarehouse
+                                ? 'Your warehouse entry has been updated successfully.'
+                                : 'Your warehouse entry has been saved and is now in the admin review queue.'}
                         </p>
                         <button
                             onClick={() => setActiveTab('dashboard')}
@@ -559,7 +575,7 @@ export default function DEAddWarehouse({ setActiveTab }) {
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Add Warehouse Entry</h1>
+                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{editingWarehouse ? 'Edit Warehouse Details' : 'Add Warehouse Entry'}</h1>
                             <p className="text-sm font-medium text-slate-500 mt-1">
                                 Step {step} of {totalSteps}: {STEP_LABELS[step]}
                             </p>
@@ -644,125 +660,16 @@ export default function DEAddWarehouse({ setActiveTab }) {
                                                 mandatory
                                                 errors={errors}
                                             />
-                                            <div className="flex flex-col relative w-full">
-                                                <Field
-                                                    label="Mobile"
-                                                    id="mobile"
-                                                    type="tel"
-                                                    placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`}
-                                                    value={ownerDetails.mobile}
-                                                    onChange={(v) => {
-                                                        handleOwnerChange('mobile', v);
-                                                        if (otpVerified) setOtpVerified(false);
-                                                        if (otpSent) {
-                                                            setOtpSent(false);
-                                                            setResendCountdown(0);
-                                                        }
-                                                    }}
-                                                    mandatory
-                                                    errors={errors}
-                                                />
-                                                <div className="mt-2">
-                                                    {otpVerified ? (
-                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit border border-emerald-100">
-                                                            <CheckCircle className="w-4 h-4" /> Phone Verified
-                                                        </span>
-                                                    ) : (
-                                                        <div className="flex flex-col gap-2">
-                                                            {!otpSent ? (
-                                                                <div className="flex items-center justify-between bg-white/50 p-2 rounded-xl border border-white">
-                                                                    <span className="text-slate-500 text-xs font-semibold px-2">
-                                                                        Verification Required
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={handleSendOtp}
-                                                                        disabled={
-                                                                            sendingOtp ||
-                                                                            !ownerDetails.mobile ||
-                                                                            ownerDetails.mobile.replace(/\D/g, '')
-                                                                                .length < 10
-                                                                        }
-                                                                        className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 shadow-md"
-                                                                    >
-                                                                        {sendingOtp && (
-                                                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                                                        )}{' '}
-                                                                        {sendingOtp ? 'Sending...' : 'Send OTP'}
-                                                                    </button>
-                                                                    <div
-                                                                        id="recaptcha-container"
-                                                                        style={{ display: 'none' }}
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <div className="bg-white/80 p-4 rounded-2xl border border-white shadow-sm backdrop-blur-md">
-                                                                    <div className="flex gap-3">
-                                                                        <div className="flex-1">
-                                                                            <label
-                                                                                htmlFor="otpCode"
-                                                                                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1"
-                                                                            >
-                                                                                Enter OTP
-                                                                            </label>
-                                                                            <input
-                                                                                id="otpCode"
-                                                                                type="text"
-                                                                                inputMode="numeric"
-                                                                                maxLength={6}
-                                                                                autoComplete="one-time-code"
-                                                                                placeholder="123456"
-                                                                                value={otp}
-                                                                                onChange={(e) =>
-                                                                                    setOtp(
-                                                                                        e.target.value
-                                                                                            .replace(/\D/g, '')
-                                                                                            .slice(0, 6)
-                                                                                    )
-                                                                                }
-                                                                                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all tracking-widest text-center font-mono font-bold text-lg shadow-inner"
-                                                                            />
-                                                                        </div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={handleVerifyOtp}
-                                                                            disabled={verifyingOtp || otp.length < 6}
-                                                                            className="self-end px-5 py-3.5 bg-cyan-500 text-white text-sm font-bold rounded-xl hover:bg-cyan-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md"
-                                                                        >
-                                                                            {verifyingOtp ? (
-                                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                            ) : (
-                                                                                'Verify'
-                                                                            )}
-                                                                        </button>
-                                                                    </div>
-                                                                    {!verifyingOtp && (
-                                                                        <div className="mt-3 text-center">
-                                                                            {resendCountdown > 0 ? (
-                                                                                <span className="text-[11px] font-semibold text-slate-400">
-                                                                                    Resend OTP in {resendCountdown}s
-                                                                                </span>
-                                                                            ) : (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={handleSendOtp}
-                                                                                    disabled={sendingOtp}
-                                                                                    className="text-[11px] text-cyan-600 hover:text-cyan-700 font-bold underline transition-colors"
-                                                                                >
-                                                                                    {sendingOtp
-                                                                                        ? 'Sending...'
-                                                                                        : 'Resend OTP'}
-                                                                                </button>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                            {otpError && <ErrMsg msg={otpError} />}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <Field
+                                                label="Mobile"
+                                                id="mobile"
+                                                type="tel"
+                                                placeholder={`${countryConfig.phonePrefix} 98765 XXXXX`}
+                                                value={ownerDetails.mobile}
+                                                onChange={(v) => handleOwnerChange('mobile', v)}
+                                                mandatory
+                                                errors={errors}
+                                            />
                                             <Field
                                                 label="Email"
                                                 id="email"
@@ -1026,6 +933,15 @@ export default function DEAddWarehouse({ setActiveTab }) {
                                                 placeholder="e.g. https://maps.app.goo.gl/..."
                                                 value={warehouseDetails.googleMapPin}
                                                 onChange={(v) => handleWarehouseChange('googleMapPin', v)}
+                                                errors={errors}
+                                            />
+                                            <TextAreaField
+                                                label="Warehouse Description"
+                                                id="description"
+                                                placeholder="Describe your warehouse's key features, location highlights, security, target client types, etc."
+                                                value={warehouseDetails.description}
+                                                onChange={(v) => handleWarehouseChange('description', v)}
+                                                mandatory
                                                 errors={errors}
                                             />
                                         </div>
@@ -1666,6 +1582,25 @@ function PhotoUpload({ label, id, fileRef, file, onFileChange, mandatory = false
                     </div>
                 </button>
             )}
+            {errors[id] && <ErrMsg msg={errors[id]} />}
+        </div>
+    );
+}
+
+function TextAreaField({ label, id, placeholder, value, onChange, mandatory = false, errors = {}, rows = 4 }) {
+    return (
+        <div className="space-y-1.5 md:col-span-2">
+            <label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">
+                {label} {mandatory && <span className="text-cyan-500">*</span>}
+            </label>
+            <textarea
+                id={id}
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                rows={rows}
+                className={`w-full p-3.5 bg-white/70 backdrop-blur-sm border rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all shadow-inner text-slate-800 font-medium ${errors[id] ? 'border-rose-400 bg-rose-50/50' : 'border-white hover:border-cyan-200/60'}`}
+            />
             {errors[id] && <ErrMsg msg={errors[id]} />}
         </div>
     );

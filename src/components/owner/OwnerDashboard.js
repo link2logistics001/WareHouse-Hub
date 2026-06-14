@@ -37,6 +37,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { subscribeToInquiries } from '@/lib/inquiryService';
 import Inquiries from './Inquiries';
 import OwnerSidebar from './OwnerSidebar';
 import DashboardHome from './DashboardHome';
@@ -82,6 +85,8 @@ export default function OwnerDashboard({ user, onLogout }) {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [localUser, setLocalUser] = useState(user);
     const [mounted, setMounted] = useState(false);
+    const [newInquiriesCount, setNewInquiriesCount] = useState(0);
+    const [globalLeadsCount, setGlobalLeadsCount] = useState(0);
 
     useEffect(() => {
         if (user) {
@@ -93,6 +98,42 @@ export default function OwnerDashboard({ user, onLogout }) {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Real-time listener for owner's inquiries count
+    useEffect(() => {
+        if (!user?.uid) return;
+
+        const q = query(
+            collection(db, 'conversations'),
+            where('ownerId', '==', user.uid)
+        );
+
+        const unsub = onSnapshot(q, (snap) => {
+            const count = snap.docs.filter((d) => d.data().stage === 'new').length;
+            setNewInquiriesCount(count);
+        }, (err) => {
+            console.error("Error fetching owner inquiries count:", err);
+        });
+
+        return () => unsub();
+    }, [user?.uid]);
+
+    // Real-time listener for owner's global leads count
+    useEffect(() => {
+        if (!user?.email) return;
+
+        const unsub = subscribeToInquiries('approved', (data) => {
+            const filtered = data.filter((lead) => {
+                if (lead.targetOwnerEmails && lead.targetOwnerEmails.length > 0) {
+                    return lead.targetOwnerEmails.includes(user.email);
+                }
+                return false;
+            });
+            setGlobalLeadsCount(filtered.length);
+        });
+
+        return () => unsub();
+    }, [user?.email]);
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -187,7 +228,13 @@ export default function OwnerDashboard({ user, onLogout }) {
         >
             {/* Sidebar for desktop (lg screen and above) */}
             <div className="hidden lg:block">
-                <OwnerSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onLogout} />
+                <OwnerSidebar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    onLogout={onLogout}
+                    inquiriesCount={newInquiriesCount}
+                    globalLeadsCount={globalLeadsCount}
+                />
             </div>
 
             {/* Sidebar overlay for mobile/tablet */}
@@ -217,6 +264,8 @@ export default function OwnerDashboard({ user, onLogout }) {
                                 }}
                                 onLogout={onLogout}
                                 isDrawer={true}
+                                inquiriesCount={newInquiriesCount}
+                                globalLeadsCount={globalLeadsCount}
                             />
                         </motion.div>
                     </motion.div>

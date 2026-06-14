@@ -25,7 +25,7 @@ const EXPECTED_HEADERS = [
     'warehouseGstPan', 'state', 'city', 'addressWithZip', 'googleMapPin',
     'inboundHandling', 'outboundHandling', 'wmsAvailable', 'daysOfOperation',
     'operationTime', 'securityFeatures', 'suitableGoods', 'valueAddedServices',
-    'pricingUnit', 'storageRate', 'handlingFees', 'minCommitment', 'shortTermStorage'
+    'pricingUnit', 'storageRate', 'handlingFees', 'minCommitment', 'shortTermStorage', 'description'
 ];
 
 export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
@@ -184,6 +184,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                             city: String(row.city).trim(),
                             addressWithZip: String(row.addressWithZip).trim(),
                             googleMapPin: row.googleMapPin ? String(row.googleMapPin).trim() : '',
+                            description: row.description ? String(row.description).trim() : null,
                             inboundHandling: row.inboundHandling ? String(row.inboundHandling).trim() : null,
                             outboundHandling: row.outboundHandling ? String(row.outboundHandling).trim() : null,
                             wmsAvailable: row.wmsAvailable ? String(row.wmsAvailable).trim() : null,

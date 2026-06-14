@@ -86,23 +86,36 @@ export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, 
 /**
  * Send a message in a conversation
  */
-export const sendMessage = async (conversationId, senderId, text, senderType = 'business_client') => {
-    const filteredText = filterAbusiveWords(text);
+export const sendMessage = async (conversationId, senderId, text, senderType = 'business_client', attachment = null) => {
+    const filteredText = text ? filterAbusiveWords(text) : '';
 
     const msgRef = collection(db, 'conversations', conversationId, 'messages');
-    await addDoc(msgRef, {
+    const msgData = {
         senderId,
         senderType, // 'business_client' or 'warehouse_partner'
         text: filteredText,
         message: filteredText, // redundant field for compatibility
         timestamp: serverTimestamp(),
         read: false,
-    });
+    };
+
+    if (attachment) {
+        msgData.fileUrl = attachment.url;
+        msgData.fileName = attachment.name;
+        msgData.fileType = attachment.type;
+    }
+
+    await addDoc(msgRef, msgData);
 
     // Update conversation's last message and updatedAt
     const convRef = doc(db, 'conversations', conversationId);
+    let previewText = filteredText;
+    if (!previewText && attachment) {
+        previewText = attachment.type?.startsWith('image/') ? '📷 Image attachment' : `📎 ${attachment.name}`;
+    }
+
     await updateDoc(convRef, {
-        lastMessage: filteredText,
+        lastMessage: previewText || 'Conversation started',
         lastSenderId: senderId,
         updatedAt: serverTimestamp(),
     });

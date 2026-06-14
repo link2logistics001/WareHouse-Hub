@@ -299,6 +299,21 @@ export default function WarehouseDetailPage({ params }) {
                                         <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-2xl text-[10px] font-black flex items-center gap-1.5 uppercase tracking-widest border border-emerald-100">
                                             <BadgeCheck className="w-3.5 h-3.5" /> Verified
                                         </span>
+                                        <span className="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-2xl text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest border border-slate-200/60 shadow-sm">
+                                            <Clock className="w-3.5 h-3.5 text-slate-400" />{' '}
+                                            {(() => {
+                                                const isUpdated = warehouse.updatedAt && warehouse.createdAt && (warehouse.updatedAt.seconds !== warehouse.createdAt.seconds);
+                                                const ts = isUpdated ? warehouse.updatedAt : (warehouse.createdAt || warehouse.updatedAt);
+                                                const label = isUpdated ? 'Updated: ' : 'Published: ';
+                                                if (!ts) return 'N/A';
+                                                const date = ts.seconds ? new Date(ts.seconds * 1000) : (ts.toDate ? ts.toDate() : new Date(ts));
+                                                return label + date.toLocaleDateString('en-IN', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                });
+                                            })()}
+                                        </span>
                                     </div>
                                     <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-[1.1] break-words">
                                         {warehouse.warehouseName}
@@ -385,6 +400,20 @@ export default function WarehouseDetailPage({ params }) {
                                     delay={0.4}
                                 />
                             </div>
+
+                            {warehouse.description && (
+                                <div className="mt-8 pt-8 border-t border-slate-100">
+                                    <h3 className="text-xl font-black text-slate-900 flex items-center gap-3 mb-4">
+                                        <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
+                                            <Info className="w-5 h-5 text-orange-500" />
+                                        </div>
+                                        About this Warehouse
+                                    </h3>
+                                    <p className="text-slate-600 leading-relaxed text-sm font-medium whitespace-pre-line pl-1">
+                                        {warehouse.description}
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Detailed Specs */}
                             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-10">

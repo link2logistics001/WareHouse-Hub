@@ -226,7 +226,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Building2 size={12} /> Company Name (Required)
+                                            <Building2 size={12} /> Company Name <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             required
@@ -238,7 +238,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <User size={12} /> Contact Person (Required)
+                                            <User size={12} /> Contact Person <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             required
@@ -252,7 +252,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Mail size={12} /> Email Address (Required)
+                                            <Mail size={12} /> Email Address <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             required
@@ -265,7 +265,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Phone size={12} /> Phone Number (Required)
+                                            <Phone size={12} /> Phone Number <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             required
@@ -290,7 +290,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                        <Package size={12} /> What will you store? (Required)
+                                        <Package size={12} /> What will you store? <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         required
@@ -303,7 +303,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                 <div className="grid-cols-1 gap-6">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Scale size={12} /> Storage Space Required
+                                            <Scale size={12} /> Storage Space Required <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex gap-3">
                                             <input
@@ -333,7 +333,7 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Clock size={12} /> Contract Duration
+                                            <Clock size={12} /> Contract Duration <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex gap-3">
                                             <input
@@ -903,7 +903,7 @@ const InputField = React.memo(({ label, icon, type = 'text', value, onChange, re
     return (
         <div className="space-y-1.5 flex-1">
             <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                {icon} {label} {required && '(Required)'}
+                {icon} {label} {required && <span className="text-red-500">*</span>}
             </label>
             <input
                 required={required}

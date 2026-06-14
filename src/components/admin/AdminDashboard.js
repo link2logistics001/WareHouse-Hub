@@ -121,13 +121,13 @@ import { PlusCircle, Edit } from 'lucide-react';
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
 // ---------------------------------------------------------------------
-function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount }) {
+function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount, pendingInquiriesCount }) {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'add-warehouse', label: 'Add Warehouse', icon: PlusCircle },
         { id: 'bulk-upload', label: 'Bulk CSV Upload', icon: FileUp },
-        { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
+        { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus, badge: pendingInquiriesCount || null },
         { id: 'block-people', label: 'Block People', icon: Users },
     ];
 
@@ -234,6 +234,7 @@ export default function AdminDashboard({ user, onLogout }) {
     const [loading, setLoading] = useState(true);
     const [usersLoading, setUsersLoading] = useState(true);
     const [error, setError] = useState('');
+    const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [actionLoading, setActionLoading] = useState({});
@@ -311,6 +312,14 @@ export default function AdminDashboard({ user, onLogout }) {
                 setUsersLoading(false);
             }
         );
+        return () => unsub();
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        const unsub = subscribeToInquiries('pending', (data) => {
+            setPendingInquiriesCount(data.length);
+        });
         return () => unsub();
     }, [user]);
 
@@ -408,6 +417,7 @@ export default function AdminDashboard({ user, onLogout }) {
                     user={user}
                     onLogout={handleLogout}
                     pendingCount={counts.pending}
+                    pendingInquiriesCount={pendingInquiriesCount}
                 />
             </div>
 
@@ -438,6 +448,7 @@ export default function AdminDashboard({ user, onLogout }) {
                                 user={user}
                                 onLogout={handleLogout}
                                 pendingCount={counts.pending}
+                                pendingInquiriesCount={pendingInquiriesCount}
                             />
                         </motion.div>
                     </motion.div>
@@ -676,12 +687,17 @@ function OverviewView({ counts, warehouses }) {
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
-                                    {w.createdAt?.seconds
-                                        ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
-                                              day: 'numeric',
-                                              month: 'short',
-                                          })
-                                        : 'Just now'}
+                                    {(() => {
+                                        const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
+                                        const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                        const label = isUpdated ? 'Updated: ' : 'Published: ';
+                                        return ts?.seconds
+                                            ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
+                                                  day: 'numeric',
+                                                  month: 'short',
+                                              })}`
+                                            : 'Just now';
+                                    })()}
                                 </span>
                             </div>
                         ))}
@@ -941,13 +957,18 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                             {statusLabel}
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1">
-                            {w.createdAt?.seconds
-                                ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
-                                      day: 'numeric',
-                                      month: 'short',
-                                      year: 'numeric',
-                                  })
-                                : '-'}
+                            {(() => {
+                                const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
+                                const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                const label = isUpdated ? 'Updated: ' : 'Published: ';
+                                return ts?.seconds
+                                    ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                      })}`
+                                    : '-';
+                            })()}
                         </p>
                     </div>
 
@@ -1023,6 +1044,12 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                     ]}
                                 />
                             </div>
+                            {w.description && (
+                                <div className="mt-5 p-4 bg-white rounded-2xl border border-slate-200/60 shadow-inner">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Description</p>
+                                    <p className="text-sm font-medium text-slate-700 whitespace-pre-line leading-relaxed">{w.description}</p>
+                                </div>
+                            )}
                             {/* Photo Gallery Section */}
                             <PhotoGallery photos={w.photos} />
                         </div>
@@ -1116,10 +1143,13 @@ const loadedImagesCache = new Set();
 
 function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
     const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
 
     const filtered = users.filter((u) => {
         const q = search.toLowerCase();
-        return !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
+        const matchesSearch = !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
+        const matchesRole = roleFilter === 'all' || u.userType === roleFilter;
+        return matchesSearch && matchesRole;
     });
 
     if (loading) return <LoadingState />;
@@ -1128,14 +1158,28 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
         <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-4 justify-between">
                 <h3 className="text-xl font-bold text-slate-800">Community Safety</h3>
-                <div className="relative w-full sm:w-80">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by email or name..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
-                    />
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
+                    >
+                        <option value="all">All Roles</option>
+                        <option value="superadmin">Super Admins</option>
+                        <option value="admin">Admins</option>
+                        <option value="warehouse_partner">Warehouse Partners</option>
+                        <option value="business_client">Business Clients</option>
+                    </select>
+
+                    <div className="relative w-full sm:w-64">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search by email or name..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none shadow-sm"
+                        />
+                    </div>
                 </div>
             </div>
 

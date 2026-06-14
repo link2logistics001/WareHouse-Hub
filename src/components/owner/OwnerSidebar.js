@@ -42,14 +42,14 @@ import {
 } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
-export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
+export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false, inquiriesCount = 0, globalLeadsCount = 0 }) {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'my-warehouses', label: 'Manage Properties', icon: Building2 },
         { id: 'add-warehouse', label: 'Add New', icon: PlusCircle },
         { id: 'console', label: 'Console', icon: Monitor },
-        { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
-        { id: 'global-leads', label: 'Global Leads', icon: MessageSquarePlus },
+        { id: 'inquiries', label: 'Inquiries', icon: MessageSquare, badge: inquiriesCount || null },
+        { id: 'global-leads', label: 'Global Leads', icon: MessageSquarePlus, badge: globalLeadsCount || null },
         { id: 'calendar', label: 'Calendar', icon: Calendar },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
@@ -94,6 +94,11 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDraw
                         <span className={`ml-4 text-sm font-semibold tracking-wide ${containerClasses}`}>
                             {item.label}
                         </span>
+                        {item.badge ? (
+                            <span className={`ml-auto bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${containerClasses}`}>
+                                {item.badge}
+                            </span>
+                        ) : null}
                     </button>
                 ))}
             </nav>

@@ -280,10 +280,21 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
     });
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [editingWarehouse, setEditingWarehouse] = useState(null);
 
     useEffect(() => {
         sessionStorage.setItem('de_activeTab', activeTab);
     }, [activeTab]);
+
+    const handleTabChange = (tab) => {
+        setEditingWarehouse(null);
+        setActiveTab(tab);
+    };
+
+    const handleEdit = (w) => {
+        setEditingWarehouse(w);
+        setActiveTab('add-warehouse');
+    };
 
     const handleLogout = async () => {
         try {
@@ -296,11 +307,11 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DEDashboardHome setActiveTab={setActiveTab} />;
+                return <DEDashboardHome setActiveTab={handleTabChange} />;
             case 'add-warehouse':
-                return <DEAddWarehouse setActiveTab={setActiveTab} />;
+                return <DEAddWarehouse setActiveTab={handleTabChange} editingWarehouse={editingWarehouse} />;
             case 'my-warehouses':
-                return <DEMyWarehouses setActiveTab={setActiveTab} />;
+                return <DEMyWarehouses setActiveTab={handleTabChange} onEdit={handleEdit} />;
             case 'inquiries':
                 return <DEInquiries />;
             case 'calendar':
@@ -308,9 +319,9 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
             case 'settings':
                 return <SettingsPanel user={user} setUser={setUser} />;
             case 'bulk-upload':
-                return <BulkWarehouseUpload role="dataentry" user={user} setActiveTab={setActiveTab} />;
+                return <BulkWarehouseUpload role="dataentry" user={user} setActiveTab={handleTabChange} />;
             default:
-                return <DEDashboardHome setActiveTab={setActiveTab} />;
+                return <DEDashboardHome setActiveTab={handleTabChange} />;
         }
     };
 
@@ -323,7 +334,7 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
         >
             {/* Desktop Sidebar */}
             <div className="hidden md:block">
-                <DataEntrySidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+                <DataEntrySidebar activeTab={activeTab} setActiveTab={handleTabChange} onLogout={handleLogout} />
             </div>
 
             {/* Mobile Sidebar Overlay */}
@@ -347,7 +358,7 @@ export default function DataEntryDashboard({ user, onLogout, onOpenChat }) {
                             <DataEntrySidebar
                                 activeTab={activeTab}
                                 setActiveTab={(t) => {
-                                    setActiveTab(t);
+                                    handleTabChange(t);
                                     setSidebarOpen(false);
                                 }}
                                 onLogout={handleLogout}

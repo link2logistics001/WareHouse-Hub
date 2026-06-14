@@ -530,13 +530,18 @@ function WarehouseCard({ warehouse: w, onDelete, onEdit, variants }) {
                 <div className="mt-auto pt-5 border-t border-slate-200/60 flex items-center justify-between text-xs font-semibold text-slate-400 z-10">
                     <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4 text-slate-300" />
-                        {w.createdAt?.seconds
-                            ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                              })
-                            : 'Just now'}
+                        {(() => {
+                            const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
+                            const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                            const label = isUpdated ? 'Updated: ' : 'Published: ';
+                            return ts?.seconds
+                                ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                  })}`
+                                : 'Just now';
+                        })()}
                     </div>
 
                     <Link

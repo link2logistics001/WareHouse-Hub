@@ -113,6 +113,8 @@ import {
     Globe,
     Check,
     Edit,
+    Ruler,
+    Layers,
 } from 'lucide-react';
 import AdminEditWarehouse from '../admin/AdminEditWarehouse';
 import { blockUser } from '@/lib/auth';
@@ -124,14 +126,14 @@ import { COUNTRY_CONFIG } from '@/lib/locale';
 // ─────────────────────────────────────────────────────────────────────
 // Sidebar
 // --------------------------------------------------------------------------------
-function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount }) {
+function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount, pendingInquiriesCount }) {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'warehouses', label: 'Warehouses', icon: Warehouse, badge: pendingCount || null },
         { id: 'assign-admin', label: 'Assign Admin', icon: Shield },
         { id: 'manage-admins', label: 'Manage Admins', icon: UserSquare2 },
         { id: 'manage-countries', label: 'Manage Countries', icon: Globe },
-        { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus },
+        { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus, badge: pendingInquiriesCount || null },
         { id: 'block-people', label: 'Block People', icon: Users },
         {
             id: 'analytics',
@@ -245,9 +247,12 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
 export default function SuperAdminDashboard({ user, onLogout }) {
     const [warehouses, setWarehouses] = useState([]);
     const [users, setUsers] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [usersLoading, setUsersLoading] = useState(true);
+    const [bookingsLoading, setBookingsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [actionLoading, setActionLoading] = useState({});
@@ -325,6 +330,37 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                 setUsersLoading(false);
             }
         );
+        return () => unsub();
+    }, [user]);
+
+    // Real-time Firestore subscription - listen to all 'warehouse_bookings'
+    useEffect(() => {
+        if (!user) return;
+        setBookingsLoading(true);
+        const q = collection(db, 'warehouse_bookings');
+        const unsub = onSnapshot(
+            q,
+            (snap) => {
+                const allBookings = snap.docs.map((d) => ({
+                    id: d.id,
+                    ...d.data(),
+                }));
+                setBookings(allBookings);
+                setBookingsLoading(false);
+            },
+            (err) => {
+                console.error('SuperAdmin bookings listener error:', err);
+                setBookingsLoading(false);
+            }
+        );
+        return () => unsub();
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        const unsub = subscribeToInquiries('pending', (data) => {
+            setPendingInquiriesCount(data.length);
+        });
         return () => unsub();
     }, [user]);
 
@@ -434,6 +470,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                     user={user}
                     onLogout={handleLogout}
                     pendingCount={counts.pending}
+                    pendingInquiriesCount={pendingInquiriesCount}
                 />
             </div>
 
@@ -464,6 +501,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 user={user}
                                 onLogout={handleLogout}
                                 pendingCount={counts.pending}
+                                pendingInquiriesCount={pendingInquiriesCount}
                             />
                         </motion.div>
                     </motion.div>
@@ -530,7 +568,7 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 exit={{ x: 60, opacity: 0 }}
                                 transition={{ duration: 0.3, type: 'tween' }}
                             >
-                                <OverviewView counts={counts} warehouses={warehouses} />
+                                <OverviewView counts={counts} warehouses={warehouses} bookings={bookings} />
                             </motion.div>
                         ) : activeView === 'warehouses' ? (
                             <motion.div
@@ -678,14 +716,28 @@ export default function SuperAdminDashboard({ user, onLogout }) {
     );
 }
 
-function OverviewView({ counts, warehouses }) {
+function OverviewView({ counts, warehouses, bookings = [] }) {
     const recentPending = warehouses.filter((w) => w.status === 'pending').slice(0, 5);
+
+    // Calculate total space from approved warehouses
+    const approvedWarehouses = warehouses.filter((w) => w.status === 'approved');
+    const totalSpace = approvedWarehouses.reduce((sum, w) => sum + (Number(w.totalArea) || 0), 0);
+
+    // Calculate currently booked space across the platform
+    const todayStr = (() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    })();
+    const activeBookings = bookings.filter((b) => b.startDate <= todayStr && b.endDate >= todayStr);
+    const bookedSpace = activeBookings.reduce((sum, b) => sum + (Number(b.bookedSpace) || 0), 0);
 
     const stats = [
         { label: 'Total Listings', value: counts.all, icon: <Building2 className="w-6 h-6" />, color: 'blue' },
         { label: 'Pending Review', value: counts.pending, icon: <Clock className="w-6 h-6" />, color: 'amber' },
-        { label: 'Approved', value: counts.approved, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald' },
-        { label: 'Rejected', value: counts.rejected, icon: <XCircle className="w-6 h-6" />, color: 'red' },
+        { label: 'Approved Listings', value: counts.approved, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald' },
+        { label: 'Total Space (Capacity)', value: `${totalSpace.toLocaleString()} sq ft`, icon: <Ruler className="w-6 h-6" />, color: 'purple' },
+        { label: 'Total Booked Space', value: `${bookedSpace.toLocaleString()} sq ft`, icon: <Layers className="w-6 h-6" />, color: 'orange' },
+        { label: 'Rejected Listings', value: counts.rejected, icon: <XCircle className="w-6 h-6" />, color: 'red' },
     ];
 
     const colorMap = {
@@ -693,19 +745,21 @@ function OverviewView({ counts, warehouses }) {
         amber: 'bg-amber-50 text-amber-600 border-amber-100',
         emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
         red: 'bg-red-50 text-red-600 border-red-100',
+        purple: 'bg-purple-50 text-purple-600 border-purple-100',
+        orange: 'bg-orange-50 text-orange-600 border-orange-100',
     };
 
     return (
         <div className="space-y-6">
             {/* Stat cards - matches merchant/owner dashboard style */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {stats.map((s) => (
                     <div key={s.label} className={`bg-white p-6 rounded-2xl border ${colorMap[s.color]} shadow-sm`}>
                         <div className="flex items-center gap-3 mb-2">
                             <span className="flex items-center justify-center opacity-80">{s.icon}</span>
                             <span className="font-semibold text-slate-600 text-sm">{s.label}</span>
                         </div>
-                        <div className="text-3xl font-bold text-slate-900">{s.value}</div>
+                        <div className="text-2xl font-bold text-slate-900">{s.value}</div>
                     </div>
                 ))}
             </div>
@@ -735,12 +789,17 @@ function OverviewView({ counts, warehouses }) {
                                     </p>
                                 </div>
                                 <span className="text-xs text-slate-400">
-                                    {w.createdAt?.seconds
-                                        ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
-                                              day: 'numeric',
-                                              month: 'short',
-                                          })
-                                        : 'Just now'}
+                                    {(() => {
+                                        const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
+                                        const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                        const label = isUpdated ? 'Updated: ' : 'Published: ';
+                                        return ts?.seconds
+                                            ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
+                                                  day: 'numeric',
+                                                  month: 'short',
+                                              })}`
+                                            : 'Just now';
+                                    })()}
                                 </span>
                             </div>
                         ))}
@@ -995,13 +1054,18 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                             {statusLabel}
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1">
-                            {w.createdAt?.seconds
-                                ? new Date(w.createdAt.seconds * 1000).toLocaleDateString('en-IN', {
-                                      day: 'numeric',
-                                      month: 'short',
-                                      year: 'numeric',
-                                  })
-                                : '-'}
+                            {(() => {
+                                const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
+                                const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                const label = isUpdated ? 'Updated: ' : 'Published: ';
+                                return ts?.seconds
+                                    ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                      })}`
+                                    : '-';
+                            })()}
                         </p>
                     </div>
 
@@ -1077,6 +1141,12 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                     ]}
                                 />
                             </div>
+                            {w.description && (
+                                <div className="mt-5 p-4 bg-white rounded-2xl border border-slate-200/60 shadow-inner">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Description</p>
+                                    <p className="text-sm font-medium text-slate-700 whitespace-pre-line leading-relaxed">{w.description}</p>
+                                </div>
+                            )}
                             {/* Photo Gallery Section */}
                             <PhotoGallery photos={w.photos} />
                         </div>
@@ -1171,10 +1241,13 @@ const loadedImagesCache = new Set();
 
 function BlockPeopleView({ users, loading, handleBlockUser, handleDeleteUser, onViewWarehouses }) {
     const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
 
     const filtered = users.filter((u) => {
         const q = search.toLowerCase();
-        return !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
+        const matchesSearch = !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q);
+        const matchesRole = roleFilter === 'all' || u.userType === roleFilter;
+        return matchesSearch && matchesRole;
     });
 
     if (loading) return <LoadingState />;
@@ -1183,14 +1256,28 @@ function BlockPeopleView({ users, loading, handleBlockUser, handleDeleteUser, on
         <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-4 justify-between">
                 <h3 className="text-xl font-bold text-slate-800">Community Safety</h3>
-                <div className="relative w-full sm:w-80">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by email or name..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none"
-                    />
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
+                    >
+                        <option value="all">All Roles</option>
+                        <option value="superadmin">Super Admins</option>
+                        <option value="admin">Admins</option>
+                        <option value="warehouse_partner">Warehouse Partners</option>
+                        <option value="business_client">Business Clients</option>
+                    </select>
+
+                    <div className="relative w-full sm:w-64">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search by email or name..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all outline-none shadow-sm"
+                        />
+                    </div>
                 </div>
             </div>
 
