@@ -799,7 +799,7 @@ function WarehouseListView({
                     <select
                         value={sourceFilter}
                         onChange={(e) => setSourceFilter(e.target.value)}
-                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
+                        className="pl-3 pr-8 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
                     >
                         <option value="all">All Roles ({sourceCounts.all})</option>
                         <option value="admin">Admin ({sourceCounts.admin})</option>
@@ -1205,7 +1205,7 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
-                        className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
+                        className="pl-3 pr-8 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
                     >
                         <option value="all">All Roles</option>
                         <option value="superadmin">Super Admins</option>
