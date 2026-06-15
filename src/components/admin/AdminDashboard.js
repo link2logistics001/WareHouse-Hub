@@ -805,7 +805,7 @@ function WarehouseListView({
                         <option value="admin">Admin ({sourceCounts.admin})</option>
                         <option value="superadmin">Super Admin ({sourceCounts.superadmin})</option>
                         <option value="dataentry">Data Entry ({sourceCounts.dataentry})</option>
-                        <option value="owner">Owner ({sourceCounts.owner})</option>
+                        <option value="owner">Warehouse Partner ({sourceCounts.owner})</option>
                     </select>
                 </div>
 
@@ -964,7 +964,7 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                 <span
                                     className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}
                                 >
-                                    {w._role}
+                                    {w._role === 'owner' ? 'warehouse partner' : w._role === 'dataentry' ? 'data entry' : w._role}
                                 </span>
                             )}
                         </p>
