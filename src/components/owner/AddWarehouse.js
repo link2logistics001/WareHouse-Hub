@@ -770,7 +770,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
 
     const handleNext = () => {
         const validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 };
-        const errs = validators[step]();
+        const errs = editingWarehouse ? {} : validators[step]();
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
             return;
@@ -818,7 +818,7 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
     };
 
     const handleSubmit = async () => {
-        const errs = validateStep4();
+        const errs = editingWarehouse ? {} : validateStep4();
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
             return;
@@ -896,47 +896,54 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                     : existingPhotos.tariff,
             ]);
 
+            const getVal = (val) => {
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    return '--';
+                }
+                return String(val).trim();
+            };
+
             const docData = {
                 // Step 1
-                warehouseName: warehouseDetails.warehouseName.trim(),
-                warehouseCategory: warehouseDetails.warehouseCategory,
-                measurementUnit: warehouseDetails.measurementUnit || 'sqft',
+                warehouseName: getVal(warehouseDetails.warehouseName),
+                warehouseCategory: getVal(warehouseDetails.warehouseCategory),
+                measurementUnit: getVal(warehouseDetails.measurementUnit),
                 totalArea: Number(warehouseDetails.totalArea) || 0,
                 availableArea: Number(warehouseDetails.availableArea) || 0,
                 totalMetricTons: Number(warehouseDetails.totalMetricTons) || 0,
                 availableMetricTons: Number(warehouseDetails.availableMetricTons) || 0,
-                clearHeight: Number(warehouseDetails.clearHeight),
-                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors),
-                containerHandling: warehouseDetails.containerHandling,
-                typeOfConstruction: warehouseDetails.typeOfConstruction.trim() || null,
+                clearHeight: Number(warehouseDetails.clearHeight) || 0,
+                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors) || 0,
+                containerHandling: getVal(warehouseDetails.containerHandling),
+                typeOfConstruction: getVal(warehouseDetails.typeOfConstruction),
                 storageTypes: warehouseDetails.storageTypes,
                 hazClass: warehouseDetails.storageTypes.includes('Hazardous')
-                    ? warehouseDetails.hazClass.trim() || null
-                    : null,
+                    ? getVal(warehouseDetails.hazClass)
+                    : '--',
                 tempRange: warehouseDetails.storageTypes.includes('Temperature Controlled')
-                    ? warehouseDetails.tempRange.trim() || null
-                    : null,
-                warehouseAge: warehouseDetails.warehouseAge || null,
-                warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null,
-                state: warehouseDetails.state.trim(),
-                city: warehouseDetails.city.trim(),
-                address: warehouseDetails.address.trim(),
-                zipCode: warehouseDetails.zipCode.trim(),
-                addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`, // backward compat
-                googleMapPin: warehouseDetails.googleMapPin.trim(),
-                description: warehouseDetails.description.trim(),
+                    ? getVal(warehouseDetails.tempRange)
+                    : '--',
+                warehouseAge: getVal(warehouseDetails.warehouseAge),
+                warehouseGstPan: getVal(warehouseDetails.warehouseGstPan),
+                state: getVal(warehouseDetails.state),
+                city: getVal(warehouseDetails.city),
+                address: getVal(warehouseDetails.address),
+                zipCode: getVal(warehouseDetails.zipCode),
+                addressWithZip: `${getVal(warehouseDetails.address)} - ${getVal(warehouseDetails.zipCode)}`, // backward compat
+                googleMapPin: getVal(warehouseDetails.googleMapPin),
+                description: getVal(warehouseDetails.description),
                 // Step 2
-                inboundHandling: operationsDetails.inboundHandling || null,
-                outboundHandling: operationsDetails.outboundHandling || null,
-                wmsAvailable: operationsDetails.wmsAvailable || null,
+                inboundHandling: getVal(operationsDetails.inboundHandling),
+                outboundHandling: getVal(operationsDetails.outboundHandling),
+                wmsAvailable: getVal(operationsDetails.wmsAvailable),
                 daysOfOperation:
                     operationsDetails.daysOfOperation === 'Other'
-                        ? operationsDetails.customDaysOfOperation.trim()
-                        : operationsDetails.daysOfOperation,
+                        ? getVal(operationsDetails.customDaysOfOperation)
+                        : getVal(operationsDetails.daysOfOperation),
                 operationTime:
                     operationsDetails.operationTime === 'Other'
-                        ? operationsDetails.customOperationTime.trim()
-                        : operationsDetails.operationTime,
+                        ? getVal(operationsDetails.customOperationTime)
+                        : getVal(operationsDetails.operationTime),
                 securityFeatures: operationsDetails.securityFeatures.map((f) =>
                     f === 'Others' && operationsDetails.customSecurityFeature.trim()
                         ? operationsDetails.customSecurityFeature.trim()
@@ -955,30 +962,31 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                 // Step 3
                 pricingUnit:
                     pricingDetails.pricingUnit === 'Custom'
-                        ? pricingDetails.customPricingUnit.trim()
-                        : pricingDetails.pricingUnit,
-                storageRate: Number(pricingDetails.storageRate),
-                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : null,
+                        ? getVal(pricingDetails.customPricingUnit)
+                        : getVal(pricingDetails.pricingUnit),
+                storageRate: Number(pricingDetails.storageRate) || 0,
+                pricingAmount: Number(pricingDetails.storageRate) || 0,
+                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : 0,
                 additionalCharges: additionalCharges
                     .filter((c) => c.name.trim())
                     .map((c) => ({ name: c.name.trim(), amount: Number(c.amount) || 0 })),
-                minCommitment: pricingDetails.minCommitment,
-                shortTermStorage: pricingDetails.shortTermStorage,
-                shortTermDuration: pricingDetails.shortTermStorage === 'Yes' ? pricingDetails.shortTermDuration : null,
+                minCommitment: getVal(pricingDetails.minCommitment),
+                shortTermStorage: getVal(pricingDetails.shortTermStorage),
+                shortTermDuration: pricingDetails.shortTermStorage === 'Yes' ? getVal(pricingDetails.shortTermDuration) : '--',
                 photos: {
-                    frontView: frontViewURL,
-                    insideView: insideViewURL,
-                    dockArea: dockAreaURL,
-                    rateCard: rateCardURL,
-                    tariff: tariffURL || null,
+                    frontView: frontViewURL || (editingWarehouse ? existingPhotos.frontView : null) || 'no photos uploaded !',
+                    insideView: insideViewURL || (editingWarehouse ? existingPhotos.insideView : null) || 'no photos uploaded !',
+                    dockArea: dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null) || 'no photos uploaded !',
+                    rateCard: rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null) || 'no photos uploaded !',
+                    tariff: tariffURL || (editingWarehouse ? existingPhotos.tariff : null) || 'no photos uploaded !',
                 },
                 // Step 4
-                businessType: ownerDetails.businessType,
-                companyName: ownerDetails.companyName.trim(),
-                contactPerson: ownerDetails.contactPerson.trim(),
-                mobile: ownerDetails.mobile.trim(),
-                email: ownerDetails.email.trim(),
-                ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
+                businessType: getVal(ownerDetails.businessType),
+                companyName: getVal(ownerDetails.companyName),
+                contactPerson: getVal(ownerDetails.contactPerson),
+                mobile: getVal(ownerDetails.mobile),
+                email: getVal(ownerDetails.email),
+                ownerGstPan: getVal(ownerDetails.ownerGstPan),
                 // Meta
                 ownerId: uid,
                 status: 'pending',

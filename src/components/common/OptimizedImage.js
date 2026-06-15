@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { ImageOff } from 'lucide-react';
 
 /**
  * OptimizedImage — drop-in replacement for raw <img> tags.
@@ -47,6 +48,24 @@ export default function OptimizedImage({
             setImgSrc(fallback);
         }
     };
+
+    const isNoPhotos = src === 'no photos uploaded !' || (!src && fallback === PLACEHOLDER_SRC);
+
+    if (isNoPhotos) {
+        return (
+            <div
+                className={`flex flex-col items-center justify-center bg-slate-50 border border-slate-200/60 text-slate-400 p-6 rounded-2xl gap-2 select-none ${className} ${
+                    fill ? 'absolute inset-0 w-full h-full' : ''
+                }`}
+                style={!fill ? { width, height } : undefined}
+            >
+                <ImageOff className="w-8 h-8 text-slate-300 animate-pulse" />
+                <span className="text-[10px] font-black tracking-widest uppercase text-slate-400/80">
+                    no photos uploaded !
+                </span>
+            </div>
+        );
+    }
 
     const wrapperClass = `relative overflow-hidden ${className}`;
 

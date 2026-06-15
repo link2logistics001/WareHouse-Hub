@@ -79,32 +79,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
     };
 
     const validateRow = (row, rowIndex) => {
-        const errors = [];
-        const requiredFields = [
-            'businessType', 'companyName', 'contactPerson', 'mobile', 'email',
-            'warehouseName', 'warehouseCategory', 'measurementUnit', 'state',
-            'city', 'addressWithZip', 'daysOfOperation', 'operationTime',
-            'pricingUnit', 'storageRate', 'minCommitment', 'shortTermStorage'
-        ];
-
-        requiredFields.forEach(field => {
-            if (!row[field] || String(row[field]).trim() === '') {
-                errors.push(`Missing required field: ${field}`);
-            }
-        });
-
-        // Area Validation
-        const unit = row.measurementUnit ? row.measurementUnit.toLowerCase().trim() : 'sqft';
-        if (unit === 'sqft' || unit === 'both') {
-            if (!row.totalArea || isNaN(Number(row.totalArea))) errors.push('Invalid totalArea');
-            if (!row.availableArea || isNaN(Number(row.availableArea))) errors.push('Invalid availableArea');
-        }
-        if (unit === 'mt' || unit === 'both') {
-            if (!row.totalMetricTons || isNaN(Number(row.totalMetricTons))) errors.push('Invalid totalMetricTons');
-            if (!row.availableMetricTons || isNaN(Number(row.availableMetricTons))) errors.push('Invalid availableMetricTons');
-        }
-
-        return errors;
+        return [];
     };
 
     const processUpload = async () => {
@@ -163,53 +138,73 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                         const adminEmail = user.email.toLowerCase().trim();
                         
                         // Parse comma separated arrays
-                        const parseArray = (str) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+                        const parseArray = (str) => {
+                            if (!str || String(str).trim() === '') return [];
+                            return str.split(',').map(s => s.trim()).filter(Boolean);
+                        };
+
+                        const getVal = (val) => {
+                            if (val === undefined || val === null || String(val).trim() === '') {
+                                return '--';
+                            }
+                            return String(val).trim();
+                        };
+
+                        const getNum = (val) => {
+                            if (val === undefined || val === null || String(val).trim() === '' || isNaN(Number(val))) {
+                                return 0;
+                            }
+                            return Number(val);
+                        };
 
                         const docData = {
-                            warehouseName: String(row.warehouseName).trim(),
-                            warehouseCategory: String(row.warehouseCategory).trim(),
-                            measurementUnit: String(row.measurementUnit).trim().toLowerCase() || 'sqft',
-                            totalArea: Number(row.totalArea) || 0,
-                            availableArea: Number(row.availableArea) || 0,
-                            totalMetricTons: Number(row.totalMetricTons) || 0,
-                            availableMetricTons: Number(row.availableMetricTons) || 0,
-                            clearHeight: Number(row.clearHeight) || 0,
-                            numberOfDockDoors: Number(row.numberOfDockDoors) || 0,
-                            containerHandling: row.containerHandling ? String(row.containerHandling).trim() : null,
-                            typeOfConstruction: row.typeOfConstruction ? String(row.typeOfConstruction).trim() : null,
+                            warehouseName: getVal(row.warehouseName),
+                            warehouseCategory: getVal(row.warehouseCategory),
+                            measurementUnit: row.measurementUnit && String(row.measurementUnit).trim() !== ''
+                                ? String(row.measurementUnit).trim().toLowerCase()
+                                : 'sqft',
+                            totalArea: getNum(row.totalArea),
+                            availableArea: getNum(row.availableArea),
+                            totalMetricTons: getNum(row.totalMetricTons),
+                            availableMetricTons: getNum(row.availableMetricTons),
+                            clearHeight: getNum(row.clearHeight),
+                            numberOfDockDoors: getNum(row.numberOfDockDoors),
+                            containerHandling: getVal(row.containerHandling),
+                            typeOfConstruction: getVal(row.typeOfConstruction),
                             storageTypes: parseArray(row.storageTypes),
-                            warehouseAge: row.warehouseAge ? String(row.warehouseAge).trim() : null,
-                            warehouseGstPan: row.warehouseGstPan ? String(row.warehouseGstPan).trim() : null,
-                            state: String(row.state).trim(),
-                            city: String(row.city).trim(),
-                            addressWithZip: String(row.addressWithZip).trim(),
-                            googleMapPin: row.googleMapPin ? String(row.googleMapPin).trim() : '',
-                            description: row.description ? String(row.description).trim() : null,
-                            inboundHandling: row.inboundHandling ? String(row.inboundHandling).trim() : null,
-                            outboundHandling: row.outboundHandling ? String(row.outboundHandling).trim() : null,
-                            wmsAvailable: row.wmsAvailable ? String(row.wmsAvailable).trim() : null,
-                            daysOfOperation: String(row.daysOfOperation).trim(),
-                            operationTime: String(row.operationTime).trim(),
+                            warehouseAge: getVal(row.warehouseAge),
+                            warehouseGstPan: getVal(row.warehouseGstPan),
+                            state: getVal(row.state),
+                            city: getVal(row.city),
+                            addressWithZip: getVal(row.addressWithZip),
+                            googleMapPin: getVal(row.googleMapPin),
+                            description: getVal(row.description),
+                            inboundHandling: getVal(row.inboundHandling),
+                            outboundHandling: getVal(row.outboundHandling),
+                            wmsAvailable: getVal(row.wmsAvailable),
+                            daysOfOperation: getVal(row.daysOfOperation),
+                            operationTime: getVal(row.operationTime),
                             securityFeatures: parseArray(row.securityFeatures),
                             suitableGoods: parseArray(row.suitableGoods),
                             valueAddedServices: parseArray(row.valueAddedServices),
-                            pricingUnit: String(row.pricingUnit).trim(),
-                            storageRate: Number(row.storageRate),
-                            handlingFees: row.handlingFees ? Number(row.handlingFees) : null,
-                            minCommitment: String(row.minCommitment).trim(),
-                            shortTermStorage: String(row.shortTermStorage).trim(),
+                            pricingUnit: getVal(row.pricingUnit),
+                            storageRate: getNum(row.storageRate),
+                            pricingAmount: getNum(row.storageRate),
+                            handlingFees: getNum(row.handlingFees),
+                            minCommitment: getVal(row.minCommitment),
+                            shortTermStorage: getVal(row.shortTermStorage),
                             photos: {
-                                frontView: null,
-                                insideView: null,
-                                dockArea: null,
-                                rateCard: null,
+                                frontView: 'no photos uploaded !',
+                                insideView: 'no photos uploaded !',
+                                dockArea: 'no photos uploaded !',
+                                rateCard: 'no photos uploaded !',
                             },
-                            businessType: String(row.businessType).trim(),
-                            companyName: String(row.companyName).trim(),
-                            contactPerson: String(row.contactPerson).trim(),
-                            mobile: String(row.mobile).trim(),
-                            email: String(row.email).trim(),
-                            ownerGstPan: row.ownerGstPan ? String(row.ownerGstPan).trim() : null,
+                            businessType: getVal(row.businessType),
+                            companyName: getVal(row.companyName),
+                            contactPerson: getVal(row.contactPerson),
+                            mobile: getVal(row.mobile),
+                            email: getVal(row.email),
+                            ownerGstPan: getVal(row.ownerGstPan),
                             ownerId: user.uid,
                             status: role === 'admin' ? 'approved' : 'pending',
                             createdAt: serverTimestamp(),

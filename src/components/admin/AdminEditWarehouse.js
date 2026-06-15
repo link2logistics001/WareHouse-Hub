@@ -105,8 +105,8 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                 warehouseGstPan: initialData.warehouseGstPan || '',
                 state: initialData.state || '',
                 city: initialData.city || '',
-                address: initialData.address || (initialData.addressWithZip ? initialData.addressWithZip.split(' - ')[0] : ''),
-                zipCode: initialData.zipCode || (initialData.addressWithZip ? initialData.addressWithZip.split(' - ')[1] : ''),
+                address: initialData.address || (initialData.addressWithZip ? (initialData.addressWithZip.split(' - ')[0] || '') : ''),
+                zipCode: initialData.zipCode || (initialData.addressWithZip ? (initialData.addressWithZip.split(' - ')[1] || '') : ''),
                 googleMapPin: initialData.googleMapPin || '',
                 description: initialData.description || '',
             });
@@ -246,74 +246,16 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
 
     // ── Validators (same as Owner) ──
     const validateStep1 = () => {
-        const e = {};
-        if (!ownerDetails.businessType) e.businessType = 'Please select a business type';
-        if (!ownerDetails.companyName.trim()) e.companyName = 'Company name is required';
-        if (!ownerDetails.contactPerson.trim()) e.contactPerson = 'Contact person is required';
-        if (!ownerDetails.mobile.trim()) e.mobile = 'Mobile number is required';
-        if (!ownerDetails.email.trim()) e.email = 'Email is required';
-        return e;
+        return {};
     };
     const validateStep2 = () => {
-        const e = {};
-        if (!warehouseDetails.warehouseName.trim()) e.warehouseName = 'Warehouse name is required';
-        if (!warehouseDetails.warehouseCategory) e.warehouseCategory = 'Please select a category';
-        const unit = warehouseDetails.measurementUnit || 'sqft';
-
-        if (unit === 'sqft' || unit === 'both') {
-            const total = Number(warehouseDetails.totalArea);
-            const available = Number(warehouseDetails.availableArea);
-            if (!warehouseDetails.totalArea) e.totalArea = 'Total area is required';
-            else if (total < 0) e.totalArea = 'Total area cannot be negative';
-            if (!warehouseDetails.availableArea) e.availableArea = 'Available area is required';
-            else if (available < 0) e.availableArea = 'Available area cannot be negative';
-            else if (total > 0 && available > total) e.availableArea = 'Available area cannot exceed total area';
-        }
-
-        if (unit === 'mt' || unit === 'both') {
-            const totalMT = Number(warehouseDetails.totalMetricTons);
-            const availableMT = Number(warehouseDetails.availableMetricTons);
-
-            if (!warehouseDetails.totalMetricTons) e.totalMetricTons = 'Total capacity (MT) is required';
-            else if (totalMT < 0) e.totalMetricTons = 'Capacity cannot be negative';
-
-            if (!warehouseDetails.availableMetricTons) e.availableMetricTons = 'Available capacity (MT) is required';
-            else if (availableMT < 0) e.availableMetricTons = 'Available capacity cannot be negative';
-            else if (totalMT > 0 && availableMT > totalMT)
-                e.availableMetricTons = 'Available capacity cannot be greater than Total capacity';
-        }
-
-        if (!warehouseDetails.state.trim()) e.state = 'State is required';
-        if (!warehouseDetails.city.trim()) e.city = 'City is required';
-        if (!warehouseDetails.address.trim()) e.address = 'Address is required';
-        if (!warehouseDetails.zipCode.trim()) e.zipCode = `${countryConfig.postalLabel} is required`;
-        else if (!countryConfig.postalRegex.test(warehouseDetails.zipCode.trim()))
-            e.zipCode = `Enter a valid ${countryConfig.postalLabel}`;
-        if (!warehouseDetails.description || !warehouseDetails.description.trim())
-            e.description = 'Warehouse description is required';
-        return e;
+        return {};
     };
     const validateStep3 = () => {
-        const e = {};
-        if (!operationsDetails.daysOfOperation) e.daysOfOperation = 'Please select days';
-        if (!operationsDetails.operationTime) e.operationTime = 'Please select time';
-        if (
-            (operationsDetails.operationTime === 'Other' || operationsDetails.operationTime === 'Fixed Hours') &&
-            !operationsDetails.customOperationTime.trim()
-        )
-            e.customOperationTime = 'Please specify hours';
-        if (operationsDetails.securityFeatures.length === 0) e.securityFeatures = 'Select at least one';
-        return e;
+        return {};
     };
     const validateStep4 = () => {
-        const e = {};
-        if (!pricingDetails.pricingUnit) e.pricingUnit = 'Please select a pricing unit';
-        if (pricingDetails.pricingUnit === 'Custom' && !pricingDetails.customPricingUnit.trim())
-            e.customPricingUnit = 'Please specify';
-        if (!pricingDetails.storageRate) e.storageRate = 'Storage rate is required';
-        if (!pricingDetails.minCommitment) e.minCommitment = 'Please select';
-        if (!pricingDetails.shortTermStorage) e.shortTermStorage = 'Please select';
-        return e;
+        return {};
     };
 
     // ── OTP handlers ──
@@ -479,39 +421,46 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                 uploadFile(photos.rateCard, `${basePath}/rate_card`, (pct) => handleProgress('rateCard', pct)),
             ]);
 
+            const getVal = (val) => {
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    return '--';
+                }
+                return String(val).trim();
+            };
+
             const docData = {
-                warehouseName: warehouseDetails.warehouseName.trim(),
-                warehouseCategory: warehouseDetails.warehouseCategory,
-                measurementUnit: warehouseDetails.measurementUnit || 'sqft',
+                warehouseName: getVal(warehouseDetails.warehouseName),
+                warehouseCategory: getVal(warehouseDetails.warehouseCategory),
+                measurementUnit: getVal(warehouseDetails.measurementUnit),
                 totalArea: Number(warehouseDetails.totalArea) || 0,
                 availableArea: Number(warehouseDetails.availableArea) || 0,
                 totalMetricTons: Number(warehouseDetails.totalMetricTons) || 0,
                 availableMetricTons: Number(warehouseDetails.availableMetricTons) || 0,
-                clearHeight: Number(warehouseDetails.clearHeight),
-                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors),
-                containerHandling: warehouseDetails.containerHandling,
+                clearHeight: Number(warehouseDetails.clearHeight) || 0,
+                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors) || 0,
+                containerHandling: getVal(warehouseDetails.containerHandling),
                 typeOfConstruction:
                     warehouseDetails.typeOfConstruction === 'Other'
-                        ? warehouseDetails.customTypeOfConstruction.trim()
-                        : warehouseDetails.typeOfConstruction || null,
+                        ? getVal(warehouseDetails.customTypeOfConstruction)
+                        : getVal(warehouseDetails.typeOfConstruction),
                 storageTypes: warehouseDetails.storageTypes,
-                warehouseAge: warehouseDetails.warehouseAge || null,
-                warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null,
-                state: warehouseDetails.state.trim(),
-                city: warehouseDetails.city.trim(),
-                address: warehouseDetails.address.trim(),
-                zipCode: warehouseDetails.zipCode.trim(),
-                addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`,
-                googleMapPin: warehouseDetails.googleMapPin.trim(),
-                description: warehouseDetails.description.trim(),
-                inboundHandling: operationsDetails.inboundHandling || null,
-                outboundHandling: operationsDetails.outboundHandling || null,
-                wmsAvailable: operationsDetails.wmsAvailable || null,
-                daysOfOperation: operationsDetails.daysOfOperation,
+                warehouseAge: getVal(warehouseDetails.warehouseAge),
+                warehouseGstPan: getVal(warehouseDetails.warehouseGstPan),
+                state: getVal(warehouseDetails.state),
+                city: getVal(warehouseDetails.city),
+                address: getVal(warehouseDetails.address),
+                zipCode: getVal(warehouseDetails.zipCode),
+                addressWithZip: `${getVal(warehouseDetails.address)} - ${getVal(warehouseDetails.zipCode)}`,
+                googleMapPin: getVal(warehouseDetails.googleMapPin),
+                description: getVal(warehouseDetails.description),
+                inboundHandling: getVal(operationsDetails.inboundHandling),
+                outboundHandling: getVal(operationsDetails.outboundHandling),
+                wmsAvailable: getVal(operationsDetails.wmsAvailable),
+                daysOfOperation: getVal(operationsDetails.daysOfOperation),
                 operationTime:
                     operationsDetails.operationTime === 'Other'
-                        ? operationsDetails.customOperationTime.trim()
-                        : operationsDetails.operationTime,
+                        ? getVal(operationsDetails.customOperationTime)
+                        : getVal(operationsDetails.operationTime),
                 securityFeatures: operationsDetails.securityFeatures.map((f) =>
                     f === 'Others' && operationsDetails.customSecurityFeature.trim()
                         ? operationsDetails.customSecurityFeature.trim()
@@ -529,24 +478,25 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                 ),
                 pricingUnit:
                     pricingDetails.pricingUnit === 'Custom'
-                        ? pricingDetails.customPricingUnit.trim()
-                        : pricingDetails.pricingUnit,
-                storageRate: Number(pricingDetails.storageRate),
-                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : null,
-                minCommitment: pricingDetails.minCommitment,
-                shortTermStorage: pricingDetails.shortTermStorage,
+                        ? getVal(pricingDetails.customPricingUnit)
+                        : getVal(pricingDetails.pricingUnit),
+                storageRate: Number(pricingDetails.storageRate) || 0,
+                pricingAmount: Number(pricingDetails.storageRate) || 0,
+                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : 0,
+                minCommitment: getVal(pricingDetails.minCommitment),
+                shortTermStorage: getVal(pricingDetails.shortTermStorage),
                 photos: {
-                    frontView: frontViewURL,
-                    insideView: insideViewURL,
-                    dockArea: dockAreaURL,
-                    rateCard: rateCardURL,
+                    frontView: frontViewURL || (initialData?.photos?.frontView) || 'no photos uploaded !',
+                    insideView: insideViewURL || (initialData?.photos?.insideView) || 'no photos uploaded !',
+                    dockArea: dockAreaURL || (initialData?.photos?.dockArea) || 'no photos uploaded !',
+                    rateCard: rateCardURL || (initialData?.photos?.rateCard) || 'no photos uploaded !',
                 },
-                businessType: ownerDetails.businessType,
-                companyName: ownerDetails.companyName.trim(),
-                contactPerson: ownerDetails.contactPerson.trim(),
-                mobile: ownerDetails.mobile.trim(),
-                email: ownerDetails.email.trim(),
-                ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
+                businessType: getVal(ownerDetails.businessType),
+                companyName: getVal(ownerDetails.companyName),
+                contactPerson: getVal(ownerDetails.contactPerson),
+                mobile: getVal(ownerDetails.mobile),
+                email: getVal(ownerDetails.email),
+                ownerGstPan: getVal(ownerDetails.ownerGstPan),
                 ownerId: uid,
                 status: 'approved',
                 source: 'admin',

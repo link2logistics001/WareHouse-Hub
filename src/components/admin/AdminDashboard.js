@@ -236,6 +236,7 @@ export default function AdminDashboard({ user, onLogout }) {
     const [error, setError] = useState('');
     const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
     const [filter, setFilter] = useState('all');
+    const [sourceFilter, setSourceFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [actionLoading, setActionLoading] = useState({});
     const [toast, setToast] = useState(null);
@@ -379,15 +380,36 @@ export default function AdminDashboard({ user, onLogout }) {
         onLogout?.();
     };
 
+    const getWarehouseSourceRole = (w) => {
+        const src = (w.source || w._role || '').toLowerCase();
+        if (src.includes('superadmin')) return 'superadmin';
+        if (src.includes('admin')) return 'admin';
+        if (src.includes('dataentry') || src.includes('data_entry')) return 'dataentry';
+        return 'owner';
+    };
+
+    const warehousesBySource = warehouses.filter((w) => {
+        return sourceFilter === 'all' || getWarehouseSourceRole(w) === sourceFilter;
+    });
+
     const counts = {
+        all: warehousesBySource.length,
+        pending: warehousesBySource.filter((w) => w.status === 'pending').length,
+        approved: warehousesBySource.filter((w) => w.status === 'approved').length,
+        rejected: warehousesBySource.filter((w) => w.status === 'rejected').length,
+    };
+
+    const sourceCounts = {
         all: warehouses.length,
-        pending: warehouses.filter((w) => w.status === 'pending').length,
-        approved: warehouses.filter((w) => w.status === 'approved').length,
-        rejected: warehouses.filter((w) => w.status === 'rejected').length,
+        admin: warehouses.filter((w) => getWarehouseSourceRole(w) === 'admin').length,
+        superadmin: warehouses.filter((w) => getWarehouseSourceRole(w) === 'superadmin').length,
+        dataentry: warehouses.filter((w) => getWarehouseSourceRole(w) === 'dataentry').length,
+        owner: warehouses.filter((w) => getWarehouseSourceRole(w) === 'owner').length,
     };
 
     const filtered = warehouses.filter((w) => {
         const matchFilter = filter === 'all' || w.status === filter;
+        const matchSource = sourceFilter === 'all' || getWarehouseSourceRole(w) === sourceFilter;
         const q = search.toLowerCase();
         const matchSearch =
             !q ||
@@ -397,7 +419,7 @@ export default function AdminDashboard({ user, onLogout }) {
             w._email?.toLowerCase().includes(q) ||
             w.city?.toLowerCase().includes(q) ||
             w.state?.toLowerCase().includes(q);
-        return matchFilter && matchSearch;
+        return matchFilter && matchSource && matchSearch;
     });
 
     if (!mounted) return null;
@@ -527,9 +549,12 @@ export default function AdminDashboard({ user, onLogout }) {
                                     error={error}
                                     filter={filter}
                                     setFilter={setFilter}
+                                    sourceFilter={sourceFilter}
+                                    setSourceFilter={setSourceFilter}
                                     search={search}
                                     setSearch={setSearch}
                                     counts={counts}
+                                    sourceCounts={sourceCounts}
                                     handleAction={handleAction}
                                     onEdit={handleEdit}
                                     actionLoading={actionLoading}
@@ -722,9 +747,12 @@ function WarehouseListView({
     error,
     filter,
     setFilter,
+    sourceFilter,
+    setSourceFilter,
     search,
     setSearch,
     counts,
+    sourceCounts,
     handleAction,
     onEdit,
     actionLoading,
@@ -741,29 +769,44 @@ function WarehouseListView({
     return (
         <div className="space-y-5">
             {/* Toolbar: filters + search */}
-            <div className="flex flex-wrap items-center gap-3 justify-between">
-                {/* Tabs */}
-                <div className="flex gap-1 bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
-                    {filterTabs.map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setFilter(tab.key)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                                filter === tab.key
-                                    ? 'bg-orange-600 text-white shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                            }`}
-                        >
-                            {tab.label}
-                            <span
-                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                    filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Status Tabs */}
+                    <div className="flex gap-1 bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                        {filterTabs.map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setFilter(tab.key)}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                                    filter === tab.key
+                                        ? 'bg-orange-600 text-white shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                 }`}
                             >
-                                {tab.count}
-                            </span>
-                        </button>
-                    ))}
+                                {tab.label}
+                                <span
+                                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                        filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                                    }`}
+                                >
+                                    {tab.count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Source Dropdown Filter */}
+                    <select
+                        value={sourceFilter}
+                        onChange={(e) => setSourceFilter(e.target.value)}
+                        className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all cursor-pointer font-semibold shadow-sm"
+                    >
+                        <option value="all">All Roles ({sourceCounts.all})</option>
+                        <option value="admin">Admin ({sourceCounts.admin})</option>
+                        <option value="superadmin">Super Admin ({sourceCounts.superadmin})</option>
+                        <option value="dataentry">Data Entry ({sourceCounts.dataentry})</option>
+                        <option value="owner">Owner ({sourceCounts.owner})</option>
+                    </select>
                 </div>
 
                 {/* Search */}
@@ -1339,7 +1382,7 @@ function PhotoGallery({ photos }) {
     // Build array of available photos
     const photoEntries = Object.entries(photoLabels)
         .map(([key, label]) => ({ key, label, url: photos?.[key] }))
-        .filter((p) => p.url);
+        .filter((p) => p.url && p.url !== 'no photos uploaded !');
 
     if (photoEntries.length === 0) {
         return (

@@ -419,39 +419,46 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                 uploadFile(photos.rateCard, `${basePath}/rate_card`, (pct) => handleProgress('rateCard', pct)),
             ]);
 
+            const getVal = (val) => {
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    return '--';
+                }
+                return String(val).trim();
+            };
+
             const docData = {
-                warehouseName: warehouseDetails.warehouseName.trim(),
-                warehouseCategory: warehouseDetails.warehouseCategory,
-                measurementUnit: warehouseDetails.measurementUnit || 'sqft',
+                warehouseName: getVal(warehouseDetails.warehouseName),
+                warehouseCategory: getVal(warehouseDetails.warehouseCategory),
+                measurementUnit: getVal(warehouseDetails.measurementUnit),
                 totalArea: Number(warehouseDetails.totalArea) || 0,
                 availableArea: Number(warehouseDetails.availableArea) || 0,
                 totalMetricTons: Number(warehouseDetails.totalMetricTons) || 0,
                 availableMetricTons: Number(warehouseDetails.availableMetricTons) || 0,
-                clearHeight: Number(warehouseDetails.clearHeight),
-                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors),
-                containerHandling: warehouseDetails.containerHandling,
+                clearHeight: Number(warehouseDetails.clearHeight) || 0,
+                numberOfDockDoors: Number(warehouseDetails.numberOfDockDoors) || 0,
+                containerHandling: getVal(warehouseDetails.containerHandling),
                 typeOfConstruction:
                     warehouseDetails.typeOfConstruction === 'Other'
-                        ? warehouseDetails.customTypeOfConstruction.trim()
-                        : warehouseDetails.typeOfConstruction || null,
+                        ? getVal(warehouseDetails.customTypeOfConstruction)
+                        : getVal(warehouseDetails.typeOfConstruction),
                 storageTypes: warehouseDetails.storageTypes,
-                warehouseAge: warehouseDetails.warehouseAge || null,
-                warehouseGstPan: warehouseDetails.warehouseGstPan.trim() || null,
-                state: warehouseDetails.state.trim(),
-                city: warehouseDetails.city.trim(),
-                address: warehouseDetails.address.trim(),
-                zipCode: warehouseDetails.zipCode.trim(),
-                addressWithZip: `${warehouseDetails.address.trim()} - ${warehouseDetails.zipCode.trim()}`,
-                googleMapPin: warehouseDetails.googleMapPin.trim(),
-                description: warehouseDetails.description.trim(),
-                inboundHandling: operationsDetails.inboundHandling || null,
-                outboundHandling: operationsDetails.outboundHandling || null,
-                wmsAvailable: operationsDetails.wmsAvailable || null,
-                daysOfOperation: operationsDetails.daysOfOperation,
+                warehouseAge: getVal(warehouseDetails.warehouseAge),
+                warehouseGstPan: getVal(warehouseDetails.warehouseGstPan),
+                state: getVal(warehouseDetails.state),
+                city: getVal(warehouseDetails.city),
+                address: getVal(warehouseDetails.address),
+                zipCode: getVal(warehouseDetails.zipCode),
+                addressWithZip: `${getVal(warehouseDetails.address)} - ${getVal(warehouseDetails.zipCode)}`,
+                googleMapPin: getVal(warehouseDetails.googleMapPin),
+                description: getVal(warehouseDetails.description),
+                inboundHandling: getVal(operationsDetails.inboundHandling),
+                outboundHandling: getVal(operationsDetails.outboundHandling),
+                wmsAvailable: getVal(operationsDetails.wmsAvailable),
+                daysOfOperation: getVal(operationsDetails.daysOfOperation),
                 operationTime:
                     operationsDetails.operationTime === 'Other'
-                        ? operationsDetails.customOperationTime.trim()
-                        : operationsDetails.operationTime,
+                        ? getVal(operationsDetails.customOperationTime)
+                        : getVal(operationsDetails.operationTime),
                 securityFeatures: operationsDetails.securityFeatures.map((f) =>
                     f === 'Others' && operationsDetails.customSecurityFeature.trim()
                         ? operationsDetails.customSecurityFeature.trim()
@@ -469,24 +476,25 @@ export default function AdminAddWarehouse({ setActiveTab }) {
                 ),
                 pricingUnit:
                     pricingDetails.pricingUnit === 'Custom'
-                        ? pricingDetails.customPricingUnit.trim()
-                        : pricingDetails.pricingUnit,
-                storageRate: Number(pricingDetails.storageRate),
-                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : null,
-                minCommitment: pricingDetails.minCommitment,
-                shortTermStorage: pricingDetails.shortTermStorage,
+                        ? getVal(pricingDetails.customPricingUnit)
+                        : getVal(pricingDetails.pricingUnit),
+                storageRate: Number(pricingDetails.storageRate) || 0,
+                pricingAmount: Number(pricingDetails.storageRate) || 0,
+                handlingFees: pricingDetails.handlingFees ? Number(pricingDetails.handlingFees) : 0,
+                minCommitment: getVal(pricingDetails.minCommitment),
+                shortTermStorage: getVal(pricingDetails.shortTermStorage),
                 photos: {
-                    frontView: frontViewURL,
-                    insideView: insideViewURL,
-                    dockArea: dockAreaURL,
-                    rateCard: rateCardURL,
+                    frontView: frontViewURL || 'no photos uploaded !',
+                    insideView: insideViewURL || 'no photos uploaded !',
+                    dockArea: dockAreaURL || 'no photos uploaded !',
+                    rateCard: rateCardURL || 'no photos uploaded !',
                 },
-                businessType: ownerDetails.businessType,
-                companyName: ownerDetails.companyName.trim(),
-                contactPerson: ownerDetails.contactPerson.trim(),
-                mobile: ownerDetails.mobile.trim(),
-                email: ownerDetails.email.trim(),
-                ownerGstPan: ownerDetails.ownerGstPan.trim() || null,
+                businessType: getVal(ownerDetails.businessType),
+                companyName: getVal(ownerDetails.companyName),
+                contactPerson: getVal(ownerDetails.contactPerson),
+                mobile: getVal(ownerDetails.mobile),
+                email: getVal(ownerDetails.email),
+                ownerGstPan: getVal(ownerDetails.ownerGstPan),
                 ownerId: uid,
                 status: 'approved',
                 createdAt: serverTimestamp(),

@@ -54,6 +54,7 @@ import {
     User,
     Lock,
     MessageSquare,
+    ImageOff,
 } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,6 +75,18 @@ export default function WarehouseDetailPage({ params }) {
     const [activePhoto, setActivePhoto] = useState('frontView');
     const [hasAccess, setHasAccess] = useState(false);
     const [showChat, setShowChat] = useState(false);
+
+    useEffect(() => {
+        if (warehouse?.photos) {
+            const photoLabelsList = ['frontView', 'insideView', 'dockArea', 'rateCard'];
+            const firstAvailable = photoLabelsList.find(
+                (key) => warehouse.photos[key] && warehouse.photos[key] !== 'no photos uploaded !'
+            );
+            if (firstAvailable) {
+                setActivePhoto(firstAvailable);
+            }
+        }
+    }, [warehouse]);
 
     useEffect(() => {
         const checkPermission = async () => {
@@ -204,80 +217,105 @@ export default function WarehouseDetailPage({ params }) {
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.1 }}
                         >
-                            <div className="relative aspect-video bg-slate-100 overflow-hidden group">
-                                {/* Preload ALL images at once — only the active one is visible */}
-                                {Object.keys(photoLabels).map(
-                                    (key) =>
-                                        photos[key] && (
-                                            <div
-                                                key={key}
-                                                className="absolute inset-0 transition-opacity duration-300 ease-in-out"
-                                                style={{
-                                                    opacity: activePhoto === key ? 1 : 0,
-                                                    zIndex: activePhoto === key ? 1 : 0,
-                                                }}
-                                            >
-                                                <OptimizedImage
-                                                    src={photos[key]}
-                                                    alt={photoLabels[key]}
-                                                    fill
-                                                    sizes="(max-width: 1024px) 100vw, 66vw"
-                                                    quality={85}
-                                                    priority
-                                                    className="w-full h-full"
-                                                    imgClassName="object-cover"
-                                                />
-                                            </div>
-                                        )
-                                )}
+                            {(() => {
+                                const hasAnyPhotos = Object.keys(photoLabels).some(
+                                    (key) => photos[key] && photos[key] !== 'no photos uploaded !'
+                                );
 
-                                <div className="absolute top-6 left-6 flex flex-col gap-2" style={{ zIndex: 2 }}>
-                                    <motion.div
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        key={activePhoto + '-label'}
-                                        className="bg-white/90 backdrop-blur-md text-slate-900 px-5 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest shadow-xl border border-white/50"
-                                    >
-                                        {photoLabels[activePhoto]}
-                                    </motion.div>
-                                </div>
-                            </div>
+                                return (
+                                    <>
+                                        <div className="relative aspect-video bg-slate-100 overflow-hidden group">
+                                            {hasAnyPhotos ? (
+                                                <>
+                                                    {/* Preload ALL images at once — only the active one is visible */}
+                                                    {Object.keys(photoLabels).map(
+                                                        (key) =>
+                                                            photos[key] &&
+                                                            photos[key] !== 'no photos uploaded !' && (
+                                                                <div
+                                                                    key={key}
+                                                                    className="absolute inset-0 transition-opacity duration-300 ease-in-out"
+                                                                    style={{
+                                                                        opacity: activePhoto === key ? 1 : 0,
+                                                                        zIndex: activePhoto === key ? 1 : 0,
+                                                                    }}
+                                                                >
+                                                                    <OptimizedImage
+                                                                        src={photos[key]}
+                                                                        alt={photoLabels[key]}
+                                                                        fill
+                                                                        sizes="(max-width: 1024px) 100vw, 66vw"
+                                                                        quality={85}
+                                                                        priority
+                                                                        className="w-full h-full"
+                                                                        imgClassName="object-cover"
+                                                                    />
+                                                                </div>
+                                                            )
+                                                    )}
 
-                            {/* Thumbnails */}
-                            <div className="p-5 grid grid-cols-4 gap-4 bg-slate-50/50">
-                                {Object.keys(photoLabels).map(
-                                    (key, index) =>
-                                        photos[key] && (
-                                            <motion.button
-                                                key={key}
-                                                onClick={() => setActivePhoto(key)}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.2 + index * 0.1 }}
-                                                className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group ${
-                                                    activePhoto === key
-                                                        ? 'border-orange-500 shadow-lg shadow-orange-200 ring-4 ring-orange-100'
-                                                        : 'border-white hover:border-orange-200 opacity-70 hover:opacity-100 hover:scale-[1.03]'
-                                                }`}
-                                            >
-                                                <OptimizedImage
-                                                    src={photos[key]}
-                                                    alt={photoLabels[key]}
-                                                    fill
-                                                    sizes="150px"
-                                                    quality={60}
-                                                    priority
-                                                    className="w-full h-full"
-                                                    imgClassName="object-cover"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="absolute inset-x-0 bottom-0 py-2 text-[9px] font-black text-white text-center uppercase tracking-tighter backdrop-blur-sm bg-black/30">
-                                                    {photoLabels[key].split(' ')[0]}
+                                                    <div className="absolute top-6 left-6 flex flex-col gap-2" style={{ zIndex: 2 }}>
+                                                        <motion.div
+                                                            initial={{ x: -20, opacity: 0 }}
+                                                            animate={{ x: 0, opacity: 1 }}
+                                                            key={activePhoto + '-label'}
+                                                            className="bg-white/90 backdrop-blur-md text-slate-900 px-5 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest shadow-xl border border-white/50"
+                                                        >
+                                                            {photoLabels[activePhoto]}
+                                                        </motion.div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-2 select-none">
+                                                    <ImageOff className="w-12 h-12 text-slate-300 animate-pulse" />
+                                                    <span className="text-sm font-black tracking-widest uppercase text-slate-400/80">
+                                                        no photos uploaded !
+                                                    </span>
                                                 </div>
-                                            </motion.button>
-                                        )
-                                )}
-                            </div>
+                                            )}
+                                        </div>
+
+                                        {/* Thumbnails */}
+                                        {hasAnyPhotos && (
+                                            <div className="p-5 grid grid-cols-4 gap-4 bg-slate-50/50">
+                                                {Object.keys(photoLabels).map(
+                                                    (key, index) =>
+                                                        photos[key] &&
+                                                        photos[key] !== 'no photos uploaded !' && (
+                                                            <motion.button
+                                                                key={key}
+                                                                onClick={() => setActivePhoto(key)}
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: 0.2 + index * 0.1 }}
+                                                                className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all group ${
+                                                                    activePhoto === key
+                                                                        ? 'border-orange-500 shadow-lg shadow-orange-200 ring-4 ring-orange-100'
+                                                                        : 'border-white hover:border-orange-200 opacity-70 hover:opacity-100 hover:scale-[1.03]'
+                                                                }`}
+                                                            >
+                                                                <OptimizedImage
+                                                                    src={photos[key]}
+                                                                    alt={photoLabels[key]}
+                                                                    fill
+                                                                    sizes="150px"
+                                                                    quality={60}
+                                                                    priority
+                                                                    className="w-full h-full"
+                                                                    imgClassName="object-cover"
+                                                                />
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                <div className="absolute inset-x-0 bottom-0 py-2 text-[9px] font-black text-white text-center uppercase tracking-tighter backdrop-blur-sm bg-black/30">
+                                                                    {photoLabels[key].split(' ')[0]}
+                                                                </div>
+                                                            </motion.button>
+                                                        )
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </motion.section>
 
                         {/* Warehouse Basic Info Section */}
