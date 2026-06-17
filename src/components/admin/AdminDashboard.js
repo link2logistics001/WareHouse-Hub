@@ -128,7 +128,7 @@ function AdminSidebar({ activeView, setActiveView, user, onLogout, pendingCount,
         { id: 'add-warehouse', label: 'Add Warehouse', icon: PlusCircle },
         { id: 'bulk-upload', label: 'Bulk CSV Upload', icon: FileUp },
         { id: 'inquiries', label: 'Lead Enquiries', icon: MessageSquarePlus, badge: pendingInquiriesCount || null },
-        { id: 'block-people', label: 'Block People', icon: Users },
+        { id: 'block-people', label: 'People', icon: Users },
     ];
 
     return (
@@ -583,6 +583,7 @@ export default function AdminDashboard({ user, onLogout }) {
                             >
                                 <BlockPeopleView
                                     users={users}
+                                    warehouses={warehouses}
                                     loading={usersLoading}
                                     handleBlockUser={handleBlockUser}
                                     onViewWarehouses={(email) => {
@@ -1184,9 +1185,10 @@ function DetailGroup({ title, items }) {
 // ---------------------------------------------------------------------
 const loadedImagesCache = new Set();
 
-function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) {
+function BlockPeopleView({ users, warehouses, loading, handleBlockUser, onViewWarehouses }) {
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
+    const [selectedUserForWarehouses, setSelectedUserForWarehouses] = useState(null);
 
     const filtered = users.filter((u) => {
         const q = search.toLowerCase();
@@ -1236,71 +1238,94 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                 </div>
 
                 <div className="divide-y divide-slate-100">
-                    {filtered.map((u) => (
-                        <div
-                            key={u.id}
-                            className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors"
-                        >
-                            <div className="min-w-0">
-                                <p className="text-sm font-bold text-slate-900 truncate">{u.name || 'Anonymous'}</p>
-                                <span className="text-[10px] text-slate-400 block mt-0.5">
-                                    Joined{' '}
-                                    {u.createdAt?.seconds
-                                        ? new Date(u.createdAt.seconds * 1000).toLocaleDateString()
-                                        : 'Unknown'}
-                                </span>
-                            </div>
-                            <p className="text-sm text-slate-600 truncate">{u.email}</p>
-                            <div>
-                                <span
-                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                        u.userType === 'warehouse_partner'
-                                            ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                    {filtered.map((u) => {
+                        const userWarehouses = warehouses?.filter((w) => 
+                            w._email?.toLowerCase() === u.email?.toLowerCase() || 
+                            w.email?.toLowerCase() === u.email?.toLowerCase()
+                        ) || [];
+                        return (
+                            <div
+                                key={u.id}
+                                onClick={() => setSelectedUserForWarehouses(u)}
+                                className="grid grid-cols-[1.5fr_2fr_1fr_1.5fr] gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors cursor-pointer"
+                            >
+                                <div className="min-w-0">
+                                    <p className="text-sm font-bold text-slate-900 truncate">{u.name || 'Anonymous'}</p>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                        <span className="text-[10px] text-slate-400">
+                                            Joined{' '}
+                                            {u.createdAt?.seconds
+                                                ? new Date(u.createdAt.seconds * 1000).toLocaleDateString()
+                                                : 'Unknown'}
+                                        </span>
+                                        <span className="text-slate-300 text-[10px]">•</span>
+                                        <span className="text-[10px] text-orange-600 font-bold flex items-center gap-0.5">
+                                            <Building2 className="w-2.5 h-2.5" />
+                                            {userWarehouses.length} {userWarehouses.length === 1 ? 'Warehouse' : 'Warehouses'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-slate-600 truncate">{u.email}</p>
+                                <div>
+                                    <span
+                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                            u.userType === 'warehouse_partner'
+                                                ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                                                : u.userType === 'business_client'
+                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                  : 'bg-slate-50 text-slate-500'
+                                        }`}
+                                    >
+                                        {u.userType === 'warehouse_partner'
+                                            ? 'Warehouse Partner'
                                             : u.userType === 'business_client'
-                                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                              : 'bg-slate-50 text-slate-500'
-                                    }`}
-                                >
-                                    {u.userType === 'warehouse_partner'
-                                        ? 'Warehouse Partner'
-                                        : u.userType === 'business_client'
-                                          ? 'Business Client'
-                                          : u.userType === 'admin'
-                                            ? 'Admin'
-                                            : u.userType === 'superadmin'
-                                              ? 'Super Admin'
-                                              : u.userType || 'User'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                {u.isBlocked ? (
-                                    <button
-                                        onClick={() => handleBlockUser(u.id, false)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors"
-                                    >
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> Unblock
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleBlockUser(u.id, true)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
-                                    >
-                                        <Ban className="w-3.5 h-3.5" /> Block
-                                    </button>
-                                )}
+                                              ? 'Business Client'
+                                              : u.userType === 'admin'
+                                                ? 'Admin'
+                                                : u.userType === 'superadmin'
+                                                  ? 'Super Admin'
+                                                  : u.userType || 'User'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                                    {u.isBlocked ? (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleBlockUser(u.id, false);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors"
+                                        >
+                                            <CheckCircle2 className="w-3.5 h-3.5" /> Unblock
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleBlockUser(u.id, true);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
+                                        >
+                                            <Ban className="w-3.5 h-3.5" /> Block
+                                        </button>
+                                    )}
 
-                                {u.userType === 'warehouse_partner' && (
-                                    <button
-                                        onClick={() => onViewWarehouses(u.email)}
-                                        className="p-1.5 bg-slate-50 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
-                                        title="View Partner Warehouses"
-                                    >
-                                        <Building2 className="w-4 h-4" />
-                                    </button>
-                                )}
+                                    {u.userType === 'warehouse_partner' && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onViewWarehouses(u.email);
+                                            }}
+                                            className="p-1.5 bg-slate-50 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                                            title="View Partner Warehouses"
+                                        >
+                                            <Building2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {filtered.length === 0 && (
@@ -1310,6 +1335,148 @@ function BlockPeopleView({ users, loading, handleBlockUser, onViewWarehouses }) 
                     </div>
                 )}
             </div>
+
+            {/* Warehouse Details Modal */}
+            {typeof window !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        {selectedUserForWarehouses && (() => {
+                            const u = selectedUserForWarehouses;
+                            const userWarehouses = warehouses?.filter((w) => 
+                                w._email?.toLowerCase() === u.email?.toLowerCase() || 
+                                w.email?.toLowerCase() === u.email?.toLowerCase()
+                            ) || [];
+                            return (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                                    onClick={() => setSelectedUserForWarehouses(null)}
+                                >
+                                    <motion.div
+                                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                        className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col overflow-hidden text-left"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Modal header */}
+                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-lg font-bold text-slate-900">
+                                                        {u.name || 'Anonymous'}
+                                                    </h3>
+                                                    <span
+                                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                            u.userType === 'warehouse_partner'
+                                                                ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                                                                : u.userType === 'business_client'
+                                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                  : 'bg-slate-50 text-slate-500'
+                                                        }`}
+                                                    >
+                                                        {u.userType === 'warehouse_partner'
+                                                            ? 'Warehouse Partner'
+                                                            : u.userType === 'business_client'
+                                                              ? 'Business Client'
+                                                              : u.userType === 'admin'
+                                                                ? 'Admin'
+                                                                : u.userType === 'superadmin'
+                                                                  ? 'Super Admin'
+                                                                  : u.userType || 'User'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                    {u.email}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setSelectedUserForWarehouses(null)}
+                                                className="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+
+                                        {/* Modal content */}
+                                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                            <div className="flex items-center gap-3 bg-orange-50/50 border border-orange-100 rounded-2xl p-4">
+                                                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                                                    <Building2 className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-semibold text-slate-500">Total Warehouses</p>
+                                                    <p className="text-xl font-bold text-slate-900">{userWarehouses.length}</p>
+                                                </div>
+                                            </div>
+
+                                            {userWarehouses.length === 0 ? (
+                                                <div className="py-12 text-center border border-dashed border-slate-200 rounded-2xl">
+                                                    <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                    <p className="text-sm text-slate-500 font-semibold">No Warehouses Found</p>
+                                                    <p className="text-xs text-slate-400 mt-1">This user does not own any warehouses on the platform.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                        Warehouse Directory
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {userWarehouses.map((wh) => (
+                                                            <div
+                                                                key={wh.id}
+                                                                className="p-4 border border-slate-100 hover:border-slate-200 rounded-2xl bg-white shadow-sm flex items-center justify-between gap-4 transition-all"
+                                                            >
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h4 className="text-sm font-bold text-slate-950 truncate">
+                                                                            {wh.warehouseName || 'Unnamed Warehouse'}
+                                                                        </h4>
+                                                                        <span
+                                                                            className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${
+                                                                                wh.status === 'approved'
+                                                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                                                    : wh.status === 'rejected'
+                                                                                      ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                                                                      : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                                            }`}
+                                                                        >
+                                                                            {wh.status || 'pending'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                                                                        <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+                                                                        <span className="truncate">
+                                                                            {[wh.city, wh.state].filter(Boolean).join(', ') || 'Location not specified'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Modal footer */}
+                                        <div className="p-6 border-t border-slate-100 flex items-center justify-end bg-slate-50">
+                                            <button
+                                                onClick={() => setSelectedUserForWarehouses(null)}
+                                                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            );
+                        })()}
+                    </AnimatePresence>,
+                    document.body
+                )}
         </div>
     );
 }
