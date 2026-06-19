@@ -152,6 +152,45 @@ service cloud.firestore {
       allow update, delete: if isAnyAdmin();
     }
 
+    // --- QUOTATION TEMPLATES ---
+    match /quotation_templates/{templateId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.owner_id || isAnyAdmin());
+      
+      allow create: if request.auth != null && 
+        isNotBlocked() && 
+        request.resource.data.owner_id == request.auth.uid;
+        
+      allow update, delete: if request.auth != null && 
+        isNotBlocked() && 
+        resource.data.owner_id == request.auth.uid;
+    }
+
+    // --- QUOTATIONS ---
+    match /quotations/{quotationId} {
+      allow read: if request.auth != null && 
+        (
+          request.auth.uid == resource.data.owner_id || 
+          request.auth.uid == resource.data.merchant_id || 
+          isAnyAdmin()
+        );
+        
+      allow create: if request.auth != null && 
+        isNotBlocked() && 
+        request.resource.data.owner_id == request.auth.uid;
+        
+      allow update: if request.auth != null && 
+        isNotBlocked() && 
+        (
+          request.auth.uid == resource.data.owner_id || 
+          request.auth.uid == resource.data.merchant_id
+        );
+        
+      allow delete: if request.auth != null && 
+        isNotBlocked() && 
+        resource.data.owner_id == request.auth.uid;
+    }
+
     // --- SETTINGS ---
     match /settings/{docId} {
       allow read: if true;

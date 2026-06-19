@@ -48,6 +48,7 @@ import MyWarehouses from './MyWarehouses';
 import Availability from './Availability';
 import Console from './Console';
 import GlobalLeads from './GlobalLeads';
+import QuotationTemplateManager from './QuotationTemplateManager';
 import {
     logoutUser,
     updateUserProfile,
@@ -422,6 +423,16 @@ export default function OwnerDashboard({ user, onLogout }) {
                                 exit={{ opacity: 0 }}
                             >
                                 <Console />
+                            </motion.div>
+                        )}
+                        {activeTab === 'quotations' && (
+                            <motion.div
+                                key="quotations"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <QuotationTemplateManager user={user} />
                             </motion.div>
                         )}
 

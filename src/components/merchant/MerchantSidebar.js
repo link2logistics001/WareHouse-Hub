@@ -1,12 +1,13 @@
 'use client';
 
-import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles } from 'lucide-react';
+import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles, FileText } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false }) {
     const menuItems = [
         { id: 'browse', label: 'Browse Directory', icon: Building2 },
         { id: 'chats', label: 'Active Chats', icon: MessageSquare },
+        { id: 'quotations', label: 'Quotations', icon: FileText },
         { id: 'saved', label: 'Saved Properties', icon: Star },
     ];
 

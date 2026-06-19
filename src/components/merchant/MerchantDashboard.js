@@ -49,6 +49,7 @@ import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
 
 import SearchFilters from '../common/SearchFilters';
 import WarehouseCard from '../common/WarehouseCard';
+import MerchantQuotations from './MerchantQuotations';
 import MerchantSidebar from './MerchantSidebar';
 import ChatBox from '../common/ChatBox';
 import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../common/InquiryModals';
@@ -582,6 +583,18 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                             </div>
                                         ))
                                     )}
+                                </motion.div>
+                            )}
+
+                            {/* --- QUOTATIONS TAB --- */}
+                            {activeTab === 'quotations' && (
+                                <motion.div
+                                    key="quotations"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <MerchantQuotations user={user} />
                                 </motion.div>
                             )}
 

@@ -39,6 +39,7 @@ import {
     LogOut,
     Monitor,
     MessageSquarePlus,
+    FileText,
 } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
@@ -50,6 +51,7 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDraw
         { id: 'console', label: 'Console', icon: Monitor },
         { id: 'inquiries', label: 'Inquiries', icon: MessageSquare, badge: inquiriesCount || null },
         { id: 'global-leads', label: 'Global Leads', icon: MessageSquarePlus, badge: globalLeadsCount || null },
+        { id: 'quotations', label: 'Quotations', icon: FileText },
         { id: 'calendar', label: 'Calendar', icon: Calendar },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];

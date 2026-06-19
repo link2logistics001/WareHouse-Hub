@@ -28,6 +28,9 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
 import { useCountry } from '@/contexts/CountryContext';
+import { FileText } from 'lucide-react';
+import QuotationEditorModal from '../owner/QuotationEditorModal';
+import { getDefaultTemplate, sendQuotation } from '@/lib/quotationService';
 
 export default function ChatBox({ warehouse, user, onClose }) {
     const [conversation, setConversation] = useState(null);
@@ -35,6 +38,8 @@ export default function ChatBox({ warehouse, user, onClose }) {
     const [newMessage, setNewMessage] = useState('');
     const [copiedId, setCopiedId] = useState(null);
     const [uploadingFile, setUploadingFile] = useState(false);
+    const [isQuotationEditorOpen, setIsQuotationEditorOpen] = useState(false);
+    const [defaultTemplate, setDefaultTemplate] = useState(null);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
     const { fmtPrice, config } = useCountry();
@@ -118,6 +123,12 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 });
                 setConversation(conv);
 
+                if (['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())) {
+                    getDefaultTemplate(currentUserId).then(template => {
+                        if (template) setDefaultTemplate(template);
+                    }).catch(err => console.error("Failed to load default template", err));
+                }
+
                 // Listen for messages in real-time
                 const q = query(collection(db, 'conversations', conv.id, 'messages'), orderBy('timestamp', 'asc'));
 
@@ -171,6 +182,41 @@ export default function ChatBox({ warehouse, user, onClose }) {
             setNewMessage(''); // Clear input immediately for UX
             await sendMessage(conversation.id, user.id || user.uid, text, user.userType || 'business_client');
         } catch (error) {}
+    };
+
+    const handleSendQuotation = async (formData) => {
+        try {
+            const currentUserId = user.id || user.uid;
+            const merchantId = ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(
+                user.userType?.toLowerCase()
+            )
+                ? warehouse.merchantId || warehouse.userId
+                : currentUserId;
+
+            const quotationData = {
+                ...formData,
+                inquiry_id: conversation.id,
+                owner_id: currentUserId,
+                merchant_id: merchantId,
+                template_id: defaultTemplate?.id || null,
+            };
+
+            const sentQuote = await sendQuotation(quotationData);
+            
+            // Send a system message to the chat
+            await sendMessage(
+                conversation.id,
+                currentUserId,
+                `I have sent you a quotation (Ref: ${sentQuote.quotation_number}). You can view it in your Quotations tab.`,
+                user.userType || 'warehouse_partner'
+            );
+            
+            setIsQuotationEditorOpen(false);
+            // alert("Quotation sent successfully!");
+        } catch (error) {
+            console.error("Error sending quotation", error);
+            alert("Failed to send quotation: " + error.message);
+        }
     };
 
     return (
@@ -230,6 +276,16 @@ export default function ChatBox({ warehouse, user, onClose }) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            {['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase()) && (
+                                <motion.button
+                                    onClick={() => setIsQuotationEditorOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <FileText className="w-4 h-4" /> Send Quotation
+                                </motion.button>
+                            )}
                             <motion.button
                                 onClick={onClose}
                                 className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors text-slate-400 hover:text-slate-900"
@@ -466,6 +522,25 @@ export default function ChatBox({ warehouse, user, onClose }) {
                     <p className="text-xs text-slate-500 mt-2 px-3">Press Enter to send • Shift+Enter for new line</p>
                 </form>
             </motion.div>
+
+            {isQuotationEditorOpen && (
+                <QuotationEditorModal
+                    isOpen={isQuotationEditorOpen}
+                    onClose={() => setIsQuotationEditorOpen(false)}
+                    initialData={defaultTemplate || {}}
+                    conversationData={{
+                        merchantName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
+                                        ? warehouse.merchantName || 'Business Client'
+                                        : user.name || 'Business Client',
+                        ownerName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
+                                        ? user.name || 'Warehouse Partner'
+                                        : warehouse.ownerName || 'Warehouse Partner',
+                        warehouseName: warehouse.name || warehouse.warehouseName,
+                    }}
+                    mode="send"
+                    onSendQuotation={handleSendQuotation}
+                />
+            )}
         </motion.div>
     );
 }
