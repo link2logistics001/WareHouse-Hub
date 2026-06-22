@@ -35,7 +35,7 @@
  * @param {Function} props.onLogout — Sign out callback
  */
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -70,6 +70,8 @@ import {
     AlertTriangle,
     Sparkles,
     Monitor,
+    X,
+    MessageSquarePlus,
 } from 'lucide-react';
 
 export default function OwnerDashboard({ user, onLogout }) {
@@ -88,6 +90,45 @@ export default function OwnerDashboard({ user, onLogout }) {
     const [mounted, setMounted] = useState(false);
     const [newInquiriesCount, setNewInquiriesCount] = useState(0);
     const [globalLeadsCount, setGlobalLeadsCount] = useState(0);
+    const [toasts, setToasts] = useState([]);
+    const prevLeadsRef = useRef([]);
+
+    // Web Audio chime sound
+    const playNotificationSound = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const playBeep = (time, freq, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, time);
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.15, time + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+                osc.start(time);
+                osc.stop(time + duration);
+            };
+            const now = ctx.currentTime;
+            playBeep(now, 523.25, 0.3); // C5
+            playBeep(now + 0.08, 659.25, 0.4); // E5
+        } catch (e) {
+            console.debug('Failed to play notification sound:', e);
+        }
+    };
+
+    const showToast = (message, type, extraData) => {
+        const id = Date.now() + Math.random().toString(36).substring(2, 9);
+        const newToast = { id, message, type, extraData };
+        setToasts(prev => [...prev, newToast]);
+        playNotificationSound();
+        setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, 6000);
+    };
 
     useEffect(() => {
         if (user) {
@@ -130,6 +171,20 @@ export default function OwnerDashboard({ user, onLogout }) {
                 }
                 return false;
             });
+
+            if (prevLeadsRef.current.length > 0) {
+                const currentIds = filtered.map(l => l.id);
+                const prevIds = prevLeadsRef.current.map(l => l.id);
+                const newLeads = filtered.filter(l => !prevIds.includes(l.id));
+                if (newLeads.length > 0) {
+                    newLeads.forEach(lead => {
+                        const companyName = lead.data?.companyName || 'A new client';
+                        showToast(`New Global Lead Available from ${companyName}!`, 'lead', lead);
+                    });
+                }
+            }
+
+            prevLeadsRef.current = filtered;
             setGlobalLeadsCount(filtered.length);
         });
 
@@ -814,6 +869,51 @@ export default function OwnerDashboard({ user, onLogout }) {
                     </AnimatePresence>
                 </div>
             </main>
+            {/* Custom Premium Toast Notifications Stack */}
+            <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+                <AnimatePresence>
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+                            className="pointer-events-auto w-full bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)] text-white relative overflow-hidden group flex items-start gap-3"
+                        >
+                            <div className="p-2 rounded-xl bg-orange-500/20 text-orange-400 shrink-0 border border-orange-500/30">
+                                <MessageSquarePlus className="w-5 h-5" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0 pr-6">
+                                <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+                                    New Lead Assigned <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                                </h4>
+                                <p className="text-xs text-slate-300 mt-1 font-medium leading-relaxed">
+                                    {toast.message}
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('global-leads');
+                                        setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+                                    }}
+                                    className="mt-3 px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-black tracking-wide shadow-md shadow-orange-600/20 transition-all flex items-center gap-1 w-fit"
+                                >
+                                    View Global Leads
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                                className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-orange-500 to-amber-500 w-full origin-left animate-shrink-progress" />
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 }

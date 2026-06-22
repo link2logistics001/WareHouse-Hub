@@ -3,11 +3,11 @@
 import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles, FileText } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
-export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false }) {
+export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false, quotationsCount = 0 }) {
     const menuItems = [
         { id: 'browse', label: 'Browse Directory', icon: Building2 },
         { id: 'chats', label: 'Active Chats', icon: MessageSquare },
-        { id: 'quotations', label: 'Quotations', icon: FileText },
+        { id: 'quotations', label: 'Quotations', icon: FileText, badge: quotationsCount || null },
         { id: 'saved', label: 'Saved Properties', icon: Star },
     ];
 
@@ -67,6 +67,11 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
                             <span className={`ml-4 text-sm font-semibold tracking-wide ${containerClasses}`}>
                                 {item.label}
                             </span>
+                            {item.badge ? (
+                                <span className={`ml-auto bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center relative z-10 ${containerClasses}`}>
+                                    {item.badge}
+                                </span>
+                            ) : null}
                         </button>
                     );
                 })}
