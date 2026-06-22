@@ -198,7 +198,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 inquiry_id: conversation.id,
                 owner_id: currentUserId,
                 merchant_id: merchantId,
-                template_id: defaultTemplate?.id || null,
+                template_id: formData.template_id || defaultTemplate?.id || null,
             };
 
             const sentQuote = await sendQuotation(quotationData);
@@ -528,6 +528,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
                     isOpen={isQuotationEditorOpen}
                     onClose={() => setIsQuotationEditorOpen(false)}
                     initialData={defaultTemplate || {}}
+                    ownerId={user.id || user.uid}
                     conversationData={{
                         merchantName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
                                         ? warehouse.merchantName || 'Business Client'

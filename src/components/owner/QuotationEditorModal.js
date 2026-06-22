@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Save, Eye, Loader2, FileText, Settings, User, Building2, Plus, Trash2 } from 'lucide-react';
 import QuotationViewModal from '../common/QuotationViewModal';
 import { INITIAL_QUOTATION_DATA } from '@/lib/quotationConstants';
+import { getOwnerTemplates } from '@/lib/quotationService';
+
+const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 // Performance Optimization: Debounced input to prevent lagging on large forms
 const FastInput = ({ value, onChange, className, ...props }) => {
@@ -46,11 +52,72 @@ const SECTIONS = [
     { id: 'terms_conditions', title: '10. Terms & Conditions', icon: FileText },
 ];
 
-export default function QuotationEditorModal({ isOpen, onClose, initialData, conversationData, onSaveTemplate, onSendQuotation, mode = 'send' }) {
+export default function QuotationEditorModal({ isOpen, onClose, initialData, conversationData, onSaveTemplate, onSendQuotation, mode = 'send', ownerId }) {
     const [formData, setFormData] = useState({});
     const [activeSection, setActiveSection] = useState('party_details');
     const [showPreview, setShowPreview] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [templates, setTemplates] = useState([]);
+    const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+    const applyTemplate = (template) => {
+        setFormData(prev => {
+            let data = JSON.parse(JSON.stringify(prev));
+            const templateKeys = [
+                'storage_charges', 
+                'handling_charges', 
+                'vas_charges', 
+                'ancillary_charges', 
+                'penalty_charges', 
+                'gst_compliance', 
+                'terms_conditions'
+            ];
+            templateKeys.forEach(key => {
+                if (template[key]) {
+                    data[key] = JSON.parse(JSON.stringify(template[key]));
+                }
+            });
+            
+            // Merge template provider details into party_details but preserve client/merchant details
+            if (template.party_details) {
+                const providerFields = [
+                    'provider_name',
+                    'provider_contact',
+                    'provider_address',
+                    'provider_area',
+                    'provider_gstin',
+                    'provider_pan',
+                    'provider_phone',
+                    'provider_email',
+                    'provider_type'
+                ];
+                if (!data.party_details) data.party_details = {};
+                providerFields.forEach(f => {
+                    if (template.party_details[f]) {
+                        data.party_details[f] = template.party_details[f];
+                    }
+                });
+            }
+            data.template_id = template.id;
+            return data;
+        });
+    };
+
+    useEffect(() => {
+        if (isOpen && mode === 'send' && ownerId) {
+            getOwnerTemplates(ownerId).then(data => {
+                setTemplates(data);
+                // Load default template if initialData is not set or empty
+                const defaultTmp = data.find(t => t.is_default);
+                if (defaultTmp && (!initialData || Object.keys(initialData).length === 0 || !initialData.id)) {
+                    setSelectedTemplateId(defaultTmp.id);
+                    applyTemplate(defaultTmp);
+                } else if (initialData?.id) {
+                    setSelectedTemplateId(initialData.id);
+                }
+            }).catch(err => console.error("Error loading templates", err));
+        }
+    }, [isOpen, mode, ownerId, initialData]);
 
     useEffect(() => {
         if (isOpen) {
@@ -202,12 +269,28 @@ export default function QuotationEditorModal({ isOpen, onClose, initialData, con
             ];
             return (
                 <div className="grid grid-cols-2 gap-4">
-                    {fields.map(f => (
-                        <div key={f.k}>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">{f.l}</label>
-                            <FastInput type={f.t} value={data[f.k] || ''} onChange={e => updateField(sectionId, f.k, e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
-                        </div>
-                    ))}
+                    {fields.map(f => {
+                        let minVal = undefined;
+                        if (f.t === 'date') {
+                            if (f.k === 'start_date') {
+                                minVal = getTodayStr();
+                            } else if (f.k === 'end_date') {
+                                minVal = data.start_date || getTodayStr();
+                            }
+                        }
+                        return (
+                            <div key={f.k}>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">{f.l}</label>
+                                <FastInput 
+                                    type={f.t} 
+                                    min={minVal} 
+                                    value={data[f.k] || ''} 
+                                    onChange={e => updateField(sectionId, f.k, e.target.value)} 
+                                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm" 
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
             );
         }
@@ -338,9 +421,35 @@ export default function QuotationEditorModal({ isOpen, onClose, initialData, con
                             )}
 
                             {mode === 'send' && (
-                                <div className="mb-6 px-2">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Valid Until</label>
-                                    <FastInput type="date" value={formData.valid_until || ''} onChange={(e) => setFormData(p => ({...p, valid_until: e.target.value}))} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-800" />
+                                <div className="mb-6 px-2 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Select Template</label>
+                                        {templates.length > 0 ? (
+                                            <select
+                                                value={selectedTemplateId}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setSelectedTemplateId(val);
+                                                    const selected = templates.find(t => t.id === val);
+                                                    if (selected) applyTemplate(selected);
+                                                }}
+                                                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold text-slate-800"
+                                            >
+                                                <option value="" disabled>-- Choose a Template --</option>
+                                                {templates.map(t => (
+                                                    <option key={t.id} value={t.id}>
+                                                        {t.template_name} {t.is_default ? '(Default)' : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <p className="text-xs font-semibold text-slate-400 italic">No templates found.</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Valid Until</label>
+                                        <FastInput type="date" min={getTodayStr()} value={formData.valid_until || ''} onChange={(e) => setFormData(p => ({...p, valid_until: e.target.value}))} className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-800" />
+                                    </div>
                                 </div>
                             )}
 
