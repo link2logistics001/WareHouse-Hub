@@ -22,7 +22,8 @@ const DetailRow = ({ label, value, isOrange = true }) => (
 );
 
 const ChargeTable = ({ letter, title, subtitle, items, isStorage = false, isPenalty = false, isVAS = false }) => {
-    if (!items || items.length === 0) return null;
+    const hasItems = items && items.length > 0;
+    const colSpan = isStorage ? 7 : (isPenalty || isVAS ? 5 : 6);
 
     return (
         <div className="mb-6 break-inside-avoid">
@@ -41,25 +42,33 @@ const ChargeTable = ({ letter, title, subtitle, items, isStorage = false, isPena
                     </tr>
                 </thead>
                 <tbody>
-                    {items.map((item, i) => (
-                        <tr key={i} className="border-b border-slate-300">
-                            <td className="p-2 border-r border-slate-300 font-bold text-center text-[#eb6223]">{item.id}</td>
-                            <td className="p-2 border-r border-slate-300 font-bold text-[#0f2b4a]">
-                                {item.head}
+                    {hasItems ? (
+                        items.map((item, i) => (
+                            <tr key={i} className="border-b border-slate-300">
+                                <td className="p-2 border-r border-slate-300 font-bold text-center text-[#eb6223]">{item.id || (i + 1)}</td>
+                                <td className="p-2 border-r border-slate-300 font-bold text-[#0f2b4a]">
+                                    {item.head}
+                                </td>
+                                <td className="p-2 border-r border-slate-300 text-center font-bold text-[#eb6223]">
+                                    {item.rate ? parseFloat(item.rate).toLocaleString('en-IN') : '-'}
+                                </td>
+                                <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.unit || '-'}</td>
+                                
+                                {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.period || '-'}</td>}
+                                {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.min_charge || '-'}</td>}
+                                
+                                {!isStorage && !isPenalty && !isVAS && <td className="p-2 border-r border-slate-300 text-center font-bold text-green-700">{item.direction || '-'}</td>}
+                                
+                                <td className="p-2 text-slate-600 text-xs italic">{item.remarks || item.trigger || '-'}</td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={colSpan} className="p-4 text-center text-slate-400 italic">
+                                Nil / No charges applicable under this section
                             </td>
-                            <td className="p-2 border-r border-slate-300 text-center font-bold text-[#eb6223]">
-                                {item.rate ? parseFloat(item.rate).toLocaleString('en-IN') : '-'}
-                            </td>
-                            <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.unit || '-'}</td>
-                            
-                            {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.period || '-'}</td>}
-                            {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.min_charge || '-'}</td>}
-                            
-                            {!isStorage && !isPenalty && !isVAS && <td className="p-2 border-r border-slate-300 text-center font-bold text-green-700">{item.direction || '-'}</td>}
-                            
-                            <td className="p-2 text-slate-600 text-xs italic">{item.remarks || item.trigger || '-'}</td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </table>
         </div>
@@ -83,28 +92,62 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
     const pc = (quotation.penalty_charges || []).filter(c => c.rate);
 
     const handlePrint = () => {
+        const printableElement = document.getElementById('printable-quotation');
+        if (!printableElement) return;
+
+        // Clone the element to print it in isolation at the body level
+        const clone = printableElement.cloneNode(true);
+        clone.classList.add('print-clone');
+        clone.removeAttribute('id');
+
         const style = document.createElement('style');
         style.innerHTML = `
             @media print {
-                body * { visibility: hidden; }
-                #printable-quotation, #printable-quotation * { visibility: visible; }
-                #printable-quotation { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-                .no-print { display: none !important; }
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm 10mm 15mm 10mm;
+                }
+                body > *:not(.print-clone) {
+                    display: none !important;
+                }
+                body {
+                    background: white !important;
+                }
+                .print-clone {
+                    display: block !important;
+                    position: relative !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    box-shadow: none !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                /* Ensure background colors print */
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
             }
         `;
         document.head.appendChild(style);
+        document.body.appendChild(clone);
+
         window.print();
-        setTimeout(() => document.head.removeChild(style), 1000);
+
+        setTimeout(() => {
+            document.head.removeChild(style);
+            document.body.removeChild(clone);
+        }, 1000);
     };
 
     return (
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[150] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+                className="quotation-modal-overlay fixed inset-0 z-[150] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
                 onClick={onClose}
             >
-                <div className="absolute top-4 right-4 flex gap-3 no-print z-10 fixed">
+                <div className="fixed top-4 right-4 flex gap-3 no-print z-20">
                     <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors">
                         <Printer className="w-5 h-5" /> Print / PDF
                     </button>
@@ -241,8 +284,7 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                         <ChargeTable letter="H" title="DEMURRAGE, OVERSTAY & PENALTY CHARGES" subtitle="Charges triggered by deviation from contracted terms" items={pc} isPenalty={true} />
 
                         {/* Section I: Cost Summary */}
-                        {isMerchantView && (
-                            <div className="break-inside-avoid mb-6">
+                        <div className="break-inside-avoid mb-6">
                                 <SectionHeader letter="I" title="ESTIMATED COST SUMMARY" subtitle="Indicative total — for client reference. Final invoice based on actual GRN quantities." />
                                 <table className="w-full border-collapse text-xs border border-slate-300">
                                     <thead>
@@ -281,7 +323,6 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                                     </tbody>
                                 </table>
                             </div>
-                        )}
 
                         {/* Section J: GST Compliance */}
                         <div className="break-inside-avoid mb-6">
@@ -346,7 +387,7 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                     </div>
 
                     {/* Merchant Actions Footer (Only visible on screen) */}
-                    {isMerchantView && quotation.status === 'Sent' && (
+                    {isMerchantView && (quotation.status === 'Sent' || quotation.status === 'Viewed') && (
                         <div className="no-print bg-slate-50 p-6 border-t border-slate-200 flex justify-end gap-4 rounded-b-[2rem]">
                             <button onClick={onReject} className="flex items-center gap-2 px-6 py-3 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 rounded-xl font-bold transition-all">
                                 <XCircle className="w-5 h-5" /> Reject Quotation

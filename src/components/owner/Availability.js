@@ -956,6 +956,7 @@ export default function Availability({ onOpenSidebar }) {
                                         <input
                                             type="date"
                                             value={bookingStartDate}
+                                            min={todayStr}
                                             onChange={(e) => setBookingStartDate(e.target.value)}
                                             className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-2xl outline-none transition-all font-bold text-slate-800"
                                         />
@@ -967,6 +968,7 @@ export default function Availability({ onOpenSidebar }) {
                                         <input
                                             type="date"
                                             value={bookingEndDate}
+                                            min={bookingStartDate || todayStr}
                                             onChange={(e) => setBookingEndDate(e.target.value)}
                                             className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-2xl outline-none transition-all font-bold text-slate-800"
                                         />
