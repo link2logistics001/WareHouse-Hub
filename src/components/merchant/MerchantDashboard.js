@@ -46,6 +46,7 @@ import {
 } from '@/lib/auth';
 import { useWishlist } from '@/hooks/useWishlist';
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
+import { subscribeToMerchantQuotations } from '@/lib/quotationService';
 
 import SearchFilters from '../common/SearchFilters';
 import WarehouseCard from '../common/WarehouseCard';
@@ -78,6 +79,7 @@ import {
     X,
     User,
     Sparkles,
+    FileText,
 } from 'lucide-react';
 
 // --- CRISP NUMBER COUNTER ---
@@ -161,6 +163,73 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [showSelectionModal, setShowSelectionModal] = useState(false);
     const [showQuickModal, setShowQuickModal] = useState(false);
     const [showDetailedModal, setShowDetailedModal] = useState(false);
+
+    const [newQuotationsCount, setNewQuotationsCount] = useState(0);
+    const [toasts, setToasts] = useState([]);
+    const prevQuotationsRef = useRef([]);
+
+    // Web Audio chime sound
+    const playNotificationSound = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const playBeep = (time, freq, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, time);
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.15, time + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+                osc.start(time);
+                osc.stop(time + duration);
+            };
+            const now = ctx.currentTime;
+            playBeep(now, 523.25, 0.3); // C5
+            playBeep(now + 0.08, 659.25, 0.4); // E5
+        } catch (e) {
+            console.debug('Failed to play notification sound:', e);
+        }
+    };
+
+    const showToast = (message, type, extraData) => {
+        const id = Date.now() + Math.random().toString(36).substring(2, 9);
+        const newToast = { id, message, type, extraData };
+        setToasts(prev => [...prev, newToast]);
+        playNotificationSound();
+        setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, 6000);
+    };
+
+    // Real-time listener for merchant's quotations
+    useEffect(() => {
+        if (!user?.uid) return;
+
+        const unsub = subscribeToMerchantQuotations(user.uid, (data) => {
+            const newCount = data.filter(q => q.status === 'Sent').length;
+
+            if (prevQuotationsRef.current.length > 0) {
+                const currentIds = data.map(q => q.id);
+                const prevIds = prevQuotationsRef.current.map(q => q.id);
+                const newQuotes = data.filter(q => !prevIds.includes(q.id) && q.status === 'Sent');
+                if (newQuotes.length > 0) {
+                    newQuotes.forEach(quote => {
+                        const providerName = quote.party_details?.provider_name || 'Warehouse Partner';
+                        showToast(`New Quotation Received from ${providerName}!`, 'quotation', quote);
+                    });
+                }
+            }
+
+            prevQuotationsRef.current = data;
+            setNewQuotationsCount(newCount);
+        });
+
+        return () => unsub();
+    }, [user?.uid]);
 
     useEffect(() => {
         if (user) {
@@ -351,6 +420,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     setActiveTab={setActiveTab}
                     onLogout={onLogout}
                     onSendEnquiry={() => setShowSelectionModal(true)}
+                    quotationsCount={newQuotationsCount}
                 />
             </div>
 
@@ -379,6 +449,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                 onLogout={onLogout}
                                 onSendEnquiry={() => setShowSelectionModal(true)}
                                 isDrawer={true}
+                                quotationsCount={newQuotationsCount}
                             />
                         </motion.div>
                     </motion.div>
@@ -804,6 +875,52 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                 onClose={() => setShowDetailedModal(false)}
                 user={localUser}
             />
+
+            {/* Custom Premium Toast Notifications Stack */}
+            <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+                <AnimatePresence>
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
+                            className="pointer-events-auto w-full bg-[#0B101E]/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)] text-white relative overflow-hidden group flex items-start gap-3"
+                        >
+                            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 shrink-0 border border-blue-500/30">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0 pr-6">
+                                <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+                                    Quotation Received <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                                </h4>
+                                <p className="text-xs text-slate-300 mt-1 font-medium leading-relaxed">
+                                    {toast.message}
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('quotations');
+                                        setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+                                    }}
+                                    className="mt-3 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black tracking-wide shadow-md shadow-blue-600/20 transition-all flex items-center gap-1 w-fit"
+                                >
+                                    View Quotation
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                                className="absolute top-3 right-3 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 w-full origin-left animate-shrink-progress" />
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Loader2, Eye, CheckCircle, XCircle } from 'lucide-react';
-import { getMerchantQuotations, updateQuotationStatus } from '@/lib/quotationService';
+import { getMerchantQuotations, updateQuotationStatus, subscribeToMerchantQuotations } from '@/lib/quotationService';
 import QuotationViewModal from '../common/QuotationViewModal';
 
 export default function MerchantQuotations({ user }) {
@@ -9,21 +9,16 @@ export default function MerchantQuotations({ user }) {
     const [loading, setLoading] = useState(true);
     const [viewingQuotation, setViewingQuotation] = useState(null);
 
-    const loadQuotations = async () => {
-        if (!user?.uid) return;
-        setLoading(true);
-        try {
-            const data = await getMerchantQuotations(user.uid);
-            setQuotations(data);
-        } catch (error) {
-            console.error("Failed to load quotations", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const loadQuotations = () => {};
 
     useEffect(() => {
-        loadQuotations();
+        if (!user?.uid) return;
+        setLoading(true);
+        const unsub = subscribeToMerchantQuotations(user.uid, (data) => {
+            setQuotations(data);
+            setLoading(false);
+        });
+        return () => unsub();
     }, [user?.uid]);
 
     const handleView = async (quotation) => {

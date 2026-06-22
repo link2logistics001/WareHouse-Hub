@@ -137,9 +137,11 @@ export default function QuotationEditorModal({ isOpen, onClose, initialData, con
             if (mode === 'send' && conversationData) {
                 data.party_details = {
                     ...data.party_details,
-                    provider_name: conversationData.ownerName || data.party_details.provider_name,
-                    provider_address: conversationData.warehouseName || data.party_details.provider_address,
+                    provider_name: conversationData.warehouseName || data.party_details.provider_name,
+                    provider_contact: conversationData.ownerName || data.party_details.provider_contact,
+                    provider_area: conversationData.city || data.party_details.provider_area,
                     client_name: conversationData.merchantName || data.party_details.client_name,
+                    client_contact: conversationData.merchantName || data.party_details.client_contact,
                 };
             }
             setFormData(data);

@@ -10,7 +10,8 @@ import {
     query, 
     where, 
     serverTimestamp,
-    orderBy
+    orderBy,
+    onSnapshot
 } from 'firebase/firestore';
 
 const TEMPLATES_COLLECTION = 'quotation_templates';
@@ -147,4 +148,16 @@ export async function updateQuotationStatus(quotationId, newStatus) {
     if (newStatus === 'Rejected') updates.rejected_at = serverTimestamp();
 
     await updateDoc(docRef, updates);
+}
+
+export function subscribeToMerchantQuotations(merchantId, callback) {
+    const q = query(
+        collection(db, QUOTATIONS_COLLECTION),
+        where('merchant_id', '==', merchantId),
+        orderBy('created_at', 'desc')
+    );
+    return onSnapshot(q, (snapshot) => {
+        const quotations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(quotations);
+    });
 }
