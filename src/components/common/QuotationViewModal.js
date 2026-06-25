@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Printer, CheckCircle, XCircle } from 'lucide-react';
+import { normalizeQuotationData, getStandardTitle } from '@/lib/quotationConstants';
 
 const SectionHeader = ({ letter, title, subtitle }) => (
     <div className="flex bg-[#0f2b4a] text-white mb-2">
@@ -21,50 +22,47 @@ const DetailRow = ({ label, value, isOrange = true }) => (
     </div>
 );
 
-const ChargeTable = ({ letter, title, subtitle, items, isStorage = false, isPenalty = false, isVAS = false }) => {
-    const hasItems = items && items.length > 0;
-    const colSpan = isStorage ? 7 : (isPenalty || isVAS ? 5 : 6);
-
+const DynamicChargeTable = ({ letter, title, columns, rows }) => {
+    const hasItems = rows && rows.length > 0;
+    
     return (
         <div className="mb-6 break-inside-avoid">
-            <SectionHeader letter={letter} title={title} subtitle={subtitle} />
+            <SectionHeader letter={letter} title={title} />
             <table className="w-full border-collapse text-xs border border-slate-300">
                 <thead>
                     <tr className="bg-[#0f2b4a] text-white">
                         <th className="p-2 border border-slate-400 w-8">#</th>
-                        <th className="p-2 border border-slate-400 text-left">Charge Head</th>
-                        <th className="p-2 border border-slate-400 w-24">Rate (INR)</th>
-                        <th className="p-2 border border-slate-400 w-24">{isPenalty ? 'Per' : 'Per Unit'}</th>
-                        {isStorage && <th className="p-2 border border-slate-400 w-24">Per Period</th>}
-                        {isStorage && <th className="p-2 border border-slate-400 w-24">Min. Charge</th>}
-                        {!isStorage && !isPenalty && !isVAS && <th className="p-2 border border-slate-400 w-24">Direction</th>}
-                        <th className="p-2 border border-slate-400 text-left w-48">{isPenalty ? 'Trigger Condition' : 'Remarks'}</th>
+                        {columns.map((col, idx) => (
+                            <th key={idx} className="p-2 border border-slate-400 text-left">
+                                {col}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
                     {hasItems ? (
-                        items.map((item, i) => (
+                        rows.map((row, i) => (
                             <tr key={i} className="border-b border-slate-300">
-                                <td className="p-2 border-r border-slate-300 font-bold text-center text-[#eb6223]">{item.id || (i + 1)}</td>
-                                <td className="p-2 border-r border-slate-300 font-bold text-[#0f2b4a]">
-                                    {item.head}
-                                </td>
-                                <td className="p-2 border-r border-slate-300 text-center font-bold text-[#eb6223]">
-                                    {item.rate ? parseFloat(item.rate).toLocaleString('en-IN') : '-'}
-                                </td>
-                                <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.unit || '-'}</td>
-                                
-                                {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.period || '-'}</td>}
-                                {isStorage && <td className="p-2 border-r border-slate-300 text-center text-slate-600">{item.min_charge || '-'}</td>}
-                                
-                                {!isStorage && !isPenalty && !isVAS && <td className="p-2 border-r border-slate-300 text-center font-bold text-green-700">{item.direction || '-'}</td>}
-                                
-                                <td className="p-2 text-slate-600 text-xs italic">{item.remarks || item.trigger || '-'}</td>
+                                <td className="p-2 border-r border-slate-300 font-bold text-center text-[#eb6223]">{i + 1}</td>
+                                {columns.map((col, idx) => {
+                                    const val = row[col];
+                                    const isRate = col.toLowerCase().includes('rate') || col.toLowerCase().includes('charge') || col.toLowerCase().includes('amount');
+                                    return (
+                                        <td 
+                                            key={idx} 
+                                            className={`p-2 border-r border-slate-300 ${
+                                                isRate ? 'text-center font-bold text-[#eb6223]' : 'text-slate-800'
+                                            }`}
+                                        >
+                                            {isRate && val ? parseFloat(val).toLocaleString('en-IN') : (val || '-')}
+                                        </td>
+                                    );
+                                })}
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={colSpan} className="p-4 text-center text-slate-400 italic">
+                            <td colSpan={columns.length + 1} className="p-4 text-center text-slate-400 italic">
                                 Nil / No charges applicable under this section
                             </td>
                         </tr>
@@ -75,8 +73,10 @@ const ChargeTable = ({ letter, title, subtitle, items, isStorage = false, isPena
     );
 };
 
-export default function QuotationViewModal({ quotation, onClose, isMerchantView = false, onAccept, onReject }) {
-    if (!quotation) return null;
+export default function QuotationViewModal({ quotation: rawQuotation, onClose, isMerchantView = false, onAccept, onReject }) {
+    if (!rawQuotation) return null;
+
+    const quotation = normalizeQuotationData(rawQuotation);
 
     const pd = quotation.party_details || {};
     const gs = quotation.goods_scope || [];
@@ -84,12 +84,33 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
     const gst = quotation.gst_compliance || {};
     const tc = quotation.terms_conditions || [];
 
-    // Filter items that have rates
-    const sc = (quotation.storage_charges || []).filter(c => c.rate || c.min_charge);
-    const hc = (quotation.handling_charges || []).filter(c => c.rate);
-    const vc = (quotation.vas_charges || []).filter(c => c.rate);
-    const ac = (quotation.ancillary_charges || []).filter(c => c.rate);
-    const pc = (quotation.penalty_charges || []).filter(c => c.rate);
+    const activeChargeSections = [];
+    const chargeKeys = ['storage_charges', 'handling_charges', 'vas_charges', 'ancillary_charges', 'penalty_charges'];
+    
+    chargeKeys.forEach(key => {
+        if (quotation[key] && quotation[key].rows && quotation[key].rows.length > 0) {
+            activeChargeSections.push({
+                id: key,
+                title: quotation[key].title || getStandardTitle(key),
+                columns: quotation[key].columns,
+                rows: quotation[key].rows
+            });
+        }
+    });
+
+    if (quotation.custom_sections && Array.isArray(quotation.custom_sections)) {
+        quotation.custom_sections.forEach(sec => {
+            if (sec && sec.columns && sec.rows && sec.rows.length > 0) {
+                activeChargeSections.push(sec);
+            }
+        });
+    }
+
+    const baseSectionsCount = 3; // Section A: Party Details, Section B: Goods Scope, Section C: Contract Tenure
+    const costSummaryLetter = String.fromCharCode(65 + baseSectionsCount + activeChargeSections.length);
+    const gstLetter = String.fromCharCode(65 + baseSectionsCount + activeChargeSections.length + 1);
+    const termsLetter = String.fromCharCode(65 + baseSectionsCount + activeChargeSections.length + 2);
+    const signaturesLetter = String.fromCharCode(65 + baseSectionsCount + activeChargeSections.length + 3);
 
     const handlePrint = () => {
         const printableElement = document.getElementById('printable-quotation');
@@ -277,15 +298,22 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                         </div>
 
                         {/* Charges Sections */}
-                        <ChargeTable letter="D" title="STORAGE CHARGES" subtitle="Primary recurring charge — basis of all invoicing" items={sc} isStorage={true} />
-                        <ChargeTable letter="E" title="HANDLING CHARGES" subtitle="Labour and equipment charges for movement of goods" items={hc} />
-                        <ChargeTable letter="F" title="VALUE-ADDED SERVICES (VAS)" subtitle="Optional services — quote only if applicable to this contract" items={vc} isVAS={true} />
-                        <ChargeTable letter="G" title="ANCILLARY & INFRASTRUCTURE CHARGES" subtitle="Fixed recurring or one-time facility charges" items={ac} isVAS={true} />
-                        <ChargeTable letter="H" title="DEMURRAGE, OVERSTAY & PENALTY CHARGES" subtitle="Charges triggered by deviation from contracted terms" items={pc} isPenalty={true} />
+                        {activeChargeSections.map((sec, idx) => {
+                            const letter = String.fromCharCode(65 + baseSectionsCount + idx);
+                            return (
+                                <DynamicChargeTable
+                                    key={sec.id}
+                                    letter={letter}
+                                    title={sec.title.toUpperCase()}
+                                    columns={sec.columns}
+                                    rows={sec.rows}
+                                />
+                            );
+                        })}
 
-                        {/* Section I: Cost Summary */}
+                        {/* Section: Cost Summary */}
                         <div className="break-inside-avoid mb-6">
-                                <SectionHeader letter="I" title="ESTIMATED COST SUMMARY" subtitle="Indicative total — for client reference. Final invoice based on actual GRN quantities." />
+                                <SectionHeader letter={costSummaryLetter} title="ESTIMATED COST SUMMARY" subtitle="Indicative total — for client reference. Final invoice based on actual GRN quantities." />
                                 <table className="w-full border-collapse text-xs border border-slate-300">
                                     <thead>
                                         <tr className="bg-[#0f2b4a] text-white text-left">
@@ -296,14 +324,26 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {['Storage Charges (Sec. D)', 'Handling Charges (Sec. E)', 'Value-Added Services (Sec. F)', 'Ancillary Charges (Sec. G)'].map((h, i) => (
-                                            <tr key={i} className="border-b border-slate-300">
-                                                <td className="p-2 font-bold text-[#0f2b4a]">{h}</td>
-                                                <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
-                                                <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
-                                                <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
+                                        {activeChargeSections.map((sec, i) => {
+                                            const letter = String.fromCharCode(65 + baseSectionsCount + i);
+                                            return (
+                                                <tr key={sec.id} className="border-b border-slate-300">
+                                                    <td className="p-2 font-bold text-[#0f2b4a]">
+                                                        {sec.title} (Sec. {letter})
+                                                    </td>
+                                                    <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
+                                                    <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
+                                                    <td className="p-2 border-l border-slate-300 bg-orange-50"></td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {activeChargeSections.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="p-4 text-center text-slate-400 italic">
+                                                    No active charges to summarize.
+                                                </td>
                                             </tr>
-                                        ))}
+                                        )}
                                         <tr className="border-t-2 border-[#0f2b4a] bg-slate-100">
                                             <td colSpan="3" className="p-2 font-bold text-right">SUBTOTAL (before GST)</td>
                                             <td className="p-2 border-l border-slate-300"></td>
@@ -324,9 +364,9 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                                 </table>
                             </div>
 
-                        {/* Section J: GST Compliance */}
+                        {/* Section: GST Compliance */}
                         <div className="break-inside-avoid mb-6">
-                            <SectionHeader letter="J" title="GST & STATUTORY COMPLIANCE DETAILS" />
+                            <SectionHeader letter={gstLetter} title="GST & STATUTORY COMPLIANCE DETAILS" />
                             <div className="grid grid-cols-2 gap-4 text-xs">
                                 <table className="w-full border-collapse border border-slate-300">
                                     <tbody>
@@ -348,9 +388,9 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                             </div>
                         </div>
 
-                        {/* Section K: Terms & Conditions */}
+                        {/* Section: Terms & Conditions */}
                         <div className="break-inside-avoid mb-6">
-                            <SectionHeader letter="K" title="TERMS & CONDITIONS" />
+                            <SectionHeader letter={termsLetter} title="TERMS & CONDITIONS" />
                             <div className="border border-slate-300 p-4 text-xs">
                                 <ul className="list-decimal pl-5 space-y-2 text-slate-700">
                                     {tc.map((t, i) => <li key={i}>{t}</li>)}
@@ -358,9 +398,9 @@ export default function QuotationViewModal({ quotation, onClose, isMerchantView 
                             </div>
                         </div>
 
-                        {/* Section L: Signatures */}
+                        {/* Section: Signatures */}
                         <div className="break-inside-avoid">
-                            <SectionHeader letter="L" title="ACCEPTANCE & SIGNATURES" />
+                            <SectionHeader letter={signaturesLetter} title="ACCEPTANCE & SIGNATURES" />
                             <div className="flex border border-slate-400 text-xs h-32">
                                 <div className="w-1/2 border-r border-slate-400 p-4 flex flex-col justify-between">
                                     <div className="font-bold text-[#0f2b4a] mb-2">FOR WAREHOUSE / LINK2LOGISTICS</div>

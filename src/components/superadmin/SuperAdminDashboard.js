@@ -194,11 +194,10 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
                         <button
                             key={item.id}
                             onClick={() => setActiveView(item.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-                                activeView === item.id
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeView === item.id
                                     ? 'bg-orange-50 text-orange-700 shadow-sm'
                                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                            }`}
+                                }`}
                         >
                             <item.icon
                                 className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`}
@@ -560,14 +559,14 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 {activeView === 'overview'
                                     ? 'Overview'
                                     : activeView === 'warehouses'
-                                      ? 'Warehouse Listings'
-                                      : activeView === 'assign-admin'
-                                        ? 'Assign Admin'
-                                        : activeView === 'manage-admins'
-                                          ? 'Manage Admins'
-                                          : activeView === 'manage-countries'
-                                            ? 'Manage Supported Countries'
-                                            : 'User Management'}
+                                        ? 'Warehouse Listings'
+                                        : activeView === 'assign-admin'
+                                            ? 'Assign Admin'
+                                            : activeView === 'manage-admins'
+                                                ? 'Manage Admins'
+                                                : activeView === 'manage-countries'
+                                                    ? 'Manage Supported Countries'
+                                                    : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -726,9 +725,8 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${
-                            toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
-                        }`}
+                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+                            }`}
                     >
                         {toast.type === 'success' ? (
                             <CheckCircle2 className="w-4 h-4" />
@@ -822,9 +820,9 @@ function OverviewView({ counts, warehouses, bookings = [] }) {
                                         const label = isUpdated ? 'Updated: ' : 'Published: ';
                                         return ts?.seconds
                                             ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
-                                                  day: 'numeric',
-                                                  month: 'short',
-                                              })}`
+                                                day: 'numeric',
+                                                month: 'short',
+                                            })}`
                                             : 'Just now';
                                     })()}
                                 </span>
@@ -879,17 +877,15 @@ function WarehouseListView({
                             <button
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                                    filter === tab.key
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${filter === tab.key
                                         ? 'bg-orange-600 text-white shadow-sm'
                                         : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                                }`}
+                                    }`}
                             >
                                 {tab.label}
                                 <span
-                                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                        filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                                    }`}
+                                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                                        }`}
                                 >
                                     {tab.count}
                                 </span>
@@ -1105,10 +1101,10 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                 const label = isUpdated ? 'Updated: ' : 'Published: ';
                                 return ts?.seconds
                                     ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
-                                          day: 'numeric',
-                                          month: 'short',
-                                          year: 'numeric',
-                                      })}`
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                    })}`
                                     : '-';
                             })()}
                         </p>
@@ -1338,8 +1334,8 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
 
                 <div className="divide-y divide-slate-100">
                     {filtered.map((u) => {
-                        const userWarehouses = warehouses?.filter((w) => 
-                            w._email?.toLowerCase() === u.email?.toLowerCase() || 
+                        const userWarehouses = warehouses?.filter((w) =>
+                            w._email?.toLowerCase() === u.email?.toLowerCase() ||
                             w.email?.toLowerCase() === u.email?.toLowerCase()
                         ) || [];
                         return (
@@ -1367,23 +1363,22 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
                                 <p className="text-sm text-slate-600 truncate">{u.email}</p>
                                 <div>
                                     <span
-                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                            u.userType === 'warehouse_partner'
+                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${u.userType === 'warehouse_partner'
                                                 ? 'bg-orange-50 text-orange-600 border border-orange-100'
                                                 : u.userType === 'business_client'
-                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                  : 'bg-slate-50 text-slate-500'
-                                        }`}
+                                                    ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                    : 'bg-slate-50 text-slate-500'
+                                            }`}
                                     >
                                         {u.userType === 'warehouse_partner'
                                             ? 'Warehouse Partner'
                                             : u.userType === 'business_client'
-                                              ? 'Business Client'
-                                              : u.userType === 'admin'
-                                                ? 'Admin'
-                                                : u.userType === 'superadmin'
-                                                  ? 'Super Admin'
-                                                  : u.userType || 'User'}
+                                                ? 'Business Client'
+                                                : u.userType === 'admin'
+                                                    ? 'Admin'
+                                                    : u.userType === 'superadmin'
+                                                        ? 'Super Admin'
+                                                        : u.userType || 'User'}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
@@ -1451,8 +1446,8 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
                     <AnimatePresence>
                         {selectedUserForWarehouses && (() => {
                             const u = selectedUserForWarehouses;
-                            const userWarehouses = warehouses?.filter((w) => 
-                                w._email?.toLowerCase() === u.email?.toLowerCase() || 
+                            const userWarehouses = warehouses?.filter((w) =>
+                                w._email?.toLowerCase() === u.email?.toLowerCase() ||
                                 w.email?.toLowerCase() === u.email?.toLowerCase()
                             ) || [];
                             return (
@@ -1479,23 +1474,22 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
                                                         {u.name || 'Anonymous'}
                                                     </h3>
                                                     <span
-                                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                                            u.userType === 'warehouse_partner'
+                                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.userType === 'warehouse_partner'
                                                                 ? 'bg-orange-50 text-orange-600 border border-orange-100'
                                                                 : u.userType === 'business_client'
-                                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                                  : 'bg-slate-50 text-slate-500'
-                                                        }`}
+                                                                    ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                    : 'bg-slate-50 text-slate-500'
+                                                            }`}
                                                     >
                                                         {u.userType === 'warehouse_partner'
                                                             ? 'Warehouse Partner'
                                                             : u.userType === 'business_client'
-                                                              ? 'Business Client'
-                                                              : u.userType === 'admin'
-                                                                ? 'Admin'
-                                                                : u.userType === 'superadmin'
-                                                                  ? 'Super Admin'
-                                                                  : u.userType || 'User'}
+                                                                ? 'Business Client'
+                                                                : u.userType === 'admin'
+                                                                    ? 'Admin'
+                                                                    : u.userType === 'superadmin'
+                                                                        ? 'Super Admin'
+                                                                        : u.userType || 'User'}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-1">
@@ -1545,13 +1539,12 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
                                                                             {wh.warehouseName || 'Unnamed Warehouse'}
                                                                         </h4>
                                                                         <span
-                                                                            className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${
-                                                                                wh.status === 'approved'
+                                                                            className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${wh.status === 'approved'
                                                                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                                                                                     : wh.status === 'rejected'
-                                                                                      ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                                                                                      : 'bg-amber-50 text-amber-700 border border-amber-100'
-                                                                            }`}
+                                                                                        ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                                                                        : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                                                }`}
                                                                         >
                                                                             {wh.status || 'pending'}
                                                                         </span>
@@ -1807,11 +1800,10 @@ function PhotoGallery({ photos }) {
                                                         e.stopPropagation();
                                                         handleNavigation(idx);
                                                     }}
-                                                    className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                                                        idx === activeIndex
+                                                    className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIndex
                                                             ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
                                                             : 'border-transparent opacity-50 hover:opacity-80'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <img
                                                         src={photo.url}
@@ -2125,11 +2117,10 @@ function MigrationView({ showToast }) {
                 <button
                     onClick={runMigration}
                     disabled={migrating}
-                    className={`px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center gap-3 shadow-lg ${
-                        migrating
+                    className={`px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center gap-3 shadow-lg ${migrating
                             ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                             : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5'
-                    }`}
+                        }`}
                 >
                     {migrating ? (
                         <>
@@ -2181,15 +2172,14 @@ function MigrationView({ showToast }) {
                         {migrationLog.map((log, i) => (
                             <div
                                 key={i}
-                                className={`px-3 py-1.5 rounded-lg ${
-                                    log.type === 'success'
+                                className={`px-3 py-1.5 rounded-lg ${log.type === 'success'
                                         ? 'text-emerald-400'
                                         : log.type === 'error'
-                                          ? 'text-red-400'
-                                          : log.type === 'warn'
-                                            ? 'text-amber-400'
-                                            : 'text-slate-400'
-                                }`}
+                                            ? 'text-red-400'
+                                            : log.type === 'warn'
+                                                ? 'text-amber-400'
+                                                : 'text-slate-400'
+                                    }`}
                             >
                                 {log.msg}
                             </div>
@@ -2676,19 +2666,17 @@ function AdminInquiriesView({ showToast }) {
                                             <button
                                                 key={wh.id}
                                                 onClick={() => toggleOwner(email)}
-                                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
-                                                    isSelected
+                                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${isSelected
                                                         ? 'bg-orange-50 border border-orange-200'
                                                         : 'bg-white border border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                                                }`}
+                                                    }`}
                                             >
                                                 {/* Checkbox */}
                                                 <div
-                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                                                        isSelected
+                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected
                                                             ? 'bg-orange-500 border-orange-500'
                                                             : 'border-slate-300'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {isSelected && <Check size={12} className="text-white" />}
                                                 </div>
@@ -2907,11 +2895,10 @@ function ManageCountriesView({ showToast }) {
                     return (
                         <div
                             key={code}
-                            className={`p-4 rounded-2xl border transition-all duration-300 ${
-                                isEnabled
+                            className={`p-4 rounded-2xl border transition-all duration-300 ${isEnabled
                                     ? 'bg-white border-orange-200 shadow-sm hover:shadow-md'
                                     : 'bg-slate-50 border-slate-200 opacity-80 hover:opacity-100'
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
@@ -2928,17 +2915,15 @@ function ManageCountriesView({ showToast }) {
                                 <button
                                     onClick={() => toggleCountry(code)}
                                     disabled={isLoading}
-                                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
-                                        isEnabled ? 'bg-orange-500' : 'bg-slate-300'
-                                    }`}
+                                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${isEnabled ? 'bg-orange-500' : 'bg-slate-300'
+                                        }`}
                                 >
                                     {isLoading ? (
                                         <Loader2 className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-4 text-white animate-spin" />
                                     ) : (
                                         <div
-                                            className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${
-                                                isEnabled ? 'translate-x-7 left-0' : 'translate-x-1 left-0'
-                                            }`}
+                                            className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${isEnabled ? 'translate-x-7 left-0' : 'translate-x-1 left-0'
+                                                }`}
                                         />
                                     )}
                                 </button>

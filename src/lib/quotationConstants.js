@@ -103,3 +103,86 @@ export const INITIAL_QUOTATION_DATA = {
   gst_compliance: QUOTATION_SCHEMA.gst_compliance,
   terms_conditions: QUOTATION_SCHEMA.terms_conditions,
 };
+
+export const getStandardTitle = (key) => {
+  switch (key) {
+    case 'storage_charges': return "Storage Charges";
+    case 'handling_charges': return "Handling Charges";
+    case 'vas_charges': return "Value Added Services";
+    case 'ancillary_charges': return "Ancillary Charges";
+    case 'penalty_charges': return "Demurrage & Penalty";
+    default: return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+};
+
+export const getStandardColumns = (key) => {
+  switch (key) {
+    case 'storage_charges':
+      return ["Charge Head", "Rate (INR)", "Unit", "Remarks / Period"];
+    case 'handling_charges':
+      return ["Charge Head", "Rate (INR)", "Unit", "Direction", "Remarks"];
+    case 'vas_charges':
+    case 'ancillary_charges':
+      return ["Charge Head", "Rate (INR)", "Unit", "Remarks"];
+    case 'penalty_charges':
+      return ["Charge Head", "Rate (INR)", "Unit", "Trigger Condition"];
+    default:
+      return ["Charge Head", "Rate (INR)", "Unit", "Remarks"];
+  }
+};
+
+export const normalizeOldRow = (item, key) => {
+  const row = {};
+  row["Charge Head"] = item.head || '';
+  row["Rate (INR)"] = item.rate || '';
+  row["Unit"] = item.unit || '';
+  
+  if (key === 'storage_charges') {
+    row["Remarks / Period"] = item.remarks || item.period || '';
+  } else if (key === 'handling_charges') {
+    row["Direction"] = item.direction || '';
+    row["Remarks"] = item.remarks || '';
+  } else if (key === 'vas_charges' || key === 'ancillary_charges') {
+    row["Remarks"] = item.remarks || '';
+  } else if (key === 'penalty_charges') {
+    row["Trigger Condition"] = item.trigger || item.remarks || '';
+  }
+  return row;
+};
+
+export const normalizeQuotationData = (raw) => {
+  if (!raw) return {};
+  const data = JSON.parse(JSON.stringify(raw));
+  
+  const chargeKeys = ['storage_charges', 'handling_charges', 'vas_charges', 'ancillary_charges', 'penalty_charges'];
+  
+  chargeKeys.forEach(key => {
+    const val = data[key];
+    if (Array.isArray(val)) {
+      const hasData = val.some(item => item.rate || item.min_charge);
+      if (hasData) {
+        data[key] = {
+          title: getStandardTitle(key),
+          columns: getStandardColumns(key),
+          rows: val.filter(item => item.rate || item.min_charge).map(item => normalizeOldRow(item, key))
+        };
+      } else {
+        delete data[key];
+      }
+    } else if (val && typeof val === 'object' && val.columns && val.rows) {
+      // Keep as is
+    } else {
+      delete data[key];
+    }
+  });
+  
+  if (data.custom_sections) {
+    if (!Array.isArray(data.custom_sections)) {
+      delete data.custom_sections;
+    } else {
+      data.custom_sections = data.custom_sections.filter(sec => sec && sec.columns && sec.rows);
+    }
+  }
+  
+  return data;
+};
