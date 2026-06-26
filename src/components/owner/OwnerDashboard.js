@@ -123,10 +123,10 @@ export default function OwnerDashboard({ user, onLogout }) {
     const showToast = (message, type, extraData) => {
         const id = Date.now() + Math.random().toString(36).substring(2, 9);
         const newToast = { id, message, type, extraData };
-        setToasts(prev => [...prev, newToast]);
+        setToasts((prev) => [...prev, newToast]);
         playNotificationSound();
         setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id));
+            setToasts((prev) => prev.filter((t) => t.id !== id));
         }, 6000);
     };
 
@@ -145,17 +145,18 @@ export default function OwnerDashboard({ user, onLogout }) {
     useEffect(() => {
         if (!user?.uid) return;
 
-        const q = query(
-            collection(db, 'conversations'),
-            where('ownerId', '==', user.uid)
-        );
+        const q = query(collection(db, 'conversations'), where('ownerId', '==', user.uid));
 
-        const unsub = onSnapshot(q, (snap) => {
-            const count = snap.docs.filter((d) => d.data().stage === 'new').length;
-            setNewInquiriesCount(count);
-        }, (err) => {
-            console.error("Error fetching owner inquiries count:", err);
-        });
+        const unsub = onSnapshot(
+            q,
+            (snap) => {
+                const count = snap.docs.filter((d) => d.data().stage === 'new').length;
+                setNewInquiriesCount(count);
+            },
+            (err) => {
+                console.error('Error fetching owner inquiries count:', err);
+            }
+        );
 
         return () => unsub();
     }, [user?.uid]);
@@ -173,11 +174,11 @@ export default function OwnerDashboard({ user, onLogout }) {
             });
 
             if (prevLeadsRef.current.length > 0) {
-                const currentIds = filtered.map(l => l.id);
-                const prevIds = prevLeadsRef.current.map(l => l.id);
-                const newLeads = filtered.filter(l => !prevIds.includes(l.id));
+                const currentIds = filtered.map((l) => l.id);
+                const prevIds = prevLeadsRef.current.map((l) => l.id);
+                const newLeads = filtered.filter((l) => !prevIds.includes(l.id));
                 if (newLeads.length > 0) {
-                    newLeads.forEach(lead => {
+                    newLeads.forEach((lead) => {
                         const companyName = lead.data?.companyName || 'A new client';
                         showToast(`New Global Lead Available from ${companyName}!`, 'lead', lead);
                     });
@@ -883,7 +884,7 @@ export default function OwnerDashboard({ user, onLogout }) {
                             <div className="p-2 rounded-xl bg-orange-500/20 text-orange-400 shrink-0 border border-orange-500/30">
                                 <MessageSquarePlus className="w-5 h-5" />
                             </div>
-                            
+
                             <div className="flex-1 min-w-0 pr-6">
                                 <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
                                     New Lead Assigned <Sparkles className="w-3.5 h-3.5 text-orange-400" />

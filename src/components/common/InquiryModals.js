@@ -301,7 +301,8 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                        <Package size={12} /> What will you store? <span className="text-red-500">*</span>
+                                        <Package size={12} /> What will you store?{' '}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         required
@@ -314,7 +315,8 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                 <div className="grid-cols-1 gap-6">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Scale size={12} /> Storage Space Required <span className="text-red-500">*</span>
+                                            <Scale size={12} /> Storage Space Required{' '}
+                                            <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex gap-3">
                                             <input
@@ -344,7 +346,8 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-slate-500 ml-1 flex items-center gap-1.5">
-                                            <Clock size={12} /> Contract Duration <span className="text-red-500">*</span>
+                                            <Clock size={12} /> Contract Duration{' '}
+                                            <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex gap-3">
                                             <input

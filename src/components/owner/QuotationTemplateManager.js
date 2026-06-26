@@ -18,7 +18,7 @@ export default function QuotationTemplateManager({ user }) {
             const data = await getOwnerTemplates(user.uid);
             setTemplates(data);
         } catch (error) {
-            console.error("Failed to load templates", error);
+            console.error('Failed to load templates', error);
         } finally {
             setLoading(false);
         }
@@ -39,13 +39,13 @@ export default function QuotationTemplateManager({ user }) {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this template?")) return;
+        if (!window.confirm('Are you sure you want to delete this template?')) return;
         setDeletingId(id);
         try {
             await deleteTemplate(id);
-            setTemplates(templates.filter(t => t.id !== id));
+            setTemplates(templates.filter((t) => t.id !== id));
         } catch (error) {
-            alert("Failed to delete template: " + error.message);
+            alert('Failed to delete template: ' + error.message);
         } finally {
             setDeletingId(null);
         }
@@ -63,12 +63,12 @@ export default function QuotationTemplateManager({ user }) {
     const handleSetDefault = async (template) => {
         try {
             // Update UI optimistically
-            setTemplates(templates.map(t => ({ ...t, is_default: t.id === template.id })));
+            setTemplates(templates.map((t) => ({ ...t, is_default: t.id === template.id })));
             await updateTemplate(template.id, user.uid, { ...template, is_default: true });
             // Optionally reload to ensure sync
             // await loadTemplates();
         } catch (error) {
-            alert("Failed to set default: " + error.message);
+            alert('Failed to set default: ' + error.message);
             await loadTemplates(); // Revert on failure
         }
     };
@@ -78,7 +78,9 @@ export default function QuotationTemplateManager({ user }) {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Quotation Templates</h2>
-                    <p className="text-sm font-medium text-slate-500 mt-1">Manage your default templates to send proposals faster.</p>
+                    <p className="text-sm font-medium text-slate-500 mt-1">
+                        Manage your default templates to send proposals faster.
+                    </p>
                 </div>
                 <button
                     onClick={handleCreateNew}
@@ -99,7 +101,10 @@ export default function QuotationTemplateManager({ user }) {
                         <FileText className="w-8 h-8" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 mb-2">No templates found</h3>
-                    <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">Create a reusable quotation template so you don't have to fill in standard terms and charges repeatedly.</p>
+                    <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
+                        Create a reusable quotation template so you don't have to fill in standard terms and charges
+                        repeatedly.
+                    </p>
                     <button
                         onClick={handleCreateNew}
                         className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm shadow-md transition-all"
@@ -109,14 +114,17 @@ export default function QuotationTemplateManager({ user }) {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {templates.map(template => (
-                        <div key={template.id} className={`bg-white border ${template.is_default ? 'border-blue-500 shadow-blue-100' : 'border-slate-200'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden`}>
+                    {templates.map((template) => (
+                        <div
+                            key={template.id}
+                            className={`bg-white border ${template.is_default ? 'border-blue-500 shadow-blue-100' : 'border-slate-200'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden`}
+                        >
                             {template.is_default && (
                                 <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg flex items-center gap-1">
                                     <Star className="w-3 h-3 fill-white" /> Default
                                 </div>
                             )}
-                            
+
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center border border-slate-100">
@@ -124,7 +132,12 @@ export default function QuotationTemplateManager({ user }) {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-slate-900 text-lg">{template.template_name}</h3>
-                                        <p className="text-xs text-slate-500">Updated {template.updated_at ? new Date(template.updated_at.seconds * 1000).toLocaleDateString() : 'recently'}</p>
+                                        <p className="text-xs text-slate-500">
+                                            Updated{' '}
+                                            {template.updated_at
+                                                ? new Date(template.updated_at.seconds * 1000).toLocaleDateString()
+                                                : 'recently'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -149,7 +162,11 @@ export default function QuotationTemplateManager({ user }) {
                                     disabled={deletingId === template.id}
                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    {deletingId === template.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                    {deletingId === template.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="w-4 h-4" />
+                                    )}
                                 </button>
                             </div>
                         </div>

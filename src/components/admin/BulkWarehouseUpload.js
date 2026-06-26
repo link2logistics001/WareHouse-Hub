@@ -5,27 +5,48 @@ import Papa from 'papaparse';
 import { addDoc, serverTimestamp } from 'firebase/firestore';
 import { getWarehouseCollection } from '@/lib/warehouseCollections';
 import { motion } from 'framer-motion';
-import {
-    FileUp,
-    Download,
-    CheckCircle,
-    AlertTriangle,
-    Loader2,
-    XCircle,
-    Info,
-    ArrowLeft
-} from 'lucide-react';
+import { FileUp, Download, CheckCircle, AlertTriangle, Loader2, XCircle, Info, ArrowLeft } from 'lucide-react';
 
 // Expected CSV Columns (exact match required in header row)
 const EXPECTED_HEADERS = [
-    'businessType', 'companyName', 'contactPerson', 'mobile', 'email', 'ownerGstPan',
-    'warehouseName', 'warehouseCategory', 'measurementUnit', 'totalArea', 'availableArea',
-    'totalMetricTons', 'availableMetricTons', 'clearHeight', 'numberOfDockDoors',
-    'containerHandling', 'typeOfConstruction', 'storageTypes', 'warehouseAge',
-    'warehouseGstPan', 'state', 'city', 'addressWithZip', 'googleMapPin',
-    'inboundHandling', 'outboundHandling', 'wmsAvailable', 'daysOfOperation',
-    'operationTime', 'securityFeatures', 'suitableGoods', 'valueAddedServices',
-    'pricingUnit', 'storageRate', 'handlingFees', 'minCommitment', 'shortTermStorage', 'description'
+    'businessType',
+    'companyName',
+    'contactPerson',
+    'mobile',
+    'email',
+    'ownerGstPan',
+    'warehouseName',
+    'warehouseCategory',
+    'measurementUnit',
+    'totalArea',
+    'availableArea',
+    'totalMetricTons',
+    'availableMetricTons',
+    'clearHeight',
+    'numberOfDockDoors',
+    'containerHandling',
+    'typeOfConstruction',
+    'storageTypes',
+    'warehouseAge',
+    'warehouseGstPan',
+    'state',
+    'city',
+    'addressWithZip',
+    'googleMapPin',
+    'inboundHandling',
+    'outboundHandling',
+    'wmsAvailable',
+    'daysOfOperation',
+    'operationTime',
+    'securityFeatures',
+    'suitableGoods',
+    'valueAddedServices',
+    'pricingUnit',
+    'storageRate',
+    'handlingFees',
+    'minCommitment',
+    'shortTermStorage',
+    'description',
 ];
 
 export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
@@ -37,29 +58,31 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
 
     const isDE = role === 'dataentry';
     const backTab = isDE ? 'dashboard' : 'overview';
-    
-    const theme = isDE ? {
-        hoverText: 'hover:text-cyan-600',
-        bgLight: 'bg-cyan-100',
-        textAccent: 'text-cyan-600',
-        iconColor: 'text-cyan-500',
-        codeText: 'text-cyan-600',
-        hoverBorder: 'hover:border-cyan-400',
-        bgButton: 'bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500/20',
-    } : {
-        hoverText: 'hover:text-orange-600',
-        bgLight: 'bg-orange-100',
-        textAccent: 'text-orange-600',
-        iconColor: 'text-orange-500',
-        codeText: 'text-orange-600',
-        hoverBorder: 'hover:border-orange-400',
-        bgButton: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500/20',
-    };
+
+    const theme = isDE
+        ? {
+              hoverText: 'hover:text-cyan-600',
+              bgLight: 'bg-cyan-100',
+              textAccent: 'text-cyan-600',
+              iconColor: 'text-cyan-500',
+              codeText: 'text-cyan-600',
+              hoverBorder: 'hover:border-cyan-400',
+              bgButton: 'bg-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500/20',
+          }
+        : {
+              hoverText: 'hover:text-orange-600',
+              bgLight: 'bg-orange-100',
+              textAccent: 'text-orange-600',
+              iconColor: 'text-orange-500',
+              codeText: 'text-orange-600',
+              hoverBorder: 'hover:border-orange-400',
+              bgButton: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500/20',
+          };
 
     const handleDownloadTemplate = () => {
         const csv = Papa.unparse({
             fields: EXPECTED_HEADERS,
-            data: []
+            data: [],
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -113,7 +136,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
 
                 // Check headers
                 const fileHeaders = Object.keys(data[0]);
-                const missingHeaders = EXPECTED_HEADERS.filter(h => !fileHeaders.includes(h));
+                const missingHeaders = EXPECTED_HEADERS.filter((h) => !fileHeaders.includes(h));
                 if (missingHeaders.length > 0) {
                     setErrorMsg(`Missing columns in CSV: ${missingHeaders.join(', ')}`);
                     setUploading(false);
@@ -136,11 +159,14 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
 
                     try {
                         const adminEmail = user.email.toLowerCase().trim();
-                        
+
                         // Parse comma separated arrays
                         const parseArray = (str) => {
                             if (!str || String(str).trim() === '') return [];
-                            return str.split(',').map(s => s.trim()).filter(Boolean);
+                            return str
+                                .split(',')
+                                .map((s) => s.trim())
+                                .filter(Boolean);
                         };
 
                         const getVal = (val) => {
@@ -160,9 +186,10 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                         const docData = {
                             warehouseName: getVal(row.warehouseName),
                             warehouseCategory: getVal(row.warehouseCategory),
-                            measurementUnit: row.measurementUnit && String(row.measurementUnit).trim() !== ''
-                                ? String(row.measurementUnit).trim().toLowerCase()
-                                : 'sqft',
+                            measurementUnit:
+                                row.measurementUnit && String(row.measurementUnit).trim() !== ''
+                                    ? String(row.measurementUnit).trim().toLowerCase()
+                                    : 'sqft',
                             totalArea: getNum(row.totalArea),
                             availableArea: getNum(row.availableArea),
                             totalMetricTons: getNum(row.totalMetricTons),
@@ -210,7 +237,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                             createdAt: serverTimestamp(),
                             source: role,
                             submittedBy: user.email,
-                            isBulkUploaded: true
+                            isBulkUploaded: true,
                         };
 
                         await addDoc(getWarehouseCollection(role, adminEmail), docData);
@@ -227,7 +254,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
             error: (error) => {
                 setErrorMsg(`CSV Parse Error: ${error.message}`);
                 setUploading(false);
-            }
+            },
         });
     };
 
@@ -241,7 +268,9 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </button>
                 <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-12 h-12 ${theme.bgLight} rounded-xl flex items-center justify-center ${theme.textAccent}`}>
+                    <div
+                        className={`w-12 h-12 ${theme.bgLight} rounded-xl flex items-center justify-center ${theme.textAccent}`}
+                    >
                         <FileUp className="w-6 h-6" />
                     </div>
                     <div>
@@ -264,10 +293,17 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                         <ol className="list-decimal pl-4 space-y-3 text-sm text-slate-600 font-medium">
                             <li>Download the CSV Template below.</li>
                             <li>Fill in your warehouse details. Do not change the column headers.</li>
-                            <li>Multiple values (like Storage Types, Security Features) should be separated by commas within the cell.</li>
-                            <li>Save the file as <code className={`bg-slate-100 px-1.5 py-0.5 rounded ${theme.codeText}`}>.csv</code> and upload it here.</li>
+                            <li>
+                                Multiple values (like Storage Types, Security Features) should be separated by commas
+                                within the cell.
+                            </li>
+                            <li>
+                                Save the file as{' '}
+                                <code className={`bg-slate-100 px-1.5 py-0.5 rounded ${theme.codeText}`}>.csv</code> and
+                                upload it here.
+                            </li>
                         </ol>
-                        
+
                         <button
                             onClick={handleDownloadTemplate}
                             className="mt-6 w-full px-4 py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
@@ -281,7 +317,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                 {/* Upload Panel */}
                 <div className="md:col-span-2 space-y-6">
                     <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                        <div 
+                        <div
                             className={`border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 ${theme.hoverBorder} transition-all`}
                             onClick={() => fileInputRef.current?.click()}
                         >
@@ -296,10 +332,10 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                                 <FileUp className="w-8 h-8 text-slate-400" />
                             </div>
                             <p className="text-base font-bold text-slate-700 mb-1">
-                                {file ? file.name : "Click to select a CSV file"}
+                                {file ? file.name : 'Click to select a CSV file'}
                             </p>
                             <p className="text-sm text-slate-500 font-medium">
-                                {file ? `${(file.size / 1024).toFixed(2)} KB` : "or drag and drop here"}
+                                {file ? `${(file.size / 1024).toFixed(2)} KB` : 'or drag and drop here'}
                             </p>
                         </div>
 
@@ -316,7 +352,11 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                                 disabled={!file || uploading}
                                 className={`px-6 py-3 ${theme.bgButton} text-white font-bold rounded-xl transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileUp className="w-5 h-5" />}
+                                {uploading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <FileUp className="w-5 h-5" />
+                                )}
                                 {uploading ? 'Processing...' : 'Upload Data'}
                             </button>
                         </div>
@@ -324,8 +364,8 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
 
                     {/* Results Display */}
                     {results && (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 10 }} 
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
                         >
@@ -342,7 +382,7 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                                     )}
                                 </div>
                             </div>
-                            
+
                             {results.errors.length > 0 && (
                                 <div className="p-6 max-h-[300px] overflow-y-auto">
                                     <h4 className="font-semibold text-slate-700 mb-3 text-sm flex items-center gap-2">
@@ -350,7 +390,10 @@ export default function BulkWarehouseUpload({ role, user, setActiveTab }) {
                                     </h4>
                                     <ul className="space-y-2">
                                         {results.errors.map((err, idx) => (
-                                            <li key={idx} className="text-xs font-medium text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">
+                                            <li
+                                                key={idx}
+                                                className="text-xs font-medium text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100"
+                                            >
                                                 {err}
                                             </li>
                                         ))}

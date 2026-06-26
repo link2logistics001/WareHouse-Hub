@@ -128,7 +128,12 @@ export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
         shortTermStorage: '',
     });
     const [photos, setPhotos] = useState({ frontView: null, insideView: null, dockArea: null, rateCard: null });
-    const [existingPhotos, setExistingPhotos] = useState({ frontView: null, insideView: null, dockArea: null, rateCard: null });
+    const [existingPhotos, setExistingPhotos] = useState({
+        frontView: null,
+        insideView: null,
+        dockArea: null,
+        rateCard: null,
+    });
 
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -314,7 +319,6 @@ export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
         return e;
     };
 
-
     const handleNext = () => {
         const validators = { 1: validateStep1, 2: validateStep2, 3: validateStep3, 4: validateStep4 };
         const errs = editingWarehouse ? {} : validators[step]();
@@ -482,10 +486,16 @@ export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
                 minCommitment: getVal(pricingDetails.minCommitment),
                 shortTermStorage: getVal(pricingDetails.shortTermStorage),
                 photos: {
-                    frontView: frontViewURL || (editingWarehouse ? existingPhotos.frontView : null) || 'no photos uploaded !',
-                    insideView: insideViewURL || (editingWarehouse ? existingPhotos.insideView : null) || 'no photos uploaded !',
-                    dockArea: dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null) || 'no photos uploaded !',
-                    rateCard: rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null) || 'no photos uploaded !',
+                    frontView:
+                        frontViewURL || (editingWarehouse ? existingPhotos.frontView : null) || 'no photos uploaded !',
+                    insideView:
+                        insideViewURL ||
+                        (editingWarehouse ? existingPhotos.insideView : null) ||
+                        'no photos uploaded !',
+                    dockArea:
+                        dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null) || 'no photos uploaded !',
+                    rateCard:
+                        rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null) || 'no photos uploaded !',
                 },
                 businessType: getVal(ownerDetails.businessType),
                 companyName: getVal(ownerDetails.companyName),
@@ -546,7 +556,9 @@ export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
                         <div className="w-20 h-20 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                             <CheckCircle className="w-10 h-10 text-emerald-500" />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-800 mb-3">{editingWarehouse ? 'Entry Updated!' : 'Entry Submitted!'}</h2>
+                        <h2 className="text-3xl font-bold text-slate-800 mb-3">
+                            {editingWarehouse ? 'Entry Updated!' : 'Entry Submitted!'}
+                        </h2>
                         <p className="text-slate-500 mb-10 font-medium">
                             {editingWarehouse
                                 ? 'Your warehouse entry has been updated successfully.'
@@ -583,7 +595,9 @@ export default function DEAddWarehouse({ setActiveTab, editingWarehouse }) {
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{editingWarehouse ? 'Edit Warehouse Details' : 'Add Warehouse Entry'}</h1>
+                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
+                                {editingWarehouse ? 'Edit Warehouse Details' : 'Add Warehouse Entry'}
+                            </h1>
                             <p className="text-sm font-medium text-slate-500 mt-1">
                                 Step {step} of {totalSteps}: {STEP_LABELS[step]}
                             </p>

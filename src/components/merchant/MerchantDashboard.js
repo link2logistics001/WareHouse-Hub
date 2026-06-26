@@ -47,10 +47,12 @@ import {
 import { useWishlist } from '@/hooks/useWishlist';
 import { getOrCreateConversation, sendMessage } from '@/lib/messaging';
 import { subscribeToMerchantQuotations } from '@/lib/quotationService';
+import { subscribeToMerchantInquiries } from '@/lib/inquiryService';
 
 import SearchFilters from '../common/SearchFilters';
 import WarehouseCard from '../common/WarehouseCard';
 import MerchantQuotations from './MerchantQuotations';
+import MerchantInquiries from './MerchantInquiries';
 import MerchantSidebar from './MerchantSidebar';
 import ChatBox from '../common/ChatBox';
 import { InquirySelectionModal, QuickInquiryModal, DetailedInquiryModal } from '../common/InquiryModals';
@@ -165,6 +167,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const [showDetailedModal, setShowDetailedModal] = useState(false);
 
     const [newQuotationsCount, setNewQuotationsCount] = useState(0);
+    const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
     const [toasts, setToasts] = useState([]);
     const prevQuotationsRef = useRef([]);
 
@@ -198,10 +201,10 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const showToast = (message, type, extraData) => {
         const id = Date.now() + Math.random().toString(36).substring(2, 9);
         const newToast = { id, message, type, extraData };
-        setToasts(prev => [...prev, newToast]);
+        setToasts((prev) => [...prev, newToast]);
         playNotificationSound();
         setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id));
+            setToasts((prev) => prev.filter((t) => t.id !== id));
         }, 6000);
     };
 
@@ -210,14 +213,14 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
         if (!user?.uid) return;
 
         const unsub = subscribeToMerchantQuotations(user.uid, (data) => {
-            const newCount = data.filter(q => q.status === 'Sent').length;
+            const newCount = data.filter((q) => q.status === 'Sent').length;
 
             if (prevQuotationsRef.current.length > 0) {
-                const currentIds = data.map(q => q.id);
-                const prevIds = prevQuotationsRef.current.map(q => q.id);
-                const newQuotes = data.filter(q => !prevIds.includes(q.id) && q.status === 'Sent');
+                const currentIds = data.map((q) => q.id);
+                const prevIds = prevQuotationsRef.current.map((q) => q.id);
+                const newQuotes = data.filter((q) => !prevIds.includes(q.id) && q.status === 'Sent');
                 if (newQuotes.length > 0) {
-                    newQuotes.forEach(quote => {
+                    newQuotes.forEach((quote) => {
                         const providerName = quote.party_details?.provider_name || 'Warehouse Partner';
                         showToast(`New Quotation Received from ${providerName}!`, 'quotation', quote);
                     });
@@ -228,6 +231,16 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
             setNewQuotationsCount(newCount);
         });
 
+        return () => unsub();
+    }, [user?.uid]);
+
+    // Real-time listener for merchant's inquiries to update sidebar pending count badge
+    useEffect(() => {
+        if (!user?.uid) return;
+        const unsub = subscribeToMerchantInquiries(user.uid, (data) => {
+            const pendingCount = data.filter((inq) => inq.status === 'pending').length;
+            setPendingInquiriesCount(pendingCount);
+        });
         return () => unsub();
     }, [user?.uid]);
 
@@ -352,18 +365,24 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
     const filteredWarehouses = realWarehouses.filter((wh) => {
         const cityMatch = !filters.city || (wh.city && wh.city.toLowerCase().includes(filters.city.toLowerCase()));
         const categoryMatch = !filters.category || wh.warehouseCategory === filters.category;
-        
+
         // Resolve available capacity with fallback to total capacity
-        const whAvailableArea = wh.availableArea !== undefined && wh.availableArea !== '' ? parseInt(wh.availableArea) : parseInt(wh.totalArea || 0);
-        const whAvailableMT = wh.availableMetricTons !== undefined && wh.availableMetricTons !== '' ? parseInt(wh.availableMetricTons) : parseInt(wh.totalMetricTons || 0);
-        
+        const whAvailableArea =
+            wh.availableArea !== undefined && wh.availableArea !== ''
+                ? parseInt(wh.availableArea)
+                : parseInt(wh.totalArea || 0);
+        const whAvailableMT =
+            wh.availableMetricTons !== undefined && wh.availableMetricTons !== ''
+                ? parseInt(wh.availableMetricTons)
+                : parseInt(wh.totalMetricTons || 0);
+
         let effectiveCapacity = whAvailableArea;
         if (wh.measurementUnit === 'mt') {
             // Convert Metric Tons to equivalent Area based on regional unit config (1 MT ≈ 10 sq ft or 1 sq m)
             const factor = config.unit === 'sq m' ? 1 : 10;
             effectiveCapacity = whAvailableMT * factor;
         }
-        
+
         const areaMatch = !filters.minArea || effectiveCapacity >= parseInt(filters.minArea);
         const priceMatch = !filters.maxBudget || parseInt(wh.pricingAmount) <= parseInt(filters.maxBudget);
         return cityMatch && categoryMatch && areaMatch && priceMatch;
@@ -421,6 +440,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                     onLogout={onLogout}
                     onSendEnquiry={() => setShowSelectionModal(true)}
                     quotationsCount={newQuotationsCount}
+                    inquiriesCount={pendingInquiriesCount}
                 />
             </div>
 
@@ -450,6 +470,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                 onSendEnquiry={() => setShowSelectionModal(true)}
                                 isDrawer={true}
                                 quotationsCount={newQuotationsCount}
+                                inquiriesCount={pendingInquiriesCount}
                             />
                         </motion.div>
                     </motion.div>
@@ -666,6 +687,18 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                                     exit={{ opacity: 0 }}
                                 >
                                     <MerchantQuotations user={user} />
+                                </motion.div>
+                            )}
+
+                            {/* --- MY ENQUIRIES TAB --- */}
+                            {activeTab === 'inquiries' && (
+                                <motion.div
+                                    key="inquiries"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <MerchantInquiries user={user} onSendEnquiry={() => setShowSelectionModal(true)} />
                                 </motion.div>
                             )}
 
@@ -890,7 +923,7 @@ export default function MerchantDashboard({ user, onLogout, onOpenChat }) {
                             <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 shrink-0 border border-blue-500/30">
                                 <FileText className="w-5 h-5" />
                             </div>
-                            
+
                             <div className="flex-1 min-w-0 pr-6">
                                 <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
                                     Quotation Received <Sparkles className="w-3.5 h-3.5 text-blue-400" />

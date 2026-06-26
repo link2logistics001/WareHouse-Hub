@@ -27,7 +27,7 @@ import {
     WifiOff,
     Trash2,
     Edit,
-    ChevronDown
+    ChevronDown,
 } from 'lucide-react';
 
 export default function DEMyWarehouses({ setActiveTab, onEdit }) {

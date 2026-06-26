@@ -972,12 +972,19 @@ export default function AddWarehouse({ setActiveTab, editingWarehouse }) {
                     .map((c) => ({ name: c.name.trim(), amount: Number(c.amount) || 0 })),
                 minCommitment: getVal(pricingDetails.minCommitment),
                 shortTermStorage: getVal(pricingDetails.shortTermStorage),
-                shortTermDuration: pricingDetails.shortTermStorage === 'Yes' ? getVal(pricingDetails.shortTermDuration) : '--',
+                shortTermDuration:
+                    pricingDetails.shortTermStorage === 'Yes' ? getVal(pricingDetails.shortTermDuration) : '--',
                 photos: {
-                    frontView: frontViewURL || (editingWarehouse ? existingPhotos.frontView : null) || 'no photos uploaded !',
-                    insideView: insideViewURL || (editingWarehouse ? existingPhotos.insideView : null) || 'no photos uploaded !',
-                    dockArea: dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null) || 'no photos uploaded !',
-                    rateCard: rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null) || 'no photos uploaded !',
+                    frontView:
+                        frontViewURL || (editingWarehouse ? existingPhotos.frontView : null) || 'no photos uploaded !',
+                    insideView:
+                        insideViewURL ||
+                        (editingWarehouse ? existingPhotos.insideView : null) ||
+                        'no photos uploaded !',
+                    dockArea:
+                        dockAreaURL || (editingWarehouse ? existingPhotos.dockArea : null) || 'no photos uploaded !',
+                    rateCard:
+                        rateCardURL || (editingWarehouse ? existingPhotos.rateCard : null) || 'no photos uploaded !',
                     tariff: tariffURL || (editingWarehouse ? existingPhotos.tariff : null) || 'no photos uploaded !',
                 },
                 // Step 4

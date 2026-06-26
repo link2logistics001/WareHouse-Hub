@@ -70,7 +70,7 @@ const STEP_LABELS = {
 // Use orange accent color
 const ACCENT = 'orange';
 
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from 'firebase/firestore';
 export default function AdminEditWarehouse({ setActiveTab, initialData }) {
     const { user } = useAuth();
     const { config: countryConfig } = useCountry();
@@ -105,8 +105,12 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                 warehouseGstPan: initialData.warehouseGstPan || '',
                 state: initialData.state || '',
                 city: initialData.city || '',
-                address: initialData.address || (initialData.addressWithZip ? (initialData.addressWithZip.split(' - ')[0] || '') : ''),
-                zipCode: initialData.zipCode || (initialData.addressWithZip ? (initialData.addressWithZip.split(' - ')[1] || '') : ''),
+                address:
+                    initialData.address ||
+                    (initialData.addressWithZip ? initialData.addressWithZip.split(' - ')[0] || '' : ''),
+                zipCode:
+                    initialData.zipCode ||
+                    (initialData.addressWithZip ? initialData.addressWithZip.split(' - ')[1] || '' : ''),
                 googleMapPin: initialData.googleMapPin || '',
                 description: initialData.description || '',
             });
@@ -486,10 +490,10 @@ export default function AdminEditWarehouse({ setActiveTab, initialData }) {
                 minCommitment: getVal(pricingDetails.minCommitment),
                 shortTermStorage: getVal(pricingDetails.shortTermStorage),
                 photos: {
-                    frontView: frontViewURL || (initialData?.photos?.frontView) || 'no photos uploaded !',
-                    insideView: insideViewURL || (initialData?.photos?.insideView) || 'no photos uploaded !',
-                    dockArea: dockAreaURL || (initialData?.photos?.dockArea) || 'no photos uploaded !',
-                    rateCard: rateCardURL || (initialData?.photos?.rateCard) || 'no photos uploaded !',
+                    frontView: frontViewURL || initialData?.photos?.frontView || 'no photos uploaded !',
+                    insideView: insideViewURL || initialData?.photos?.insideView || 'no photos uploaded !',
+                    dockArea: dockAreaURL || initialData?.photos?.dockArea || 'no photos uploaded !',
+                    rateCard: rateCardURL || initialData?.photos?.rateCard || 'no photos uploaded !',
                 },
                 businessType: getVal(ownerDetails.businessType),
                 companyName: getVal(ownerDetails.companyName),

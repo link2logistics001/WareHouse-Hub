@@ -71,17 +71,23 @@ export const submitInquiry = async (type, formData, userId = null) => {
 export const updateInquiryStatus = async (inquiryId, status, targetOwnerEmails = []) => {
     try {
         const docRef = doc(db, 'admin_inquiries', inquiryId);
+
+        // Auto-revert status to 'pending' if it's approved but no partners are assigned
+        const finalStatus = status === 'approved' && targetOwnerEmails.length === 0 ? 'pending' : status;
+
         const updateData = {
-            status,
+            status: finalStatus,
             updatedAt: serverTimestamp(),
         };
-        if (status === 'approved') {
+
+        if (finalStatus === 'approved') {
             // Save selected owner emails — only these owners will see the inquiry
             updateData.targetOwnerEmails = targetOwnerEmails;
-        } else if (status === 'rejected') {
-            // Clear owner assignments on rejection so no owner sees it
+        } else {
+            // Clear owner assignments on rejection/pending so no owner sees it
             updateData.targetOwnerEmails = [];
         }
+
         await updateDoc(docRef, updateData);
         return { success: true };
     } catch (error) {
@@ -132,4 +138,31 @@ export const getApprovedInquiries = async () => {
         console.error('Error fetching approved inquiries:', error);
         throw error;
     }
+};
+
+/**
+ * Listens for inquiries submitted by a specific merchant (Real-time)
+ * Sorts by createdAt desc on client side to avoid Firestore index requirements.
+ * @param {string} userId - The ID of the merchant
+ * @param {function} callback - Callback for data updates
+ */
+export const subscribeToMerchantInquiries = (userId, callback) => {
+    if (!userId) return () => {};
+    const q = query(collection(db, 'admin_inquiries'), where('submittedBy', '==', userId));
+
+    return onSnapshot(q, (snapshot) => {
+        const inquiries = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+        }));
+
+        // Client-side sort by createdAt desc
+        inquiries.sort((a, b) => {
+            const timeA = a.createdAt?.seconds || 0;
+            const timeB = b.createdAt?.seconds || 0;
+            return timeB - timeA;
+        });
+
+        callback(inquiries);
+    });
 };

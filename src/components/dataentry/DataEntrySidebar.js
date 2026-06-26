@@ -1,6 +1,15 @@
 'use client';
 
-import { LayoutDashboard, Building2, PlusCircle, FileUp, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
+import {
+    LayoutDashboard,
+    Building2,
+    PlusCircle,
+    FileUp,
+    MessageSquare,
+    Calendar,
+    Settings,
+    LogOut,
+} from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
 export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout, isDrawer = false }) {
@@ -56,7 +65,9 @@ export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout, is
                                 : 'text-slate-400 hover:bg-white/5 hover:text-white'
                         }`}
                     >
-                        <item.icon className={`w-5 h-5 shrink-0 transition-transform duration-300 relative z-10 ${activeTab === item.id ? 'scale-110 text-white' : 'group-hover/item:scale-110 text-slate-400'}`} />
+                        <item.icon
+                            className={`w-5 h-5 shrink-0 transition-transform duration-300 relative z-10 ${activeTab === item.id ? 'scale-110 text-white' : 'group-hover/item:scale-110 text-slate-400'}`}
+                        />
                         <span className={`ml-4 text-sm font-semibold tracking-wide relative z-10 ${containerClasses}`}>
                             {item.label}
                         </span>
@@ -66,18 +77,13 @@ export default function DataEntrySidebar({ activeTab, setActiveTab, onLogout, is
 
             {/* Bottom Actions */}
             <div className="p-3 border-t border-white/10 space-y-1 relative z-10">
-                <SidebarCountrySelector
-                    containerClasses={containerClasses}
-                    accentColor="cyan"
-                />
+                <SidebarCountrySelector containerClasses={containerClasses} accentColor="cyan" />
                 <button
                     onClick={onLogout}
                     className="w-full flex items-center px-3.5 py-3 text-slate-400 hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all duration-200 whitespace-nowrap group/logout mt-1"
                 >
                     <LogOut className="w-5 h-5 shrink-0 group-hover/logout:-translate-x-0.5 transition-transform" />
-                    <span className={`ml-4 text-sm font-semibold ${containerClasses}`}>
-                        Sign Out
-                    </span>
+                    <span className={`ml-4 text-sm font-semibold ${containerClasses}`}>Sign Out</span>
                 </button>
             </div>
         </div>

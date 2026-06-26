@@ -86,7 +86,13 @@ export const getOrCreateConversation = async (warehouseId, merchantId, ownerId, 
 /**
  * Send a message in a conversation
  */
-export const sendMessage = async (conversationId, senderId, text, senderType = 'business_client', attachment = null) => {
+export const sendMessage = async (
+    conversationId,
+    senderId,
+    text,
+    senderType = 'business_client',
+    attachment = null
+) => {
     const filteredText = text ? filterAbusiveWords(text) : '';
 
     const msgRef = collection(db, 'conversations', conversationId, 'messages');

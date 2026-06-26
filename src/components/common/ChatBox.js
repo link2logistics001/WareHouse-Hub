@@ -67,23 +67,17 @@ export default function ChatBox({ warehouse, user, onClose }) {
         try {
             const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
             const { storage } = await import('@/lib/firebase');
-            
+
             const storagePath = `chat_attachments/${conversation.id}/${Date.now()}_${file.name}`;
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(storageRef);
 
-            await sendMessage(
-                conversation.id,
-                user.id || user.uid,
-                '',
-                user.userType || 'business_client',
-                {
-                    url: downloadURL,
-                    name: file.name,
-                    type: file.type,
-                }
-            );
+            await sendMessage(conversation.id, user.id || user.uid, '', user.userType || 'business_client', {
+                url: downloadURL,
+                name: file.name,
+                type: file.type,
+            });
         } catch (err) {
             console.error('Attachment upload failed:', err);
             alert('Failed to upload attachment: ' + err.message);
@@ -124,9 +118,11 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 setConversation(conv);
 
                 if (['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())) {
-                    getDefaultTemplate(currentUserId).then(template => {
-                        if (template) setDefaultTemplate(template);
-                    }).catch(err => console.error("Failed to load default template", err));
+                    getDefaultTemplate(currentUserId)
+                        .then((template) => {
+                            if (template) setDefaultTemplate(template);
+                        })
+                        .catch((err) => console.error('Failed to load default template', err));
                 }
 
                 // Listen for messages in real-time
@@ -202,7 +198,7 @@ export default function ChatBox({ warehouse, user, onClose }) {
             };
 
             const sentQuote = await sendQuotation(quotationData);
-            
+
             // Send a system message to the chat
             await sendMessage(
                 conversation.id,
@@ -210,12 +206,12 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 `I have sent you a quotation (Ref: ${sentQuote.quotation_number}). You can view it in your Quotations tab.`,
                 user.userType || 'warehouse_partner'
             );
-            
+
             setIsQuotationEditorOpen(false);
             // alert("Quotation sent successfully!");
         } catch (error) {
-            console.error("Error sending quotation", error);
-            alert("Failed to send quotation: " + error.message);
+            console.error('Error sending quotation', error);
+            alert('Failed to send quotation: ' + error.message);
         }
     };
 
@@ -276,7 +272,9 @@ export default function ChatBox({ warehouse, user, onClose }) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            {['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase()) && (
+                            {['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(
+                                user.userType?.toLowerCase()
+                            ) && (
                                 <motion.button
                                     onClick={() => setIsQuotationEditorOpen(true)}
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
@@ -371,23 +369,45 @@ export default function ChatBox({ warehouse, user, onClose }) {
                                                                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                                                             }`}
                                                         >
-                                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isOwn ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500'}`}>
-                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                            <div
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${isOwn ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500'}`}
+                                                            >
+                                                                <svg
+                                                                    className="w-6 h-6"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                                                    />
                                                                 </svg>
                                                             </div>
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="text-xs font-bold truncate leading-tight">{msg.fileName || 'Document.pdf'}</p>
-                                                                <p className={`text-[10px] ${isOwn ? 'text-white/60' : 'text-slate-400'}`}>PDF Document</p>
+                                                                <p className="text-xs font-bold truncate leading-tight">
+                                                                    {msg.fileName || 'Document.pdf'}
+                                                                </p>
+                                                                <p
+                                                                    className={`text-[10px] ${isOwn ? 'text-white/60' : 'text-slate-400'}`}
+                                                                >
+                                                                    PDF Document
+                                                                </p>
                                                             </div>
                                                         </a>
                                                     )}
                                                     {msg.message && (
-                                                        <p className="text-sm leading-relaxed whitespace-pre-wrap pt-1">{msg.message}</p>
+                                                        <p className="text-sm leading-relaxed whitespace-pre-wrap pt-1">
+                                                            {msg.message}
+                                                        </p>
                                                     )}
                                                 </div>
                                             ) : (
-                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                                    {msg.message}
+                                                </p>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-1 text-xs text-slate-400 px-2">
@@ -455,36 +475,47 @@ export default function ChatBox({ warehouse, user, onClose }) {
                 <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white">
                     <div className="flex items-end gap-3">
                         <input
-                                                            type="file"
-                                                            ref={fileInputRef}
-                                                            onChange={handleFileChange}
-                                                            accept="image/*,application/pdf"
-                                                            className="hidden"
-                                                        />
-                                                        <motion.button
-                                                            type="button"
-                                                            onClick={() => fileInputRef.current?.click()}
-                                                            disabled={uploadingFile || !conversation}
-                                                            className="p-3 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
-                                                            whileHover={{ scale: 1.1 }}
-                                                            whileTap={{ scale: 0.9 }}
-                                                        >
-                                                            {uploadingFile ? (
-                                                                <svg className="w-6 h-6 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
-                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                                </svg>
-                                                            ) : (
-                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                                                                    />
-                                                                </svg>
-                                                            )}
-                                                        </motion.button>
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                        />
+                        <motion.button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingFile || !conversation}
+                            className="p-3 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            {uploadingFile ? (
+                                <svg className="w-6 h-6 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                            ) : (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                                    />
+                                </svg>
+                            )}
+                        </motion.button>
 
                         <div className="flex-1">
                             <textarea
@@ -530,12 +561,16 @@ export default function ChatBox({ warehouse, user, onClose }) {
                     initialData={defaultTemplate || {}}
                     ownerId={user.id || user.uid}
                     conversationData={{
-                        merchantName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
-                                        ? warehouse.merchantName || 'Business Client'
-                                        : user.name || 'Business Client',
-                        ownerName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(user.userType?.toLowerCase())
-                                        ? user.name || 'Warehouse Partner'
-                                        : warehouse.ownerName || 'Warehouse Partner',
+                        merchantName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(
+                            user.userType?.toLowerCase()
+                        )
+                            ? warehouse.merchantName || 'Business Client'
+                            : user.name || 'Business Client',
+                        ownerName: ['warehouse_partner', 'admin', 'superadmin', 'dataentry'].includes(
+                            user.userType?.toLowerCase()
+                        )
+                            ? user.name || 'Warehouse Partner'
+                            : warehouse.ownerName || 'Warehouse Partner',
                         warehouseName: warehouse.name || warehouse.warehouseName,
                     }}
                     mode="send"

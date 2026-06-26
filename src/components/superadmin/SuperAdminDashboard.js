@@ -196,10 +196,11 @@ function SuperAdminSidebar({ activeView, setActiveView, user, onLogout, pendingC
                         <button
                             key={item.id}
                             onClick={() => setActiveView(item.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeView === item.id
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                                activeView === item.id
                                     ? 'bg-orange-50 text-orange-700 shadow-sm'
                                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                }`}
+                            }`}
                         >
                             <item.icon
                                 className={`w-5 h-5 ${activeView === item.id ? 'text-orange-600' : 'text-slate-400'}`}
@@ -300,8 +301,17 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                         _docPath: d.ref.path, // full path for updates
                     };
                 });
-                // Sort by createdAt descending
-                allWarehouses.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+                // Sort by pending status first, then by latest update/creation time
+                allWarehouses.sort((a, b) => {
+                    const isPendingA = a.status === 'pending' ? 1 : 0;
+                    const isPendingB = b.status === 'pending' ? 1 : 0;
+                    if (isPendingA !== isPendingB) {
+                        return isPendingB - isPendingA;
+                    }
+                    const timeA = a.updatedAt?.seconds ?? a.createdAt?.seconds ?? 0;
+                    const timeB = b.updatedAt?.seconds ?? b.createdAt?.seconds ?? 0;
+                    return timeB - timeA;
+                });
                 setWarehouses(allWarehouses);
                 setLoading(false);
                 setError('');
@@ -561,14 +571,14 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                                 {activeView === 'overview'
                                     ? 'Overview'
                                     : activeView === 'warehouses'
-                                        ? 'Warehouse Listings'
-                                        : activeView === 'assign-admin'
-                                            ? 'Assign Admin'
-                                            : activeView === 'manage-admins'
-                                                ? 'Manage Admins'
-                                                : activeView === 'manage-countries'
-                                                    ? 'Manage Supported Countries'
-                                                    : 'User Management'}
+                                      ? 'Warehouse Listings'
+                                      : activeView === 'assign-admin'
+                                        ? 'Assign Admin'
+                                        : activeView === 'manage-admins'
+                                          ? 'Manage Admins'
+                                          : activeView === 'manage-countries'
+                                            ? 'Manage Supported Countries'
+                                            : 'User Management'}
                             </motion.h2>
                         </AnimatePresence>
                     </div>
@@ -727,8 +737,9 @@ export default function SuperAdminDashboard({ user, onLogout }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
-                            }`}
+                        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold text-white ${
+                            toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+                        }`}
                     >
                         {toast.type === 'success' ? (
                             <CheckCircle2 className="w-4 h-4" />
@@ -748,7 +759,22 @@ function OverviewView({ counts, warehouses, bookings = [] }) {
 
     // Calculate total space from approved warehouses
     const approvedWarehouses = warehouses.filter((w) => w.status === 'approved');
-    const totalSpace = approvedWarehouses.reduce((sum, w) => sum + (Number(w.totalArea) || 0), 0);
+
+    const totalSpaceSqFt = approvedWarehouses.reduce((sum, w) => {
+        const unit = w.measurementUnit || 'sqft';
+        if (unit === 'sqft' || unit === 'both') {
+            return sum + (Number(w.totalArea) || 0);
+        }
+        return sum;
+    }, 0);
+
+    const totalSpaceMT = approvedWarehouses.reduce((sum, w) => {
+        const unit = w.measurementUnit || 'sqft';
+        if (unit === 'mt' || unit === 'both') {
+            return sum + (Number(w.totalMetricTons) || 0);
+        }
+        return sum;
+    }, 0);
 
     // Calculate currently booked space across the platform
     const todayStr = (() => {
@@ -756,14 +782,55 @@ function OverviewView({ counts, warehouses, bookings = [] }) {
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     })();
     const activeBookings = bookings.filter((b) => b.startDate <= todayStr && b.endDate >= todayStr);
-    const bookedSpace = activeBookings.reduce((sum, b) => sum + (Number(b.bookedSpace) || 0), 0);
+
+    let bookedSpaceSqFt = 0;
+    let bookedSpaceMT = 0;
+
+    activeBookings.forEach((b) => {
+        const relatedWh = warehouses.find((w) => w.id === b.warehouse_id);
+        const unit = relatedWh?.measurementUnit || 'sqft';
+        if (unit === 'mt') {
+            bookedSpaceMT += Number(b.bookedSpace) || 0;
+        } else {
+            bookedSpaceSqFt += Number(b.bookedSpace) || 0;
+        }
+    });
+
+    const totalSpaceDisplay = [
+        totalSpaceSqFt > 0 || totalSpaceMT === 0 ? `${totalSpaceSqFt.toLocaleString()} sq ft` : '',
+        totalSpaceMT > 0 ? `${totalSpaceMT.toLocaleString()} MT` : '',
+    ]
+        .filter(Boolean)
+        .join(' | ');
+
+    const bookedSpaceDisplay = [
+        bookedSpaceSqFt > 0 || bookedSpaceMT === 0 ? `${bookedSpaceSqFt.toLocaleString()} sq ft` : '',
+        bookedSpaceMT > 0 ? `${bookedSpaceMT.toLocaleString()} MT` : '',
+    ]
+        .filter(Boolean)
+        .join(' | ');
 
     const stats = [
         { label: 'Total Listings', value: counts.all, icon: <Building2 className="w-6 h-6" />, color: 'blue' },
         { label: 'Pending Review', value: counts.pending, icon: <Clock className="w-6 h-6" />, color: 'amber' },
-        { label: 'Approved Listings', value: counts.approved, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald' },
-        { label: 'Total Space (Capacity)', value: `${totalSpace.toLocaleString()} sq ft`, icon: <Ruler className="w-6 h-6" />, color: 'purple' },
-        { label: 'Total Booked Space', value: `${bookedSpace.toLocaleString()} sq ft`, icon: <Layers className="w-6 h-6" />, color: 'orange' },
+        {
+            label: 'Approved Listings',
+            value: counts.approved,
+            icon: <CheckCircle2 className="w-6 h-6" />,
+            color: 'emerald',
+        },
+        {
+            label: 'Total Space (Capacity)',
+            value: totalSpaceDisplay,
+            icon: <Ruler className="w-6 h-6" />,
+            color: 'purple',
+        },
+        {
+            label: 'Total Booked Space',
+            value: bookedSpaceDisplay,
+            icon: <Layers className="w-6 h-6" />,
+            color: 'orange',
+        },
         { label: 'Rejected Listings', value: counts.rejected, icon: <XCircle className="w-6 h-6" />, color: 'red' },
     ];
 
@@ -817,14 +884,15 @@ function OverviewView({ counts, warehouses, bookings = [] }) {
                                 </div>
                                 <span className="text-xs text-slate-400">
                                     {(() => {
-                                        const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
-                                        const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                        const isUpdated =
+                                            w.updatedAt && w.createdAt && w.updatedAt.seconds !== w.createdAt.seconds;
+                                        const ts = isUpdated ? w.updatedAt : w.createdAt || w.updatedAt;
                                         const label = isUpdated ? 'Updated: ' : 'Published: ';
                                         return ts?.seconds
                                             ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                            })}`
+                                                  day: 'numeric',
+                                                  month: 'short',
+                                              })}`
                                             : 'Just now';
                                     })()}
                                 </span>
@@ -879,15 +947,17 @@ function WarehouseListView({
                             <button
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${filter === tab.key
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                                    filter === tab.key
                                         ? 'bg-orange-600 text-white shadow-sm'
                                         : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                                    }`}
+                                }`}
                             >
                                 {tab.label}
                                 <span
-                                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                                        }`}
+                                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                        filter === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                                    }`}
                                 >
                                     {tab.count}
                                 </span>
@@ -1036,7 +1106,13 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                         </span>
                         {w.totalArea && <span>{Number(w.totalArea).toLocaleString()} sq ft</span>}
                     </div>
-                    <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} onEdit={onEdit} />
+                    <ActionButtons
+                        w={w}
+                        status={status}
+                        isActing={isActing}
+                        handleAction={handleAction}
+                        onEdit={onEdit}
+                    />
                 </div>
 
                 {/* Desktop grid layout */}
@@ -1062,7 +1138,11 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                                 <span
                                     className={`ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${w._role === 'dataentry' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'}`}
                                 >
-                                    {w._role === 'owner' ? 'warehouse partner' : w._role === 'dataentry' ? 'data entry' : w._role}
+                                    {w._role === 'owner'
+                                        ? 'warehouse partner'
+                                        : w._role === 'dataentry'
+                                          ? 'data entry'
+                                          : w._role}
                                 </span>
                             )}
                         </p>
@@ -1098,15 +1178,16 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1">
                             {(() => {
-                                const isUpdated = w.updatedAt && w.createdAt && (w.updatedAt.seconds !== w.createdAt.seconds);
-                                const ts = isUpdated ? w.updatedAt : (w.createdAt || w.updatedAt);
+                                const isUpdated =
+                                    w.updatedAt && w.createdAt && w.updatedAt.seconds !== w.createdAt.seconds;
+                                const ts = isUpdated ? w.updatedAt : w.createdAt || w.updatedAt;
                                 const label = isUpdated ? 'Updated: ' : 'Published: ';
                                 return ts?.seconds
                                     ? `${label}${new Date(ts.seconds * 1000).toLocaleDateString('en-IN', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric',
-                                    })}`
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                      })}`
                                     : '-';
                             })()}
                         </p>
@@ -1114,7 +1195,13 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
 
                     {/* Actions */}
                     <div>
-                        <ActionButtons w={w} status={status} isActing={isActing} handleAction={handleAction} onEdit={onEdit} />
+                        <ActionButtons
+                            w={w}
+                            status={status}
+                            isActing={isActing}
+                            handleAction={handleAction}
+                            onEdit={onEdit}
+                        />
                     </div>
                 </div>
             </div>
@@ -1186,8 +1273,12 @@ function WarehouseRow({ warehouse: w, handleAction, onEdit, actionLoading, isExp
                             </div>
                             {w.description && (
                                 <div className="mt-5 p-4 bg-white rounded-2xl border border-slate-200/60 shadow-inner">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Description</p>
-                                    <p className="text-sm font-medium text-slate-700 whitespace-pre-line leading-relaxed">{w.description}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                                        Description
+                                    </p>
+                                    <p className="text-sm font-medium text-slate-700 whitespace-pre-line leading-relaxed">
+                                        {w.description}
+                                    </p>
                                 </div>
                             )}
                             {/* Photo Gallery Section */}
@@ -1336,10 +1427,12 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
 
                 <div className="divide-y divide-slate-100">
                     {filtered.map((u) => {
-                        const userWarehouses = warehouses?.filter((w) =>
-                            w._email?.toLowerCase() === u.email?.toLowerCase() ||
-                            w.email?.toLowerCase() === u.email?.toLowerCase()
-                        ) || [];
+                        const userWarehouses =
+                            warehouses?.filter(
+                                (w) =>
+                                    w._email?.toLowerCase() === u.email?.toLowerCase() ||
+                                    w.email?.toLowerCase() === u.email?.toLowerCase()
+                            ) || [];
                         return (
                             <div
                                 key={u.id}
@@ -1358,29 +1451,31 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
                                         <span className="text-slate-300 text-[10px]">•</span>
                                         <span className="text-[10px] text-orange-600 font-bold flex items-center gap-0.5">
                                             <Building2 className="w-2.5 h-2.5" />
-                                            {userWarehouses.length} {userWarehouses.length === 1 ? 'Warehouse' : 'Warehouses'}
+                                            {userWarehouses.length}{' '}
+                                            {userWarehouses.length === 1 ? 'Warehouse' : 'Warehouses'}
                                         </span>
                                     </div>
                                 </div>
                                 <p className="text-sm text-slate-600 truncate">{u.email}</p>
                                 <div>
                                     <span
-                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${u.userType === 'warehouse_partner'
+                                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                            u.userType === 'warehouse_partner'
                                                 ? 'bg-orange-50 text-orange-600 border border-orange-100'
                                                 : u.userType === 'business_client'
-                                                    ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                    : 'bg-slate-50 text-slate-500'
-                                            }`}
+                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                  : 'bg-slate-50 text-slate-500'
+                                        }`}
                                     >
                                         {u.userType === 'warehouse_partner'
                                             ? 'Warehouse Partner'
                                             : u.userType === 'business_client'
-                                                ? 'Business Client'
-                                                : u.userType === 'admin'
-                                                    ? 'Admin'
-                                                    : u.userType === 'superadmin'
-                                                        ? 'Super Admin'
-                                                        : u.userType || 'User'}
+                                              ? 'Business Client'
+                                              : u.userType === 'admin'
+                                                ? 'Admin'
+                                                : u.userType === 'superadmin'
+                                                  ? 'Super Admin'
+                                                  : u.userType || 'User'}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
@@ -1446,140 +1541,157 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, handleDe
             {typeof window !== 'undefined' &&
                 createPortal(
                     <AnimatePresence>
-                        {selectedUserForWarehouses && (() => {
-                            const u = selectedUserForWarehouses;
-                            const userWarehouses = warehouses?.filter((w) =>
-                                w._email?.toLowerCase() === u.email?.toLowerCase() ||
-                                w.email?.toLowerCase() === u.email?.toLowerCase()
-                            ) || [];
-                            return (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-                                    onClick={() => setSelectedUserForWarehouses(null)}
-                                >
+                        {selectedUserForWarehouses &&
+                            (() => {
+                                const u = selectedUserForWarehouses;
+                                const userWarehouses =
+                                    warehouses?.filter(
+                                        (w) =>
+                                            w._email?.toLowerCase() === u.email?.toLowerCase() ||
+                                            w.email?.toLowerCase() === u.email?.toLowerCase()
+                                    ) || [];
+                                return (
                                     <motion.div
-                                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                                        className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col overflow-hidden text-left"
-                                        onClick={(e) => e.stopPropagation()}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                                        onClick={() => setSelectedUserForWarehouses(null)}
                                     >
-                                        {/* Modal header */}
-                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg font-bold text-slate-900">
-                                                        {u.name || 'Anonymous'}
-                                                    </h3>
-                                                    <span
-                                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.userType === 'warehouse_partner'
-                                                                ? 'bg-orange-50 text-orange-600 border border-orange-100'
-                                                                : u.userType === 'business_client'
-                                                                    ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                                    : 'bg-slate-50 text-slate-500'
+                                        <motion.div
+                                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                            className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col overflow-hidden text-left"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {/* Modal header */}
+                                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-lg font-bold text-slate-900">
+                                                            {u.name || 'Anonymous'}
+                                                        </h3>
+                                                        <span
+                                                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                                u.userType === 'warehouse_partner'
+                                                                    ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                                                                    : u.userType === 'business_client'
+                                                                      ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                      : 'bg-slate-50 text-slate-500'
                                                             }`}
-                                                    >
-                                                        {u.userType === 'warehouse_partner'
-                                                            ? 'Warehouse Partner'
-                                                            : u.userType === 'business_client'
-                                                                ? 'Business Client'
-                                                                : u.userType === 'admin'
+                                                        >
+                                                            {u.userType === 'warehouse_partner'
+                                                                ? 'Warehouse Partner'
+                                                                : u.userType === 'business_client'
+                                                                  ? 'Business Client'
+                                                                  : u.userType === 'admin'
                                                                     ? 'Admin'
                                                                     : u.userType === 'superadmin'
-                                                                        ? 'Super Admin'
-                                                                        : u.userType || 'User'}
-                                                    </span>
+                                                                      ? 'Super Admin'
+                                                                      : u.userType || 'User'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 mt-1">{u.email}</p>
                                                 </div>
-                                                <p className="text-xs text-slate-500 mt-1">
-                                                    {u.email}
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={() => setSelectedUserForWarehouses(null)}
-                                                className="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-
-                                        {/* Modal content */}
-                                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                            <div className="flex items-center gap-3 bg-orange-50/50 border border-orange-100 rounded-2xl p-4">
-                                                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
-                                                    <Building2 className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold text-slate-500">Total Warehouses</p>
-                                                    <p className="text-xl font-bold text-slate-900">{userWarehouses.length}</p>
-                                                </div>
+                                                <button
+                                                    onClick={() => setSelectedUserForWarehouses(null)}
+                                                    className="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors"
+                                                >
+                                                    <X size={16} />
+                                                </button>
                                             </div>
 
-                                            {userWarehouses.length === 0 ? (
-                                                <div className="py-12 text-center border border-dashed border-slate-200 rounded-2xl">
-                                                    <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                                    <p className="text-sm text-slate-500 font-semibold">No Warehouses Found</p>
-                                                    <p className="text-xs text-slate-400 mt-1">This user does not own any warehouses on the platform.</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                        Warehouse Directory
-                                                    </p>
-                                                    <div className="space-y-2">
-                                                        {userWarehouses.map((wh) => (
-                                                            <div
-                                                                key={wh.id}
-                                                                className="p-4 border border-slate-100 hover:border-slate-200 rounded-2xl bg-white shadow-sm flex items-center justify-between gap-4 transition-all"
-                                                            >
-                                                                <div className="min-w-0 flex-1">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Link href={`/warehouse/${encodeWarehouseId(wh.id)}`}>
-                                                                            <h4 className="text-sm font-bold text-slate-950 truncate hover:text-orange-600 transition-colors underline decoration-transparent hover:decoration-orange-600 underline-offset-2 cursor-pointer">
-                                                                                {wh.warehouseName || 'Unnamed Warehouse'}
-                                                                            </h4>
-                                                                        </Link>
-                                                                        <span
-                                                                            className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${wh.status === 'approved'
-                                                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                                                                    : wh.status === 'rejected'
-                                                                                        ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                                                                                        : 'bg-amber-50 text-amber-700 border border-amber-100'
-                                                                                }`}
-                                                                        >
-                                                                            {wh.status || 'pending'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                                                                        <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
-                                                                        <span className="truncate">
-                                                                            {[wh.city, wh.state].filter(Boolean).join(', ') || 'Location not specified'}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                            {/* Modal content */}
+                                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                                <div className="flex items-center gap-3 bg-orange-50/50 border border-orange-100 rounded-2xl p-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+                                                        <Building2 className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-slate-500">
+                                                            Total Warehouses
+                                                        </p>
+                                                        <p className="text-xl font-bold text-slate-900">
+                                                            {userWarehouses.length}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        {/* Modal footer */}
-                                        <div className="p-6 border-t border-slate-100 flex items-center justify-end bg-slate-50">
-                                            <button
-                                                onClick={() => setSelectedUserForWarehouses(null)}
-                                                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
-                                            >
-                                                Close
-                                            </button>
-                                        </div>
+                                                {userWarehouses.length === 0 ? (
+                                                    <div className="py-12 text-center border border-dashed border-slate-200 rounded-2xl">
+                                                        <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                        <p className="text-sm text-slate-500 font-semibold">
+                                                            No Warehouses Found
+                                                        </p>
+                                                        <p className="text-xs text-slate-400 mt-1">
+                                                            This user does not own any warehouses on the platform.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                            Warehouse Directory
+                                                        </p>
+                                                        <div className="space-y-2">
+                                                            {userWarehouses.map((wh) => (
+                                                                <div
+                                                                    key={wh.id}
+                                                                    className="p-4 border border-slate-100 hover:border-slate-200 rounded-2xl bg-white shadow-sm flex items-center justify-between gap-4 transition-all"
+                                                                >
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Link
+                                                                                href={`/warehouse/${encodeWarehouseId(wh.id)}`}
+                                                                            >
+                                                                                <h4 className="text-sm font-bold text-slate-950 truncate hover:text-orange-600 transition-colors underline decoration-transparent hover:decoration-orange-600 underline-offset-2 cursor-pointer">
+                                                                                    {wh.warehouseName ||
+                                                                                        'Unnamed Warehouse'}
+                                                                                </h4>
+                                                                            </Link>
+                                                                            <span
+                                                                                className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${
+                                                                                    wh.status === 'approved'
+                                                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                                                        : wh.status === 'rejected'
+                                                                                          ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                                                                          : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                                                }`}
+                                                                            >
+                                                                                {wh.status || 'pending'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                                                                            <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+                                                                            <span className="truncate">
+                                                                                {[wh.city, wh.state]
+                                                                                    .filter(Boolean)
+                                                                                    .join(', ') ||
+                                                                                    'Location not specified'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Modal footer */}
+                                            <div className="p-6 border-t border-slate-100 flex items-center justify-end bg-slate-50">
+                                                <button
+                                                    onClick={() => setSelectedUserForWarehouses(null)}
+                                                    className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
+                                                >
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </motion.div>
                                     </motion.div>
-                                </motion.div>
-                            );
-                        })()}
+                                );
+                            })()}
                     </AnimatePresence>,
                     document.body
                 )}
@@ -1804,10 +1916,11 @@ function PhotoGallery({ photos }) {
                                                         e.stopPropagation();
                                                         handleNavigation(idx);
                                                     }}
-                                                    className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${idx === activeIndex
+                                                    className={`w-14 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                                                        idx === activeIndex
                                                             ? 'border-orange-500 shadow-lg shadow-orange-500/30 scale-110'
                                                             : 'border-transparent opacity-50 hover:opacity-80'
-                                                        }`}
+                                                    }`}
                                                 >
                                                     <img
                                                         src={photo.url}
@@ -2121,10 +2234,11 @@ function MigrationView({ showToast }) {
                 <button
                     onClick={runMigration}
                     disabled={migrating}
-                    className={`px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center gap-3 shadow-lg ${migrating
+                    className={`px-8 py-4 rounded-2xl font-bold text-base transition-all flex items-center gap-3 shadow-lg ${
+                        migrating
                             ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                             : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5'
-                        }`}
+                    }`}
                 >
                     {migrating ? (
                         <>
@@ -2176,14 +2290,15 @@ function MigrationView({ showToast }) {
                         {migrationLog.map((log, i) => (
                             <div
                                 key={i}
-                                className={`px-3 py-1.5 rounded-lg ${log.type === 'success'
+                                className={`px-3 py-1.5 rounded-lg ${
+                                    log.type === 'success'
                                         ? 'text-emerald-400'
                                         : log.type === 'error'
-                                            ? 'text-red-400'
-                                            : log.type === 'warn'
-                                                ? 'text-amber-400'
-                                                : 'text-slate-400'
-                                    }`}
+                                          ? 'text-red-400'
+                                          : log.type === 'warn'
+                                            ? 'text-amber-400'
+                                            : 'text-slate-400'
+                                }`}
                             >
                                 {log.msg}
                             </div>
@@ -2571,159 +2686,171 @@ function AdminInquiriesView({ showToast }) {
             </div>
 
             {/* Owner Selection Modal */}
-            <AnimatePresence>
-                {ownerSelectInquiryId && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-                        onClick={() => setOwnerSelectInquiryId(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Modal header */}
-                            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-900">Select Warehouse Partners</h3>
-                                    <p className="text-sm text-slate-500 mt-0.5">
-                                        Choose which warehouse partners should see this inquiry
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setOwnerSelectInquiryId(null)}
-                                    className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+            {typeof window !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        {ownerSelectInquiryId && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                                onClick={() => setOwnerSelectInquiryId(null)}
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                    className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
+                                    onClick={(e) => e.stopPropagation()}
                                 >
-                                    <X size={16} />
-                                </button>
-                            </div>
-
-                            {/* Search bar */}
-                            <div className="px-6 py-3 border-b border-slate-100">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search warehouses by name, partner ID or email..."
-                                        value={ownerSearch}
-                                        onChange={(e) => setOwnerSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
-                                    />
-                                </div>
-                                {/* Select all / Clear all */}
-                                <div className="flex items-center justify-between mt-3">
-                                    <span className="text-xs font-bold text-slate-500">
-                                        {selectedOwners.length} selected
-                                    </span>
-                                    <div className="flex gap-2">
+                                    {/* Modal header */}
+                                    <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-900">
+                                                Select Warehouse Partners
+                                            </h3>
+                                            <p className="text-sm text-slate-500 mt-0.5">
+                                                Choose which warehouse partners should see this inquiry
+                                            </p>
+                                        </div>
                                         <button
-                                            onClick={() => {
-                                                const uniqueEmails = Array.from(
-                                                    new Set(
-                                                        filteredWarehouses
-                                                            .map((w) => w._email || w.email)
-                                                            .filter(Boolean)
-                                                    )
-                                                );
-                                                setSelectedOwners(uniqueEmails);
-                                            }}
-                                            className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
+                                            onClick={() => setOwnerSelectInquiryId(null)}
+                                            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
                                         >
-                                            Select All
-                                        </button>
-                                        <span className="text-slate-300">|</span>
-                                        <button
-                                            onClick={() => setSelectedOwners([])}
-                                            className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                                        >
-                                            Clear All
+                                            <X size={16} />
                                         </button>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Warehouses list */}
-                            <div className="flex-1 overflow-y-auto px-6 py-3 space-y-1 min-h-0">
-                                {warehousesLoading ? (
-                                    <div className="py-12 text-center">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-500 mb-2" />
-                                        <p className="text-sm text-slate-500">Loading warehouses...</p>
-                                    </div>
-                                ) : filteredWarehouses.length === 0 ? (
-                                    <div className="py-12 text-center">
-                                        <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                        <p className="text-sm text-slate-500 font-medium">
-                                            {ownerSearch ? 'No warehouses match your search' : 'No warehouses found'}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    filteredWarehouses.map((wh) => {
-                                        const email = wh._email || wh.email;
-                                        const isSelected = selectedOwners.includes(email);
-                                        return (
-                                            <button
-                                                key={wh.id}
-                                                onClick={() => toggleOwner(email)}
-                                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${isSelected
-                                                        ? 'bg-orange-50 border border-orange-200'
-                                                        : 'bg-white border border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                                                    }`}
-                                            >
-                                                {/* Checkbox */}
-                                                <div
-                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected
-                                                            ? 'bg-orange-500 border-orange-500'
-                                                            : 'border-slate-300'
-                                                        }`}
+                                    {/* Search bar */}
+                                    <div className="px-6 py-3 border-b border-slate-100">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search warehouses by name, partner ID or email..."
+                                                value={ownerSearch}
+                                                onChange={(e) => setOwnerSearch(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                                            />
+                                        </div>
+                                        {/* Select all / Clear all */}
+                                        <div className="flex items-center justify-between mt-3">
+                                            <span className="text-xs font-bold text-slate-500">
+                                                {selectedOwners.length} selected
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const uniqueEmails = Array.from(
+                                                            new Set(
+                                                                filteredWarehouses
+                                                                    .map((w) => w._email || w.email)
+                                                                    .filter(Boolean)
+                                                            )
+                                                        );
+                                                        setSelectedOwners(uniqueEmails);
+                                                    }}
+                                                    className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
                                                 >
-                                                    {isSelected && <Check size={12} className="text-white" />}
-                                                </div>
-                                                {/* Avatar */}
-                                                <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                                    {(wh.warehouseName || 'W')[0].toUpperCase()}
-                                                </div>
-                                                {/* Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-slate-900 truncate">
-                                                        {wh.warehouseName || 'Unnamed Warehouse'}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500 truncate">
-                                                        Warehouse Partner: {wh._partnerName} ({email})
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        );
-                                    })
-                                )}
-                            </div>
+                                                    Select All
+                                                </button>
+                                                <span className="text-slate-300">|</span>
+                                                <button
+                                                    onClick={() => setSelectedOwners([])}
+                                                    className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                                                >
+                                                    Clear All
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Modal footer */}
-                            <div className="p-6 border-t border-slate-100 flex items-center justify-between gap-3">
-                                <button
-                                    onClick={() => setOwnerSelectInquiryId(null)}
-                                    className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleApproveWithOwners}
-                                    disabled={!isAlreadyApproved && selectedOwners.length === 0}
-                                    className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isAlreadyApproved ? <RefreshCw size={16} /> : <CheckCircle2 size={16} />}
-                                    {isAlreadyApproved ? 'Update' : `Approve & Assign (${selectedOwners.length})`}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                                    {/* Warehouses list */}
+                                    <div className="flex-1 overflow-y-auto px-6 py-3 space-y-1 min-h-0">
+                                        {warehousesLoading ? (
+                                            <div className="py-12 text-center">
+                                                <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-500 mb-2" />
+                                                <p className="text-sm text-slate-500">Loading warehouses...</p>
+                                            </div>
+                                        ) : filteredWarehouses.length === 0 ? (
+                                            <div className="py-12 text-center">
+                                                <Warehouse className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                <p className="text-sm text-slate-500 font-medium">
+                                                    {ownerSearch
+                                                        ? 'No warehouses match your search'
+                                                        : 'No warehouses found'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            filteredWarehouses.map((wh) => {
+                                                const email = wh._email || wh.email;
+                                                const isSelected = selectedOwners.includes(email);
+                                                return (
+                                                    <button
+                                                        key={wh.id}
+                                                        onClick={() => toggleOwner(email)}
+                                                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
+                                                            isSelected
+                                                                ? 'bg-orange-50 border border-orange-200'
+                                                                : 'bg-white border border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                        }`}
+                                                    >
+                                                        {/* Checkbox */}
+                                                        <div
+                                                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                                                isSelected
+                                                                    ? 'bg-orange-500 border-orange-500'
+                                                                    : 'border-slate-300'
+                                                            }`}
+                                                        >
+                                                            {isSelected && <Check size={12} className="text-white" />}
+                                                        </div>
+                                                        {/* Avatar */}
+                                                        <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                            {(wh.warehouseName || 'W')[0].toUpperCase()}
+                                                        </div>
+                                                        {/* Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-bold text-slate-900 truncate">
+                                                                {wh.warehouseName || 'Unnamed Warehouse'}
+                                                            </p>
+                                                            <p className="text-xs text-slate-500 truncate">
+                                                                Warehouse Partner: {wh._partnerName} ({email})
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    {/* Modal footer */}
+                                    <div className="p-6 border-t border-slate-100 flex items-center justify-between gap-3">
+                                        <button
+                                            onClick={() => setOwnerSelectInquiryId(null)}
+                                            className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleApproveWithOwners}
+                                            disabled={!isAlreadyApproved && selectedOwners.length === 0}
+                                            className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isAlreadyApproved ? <RefreshCw size={16} /> : <CheckCircle2 size={16} />}
+                                            {isAlreadyApproved
+                                                ? 'Update'
+                                                : `Approve & Assign (${selectedOwners.length})`}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>,
+                    document.body
                 )}
-            </AnimatePresence>
         </div>
     );
 }
@@ -2899,10 +3026,11 @@ function ManageCountriesView({ showToast }) {
                     return (
                         <div
                             key={code}
-                            className={`p-4 rounded-2xl border transition-all duration-300 ${isEnabled
+                            className={`p-4 rounded-2xl border transition-all duration-300 ${
+                                isEnabled
                                     ? 'bg-white border-orange-200 shadow-sm hover:shadow-md'
                                     : 'bg-slate-50 border-slate-200 opacity-80 hover:opacity-100'
-                                }`}
+                            }`}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
@@ -2919,15 +3047,17 @@ function ManageCountriesView({ showToast }) {
                                 <button
                                     onClick={() => toggleCountry(code)}
                                     disabled={isLoading}
-                                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${isEnabled ? 'bg-orange-500' : 'bg-slate-300'
-                                        }`}
+                                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                                        isEnabled ? 'bg-orange-500' : 'bg-slate-300'
+                                    }`}
                                 >
                                     {isLoading ? (
                                         <Loader2 className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-4 text-white animate-spin" />
                                     ) : (
                                         <div
-                                            className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${isEnabled ? 'translate-x-7 left-0' : 'translate-x-1 left-0'
-                                                }`}
+                                            className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${
+                                                isEnabled ? 'translate-x-7 left-0' : 'translate-x-1 left-0'
+                                            }`}
                                         />
                                     )}
                                 </button>

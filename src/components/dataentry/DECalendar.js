@@ -83,9 +83,11 @@ export default function DECalendar({ onOpenSidebar }) {
     // Booking Creation Form State
     const [selectedWarehouseForBooking, setSelectedWarehouseForBooking] = useState(null);
     const [bookingClientName, setBookingClientName] = useState('');
-    const [bookingSpace, setBookingSpace] = useState('');
+    const [bookingSpaceSqFt, setBookingSpaceSqFt] = useState('');
+    const [bookingSpaceMT, setBookingSpaceMT] = useState('');
     const [bookingStartDate, setBookingStartDate] = useState('');
     const [bookingEndDate, setBookingEndDate] = useState('');
+    const [bookingUnit, setBookingUnit] = useState('sqft');
 
     const [toast, setToast] = useState(null);
 
@@ -156,43 +158,128 @@ export default function DECalendar({ onOpenSidebar }) {
 
     // Calculate space stats for a single warehouse on any target date
     const getWarehouseSpaceStats = useCallback(
-        (w, targetDateStr = analysisDate) => {
-            const total = Number(w.totalArea) || Number(w.totalSpace) || 0;
+        (w, targetDateStr, targetUnit = null) => {
+            const dateStr = targetDateStr || todayStr;
+            const isMT = targetUnit === 'mt' || (targetUnit === null && w.measurementUnit === 'mt');
+            const total = isMT ? Number(w.totalMetricTons) || 0 : Number(w.totalArea) || Number(w.totalSpace) || 0;
             const bookings = w.bookings || [];
-            const activeBookings = bookings.filter((b) => b.startDate <= targetDateStr && b.endDate >= targetDateStr);
-            const booked = activeBookings.reduce((sum, b) => sum + (Number(b.bookedSpace) || 0), 0);
+            const activeBookings = bookings.filter((b) => b.startDate <= dateStr && b.endDate >= dateStr);
+            const booked = activeBookings.reduce((sum, b) => {
+                const bUnit = b.bookingUnit || (w.measurementUnit === 'mt' ? 'mt' : 'sqft');
+                if (isMT && bUnit === 'mt') {
+                    return sum + (Number(b.bookedSpace) || 0);
+                } else if (!isMT && bUnit === 'sqft') {
+                    return sum + (Number(b.bookedSpace) || 0);
+                }
+                return sum;
+            }, 0);
             const left = Math.max(0, total - booked);
             return { total, booked, left, activeBookings };
         },
-        [analysisDate]
+        [todayStr]
     );
+
+    const renderOccupancyBar = (stats, unitName) => {
+        const { total, booked, left } = stats;
+        const occupancyPercent = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
+
+        let barColor = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
+        if (occupancyPercent >= 90) {
+            barColor = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+        } else if (occupancyPercent >= 70) {
+            barColor = 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]';
+        }
+
+        return (
+            <div className="space-y-1.5 mt-2 first:mt-0">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                    <span>Space Occupancy ({occupancyPercent}%)</span>
+                    <span className="text-slate-400">
+                        Total: {total.toLocaleString()} {unitName}
+                    </span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden relative">
+                    <div
+                        className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                        style={{ width: `${occupancyPercent}%` }}
+                    />
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-rose-500">
+                        Booked: {booked.toLocaleString()} {unitName}
+                    </span>
+                    <span className="text-emerald-500">
+                        Available: {left.toLocaleString()} {unitName}
+                    </span>
+                </div>
+            </div>
+        );
+    };
 
     // Aggregate portfolio metrics for the analysis date
     const portfolioStats = useMemo(() => {
-        let total = 0;
-        let booked = 0;
-        let left = 0;
+        let totalSqFt = 0;
+        let totalMT = 0;
+        let bookedSqFt = 0;
+        let bookedMT = 0;
+        let leftSqFt = 0;
+        let leftMT = 0;
+
         warehouses.forEach((w) => {
-            const stats = getWarehouseSpaceStats(w, analysisDate);
-            total += stats.total;
-            booked += stats.booked;
-            left += stats.left;
+            const unit = w.measurementUnit || 'sqft';
+            if (unit === 'sqft' || unit === 'both') {
+                const stats = getWarehouseSpaceStats(w, analysisDate, 'sqft');
+                totalSqFt += stats.total;
+                bookedSqFt += stats.booked;
+                leftSqFt += stats.left;
+            }
+            if (unit === 'mt' || unit === 'both') {
+                const stats = getWarehouseSpaceStats(w, analysisDate, 'mt');
+                totalMT += stats.total;
+                bookedMT += stats.booked;
+                leftMT += stats.left;
+            }
         });
-        return { total, booked, left };
+        return { totalSqFt, totalMT, bookedSqFt, bookedMT, leftSqFt, leftMT };
     }, [warehouses, getWarehouseSpaceStats, analysisDate]);
 
-    // Visual indicators generator for calendar cells
-    const getDayStatuses = useCallback(
-        (day) => {
+    // Precompute all day statuses for the month to optimize calendar rendering performance
+    const monthDayStatuses = useMemo(() => {
+        const statuses = {};
+        for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = toDateStr(day);
-            return warehouses.map((w) => {
-                const { total, booked, left } = getWarehouseSpaceStats(w, dateStr);
+            statuses[day] = warehouses.map((w) => {
                 let status = 'available';
-                if (booked >= total && total > 0) {
-                    status = 'booked';
-                } else if (booked > 0) {
-                    status = 'partial';
+                let booked = 0;
+                let total = 0;
+                let left = 0;
+
+                if (w.measurementUnit === 'both') {
+                    const statsSqFt = getWarehouseSpaceStats(w, dateStr, 'sqft');
+                    const statsMT = getWarehouseSpaceStats(w, dateStr, 'mt');
+                    const isSqBooked = statsSqFt.booked >= statsSqFt.total && statsSqFt.total > 0;
+                    const isMTBooked = statsMT.booked >= statsMT.total && statsMT.total > 0;
+
+                    if (isSqBooked && isMTBooked) {
+                        status = 'booked';
+                    } else if (statsSqFt.booked > 0 || statsMT.booked > 0) {
+                        status = 'partial';
+                    }
+                    booked = statsSqFt.booked + statsMT.booked;
+                    total = statsSqFt.total + statsMT.total;
+                    left = statsSqFt.left + statsMT.left;
+                } else {
+                    const stats = getWarehouseSpaceStats(w, dateStr);
+                    booked = stats.booked;
+                    total = stats.total;
+                    left = stats.left;
+                    if (booked >= total && total > 0) {
+                        status = 'booked';
+                    } else if (booked > 0) {
+                        status = 'partial';
+                    }
                 }
+
                 return {
                     warehouseId: w.id,
                     warehouseName: w.warehouseName || w.name || 'Warehouse',
@@ -202,8 +289,16 @@ export default function DECalendar({ onOpenSidebar }) {
                     left,
                 };
             });
+        }
+        return statuses;
+    }, [toDateStr, daysInMonth, warehouses, getWarehouseSpaceStats]);
+
+    // Visual indicators generator for calendar cells
+    const getDayStatuses = useCallback(
+        (day) => {
+            return monthDayStatuses[day] || [];
         },
-        [toDateStr, warehouses, getWarehouseSpaceStats]
+        [monthDayStatuses]
     );
 
     const showToast = (message, type = 'success') => {
@@ -233,19 +328,25 @@ export default function DECalendar({ onOpenSidebar }) {
         e.preventDefault();
         if (!selectedWarehouseForBooking) return;
         const w = selectedWarehouseForBooking;
-        const total = Number(w.totalArea) || 0;
-        const requestedSpace = Number(bookingSpace);
+        const isMT = bookingUnit === 'mt' || (bookingUnit === null && w.measurementUnit === 'mt');
+        const total = isMT ? Number(w.totalMetricTons) || 0 : Number(w.totalArea) || 0;
+        const requestedSpace = Number(bookingUnit === 'mt' ? bookingSpaceMT : bookingSpaceSqFt);
+        const unitLabel = isMT ? 'MT' : config.unit;
 
         if (!bookingClientName.trim()) {
             showToast('Please enter client/booking name', 'error');
             return;
         }
         if (isNaN(requestedSpace) || requestedSpace <= 0) {
-            showToast('Please enter a valid booking size in ' + config.unit, 'error');
+            showToast('Please enter a valid booking size in ' + unitLabel, 'error');
             return;
         }
         if (!bookingStartDate || !bookingEndDate) {
             showToast('Please specify start and end dates', 'error');
+            return;
+        }
+        if (bookingStartDate < todayStr) {
+            showToast('Start date cannot be in the past', 'error');
             return;
         }
         if (bookingEndDate < bookingStartDate) {
@@ -262,7 +363,7 @@ export default function DECalendar({ onOpenSidebar }) {
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             const dateStr = d.toISOString().split('T')[0];
-            const { booked } = getWarehouseSpaceStats(w, dateStr);
+            const { booked } = getWarehouseSpaceStats(w, dateStr, bookingUnit);
             if (booked + requestedSpace > total) {
                 hasConflict = true;
                 conflictDate = dateStr;
@@ -273,7 +374,7 @@ export default function DECalendar({ onOpenSidebar }) {
 
         if (hasConflict) {
             showToast(
-                `Exceeds space limits on ${conflictDate}! Space booked: ${conflictSpace} / Total: ${total} ${config.unit}. Remaining: ${total - conflictSpace} ${config.unit}.`,
+                `Exceeds space limits on ${conflictDate}! Space booked: ${conflictSpace} / Total: ${total} ${unitLabel}. Remaining: ${total - conflictSpace} ${unitLabel}.`,
                 'error'
             );
             return;
@@ -288,6 +389,7 @@ export default function DECalendar({ onOpenSidebar }) {
                 owner_id: user.uid,
                 clientName: bookingClientName.trim(),
                 bookedSpace: requestedSpace,
+                bookingUnit: bookingUnit,
                 startDate: bookingStartDate,
                 endDate: bookingEndDate,
                 createdAt: new Date().toISOString(),
@@ -298,9 +400,9 @@ export default function DECalendar({ onOpenSidebar }) {
             await fetchWarehouses();
             showToast('New space reservation successfully logged!', 'success');
 
-            // Reset form
             setBookingClientName('');
-            setBookingSpace('');
+            setBookingSpaceSqFt('');
+            setBookingSpaceMT('');
             setBookingStartDate('');
             setBookingEndDate('');
             setSelectedWarehouseForBooking(null);
@@ -417,44 +519,66 @@ export default function DECalendar({ onOpenSidebar }) {
                 ) : (
                     <div>
                         {/* Summary Metrics Banner */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                            <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-3xl text-white shadow-xl shadow-orange-500/20 relative overflow-hidden group">
-                                <div className="absolute right-[-20px] bottom-[-20px] opacity-10 group-hover:scale-110 transition-transform duration-500">
-                                    <Ruler size={140} />
+                        {(() => {
+                            const totalDisplay = [
+                                portfolioStats.totalSqFt > 0 || portfolioStats.totalMT === 0
+                                    ? `${portfolioStats.totalSqFt.toLocaleString()} ${config.unit}`
+                                    : '',
+                                portfolioStats.totalMT > 0 ? `${portfolioStats.totalMT.toLocaleString()} MT` : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' | ');
+
+                            const bookedDisplay = [
+                                portfolioStats.bookedSqFt > 0 || portfolioStats.bookedMT === 0
+                                    ? `${portfolioStats.bookedSqFt.toLocaleString()} ${config.unit}`
+                                    : '',
+                                portfolioStats.bookedMT > 0 ? `${portfolioStats.bookedMT.toLocaleString()} MT` : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' | ');
+
+                            const leftDisplay = [
+                                portfolioStats.leftSqFt > 0 || portfolioStats.leftMT === 0
+                                    ? `${portfolioStats.leftSqFt.toLocaleString()} ${config.unit}`
+                                    : '',
+                                portfolioStats.leftMT > 0 ? `${portfolioStats.leftMT.toLocaleString()} MT` : '',
+                            ]
+                                .filter(Boolean)
+                                .join(' | ');
+
+                            return (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-3xl text-white shadow-xl shadow-orange-500/20 relative overflow-hidden group">
+                                        <div className="absolute right-[-20px] bottom-[-20px] opacity-10 group-hover:scale-110 transition-transform duration-500">
+                                            <Ruler size={140} />
+                                        </div>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-orange-100 opacity-80">
+                                            Total Portfolio Space
+                                        </p>
+                                        <h3 className="text-2xl font-black mt-2">{totalDisplay}</h3>
+                                    </div>
+                                    <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
+                                        <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
+                                            <Package size={140} />
+                                        </div>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                                            Total Active Booked
+                                        </p>
+                                        <h3 className="text-2xl font-black mt-2 text-rose-500">{bookedDisplay}</h3>
+                                    </div>
+                                    <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
+                                        <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
+                                            <Warehouse size={140} />
+                                        </div>
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                                            Total Left (Free) Space
+                                        </p>
+                                        <h3 className="text-2xl font-black mt-2 text-emerald-500">{leftDisplay}</h3>
+                                    </div>
                                 </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-orange-100 opacity-80">
-                                    Total Portfolio Space
-                                </p>
-                                <h3 className="text-3xl font-black mt-2">
-                                    {portfolioStats.total.toLocaleString()}{' '}
-                                    <span className="text-sm font-bold">{config.unit}</span>
-                                </h3>
-                            </div>
-                            <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
-                                <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
-                                    <Package size={140} />
-                                </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                                    Total Active Booked
-                                </p>
-                                <h3 className="text-3xl font-black mt-2 text-rose-500">
-                                    {portfolioStats.booked.toLocaleString()}{' '}
-                                    <span className="text-sm font-bold text-slate-400">{config.unit}</span>
-                                </h3>
-                            </div>
-                            <div className="bg-white border border-white shadow-md p-6 rounded-3xl relative overflow-hidden group">
-                                <div className="absolute right-[-20px] bottom-[-20px] text-slate-100 opacity-80 group-hover:scale-110 transition-transform duration-500">
-                                    <Warehouse size={140} />
-                                </div>
-                                <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                                    Total Left (Free) Space
-                                </p>
-                                <h3 className="text-3xl font-black mt-2 text-emerald-500">
-                                    {portfolioStats.left.toLocaleString()}{' '}
-                                    <span className="text-sm font-bold text-slate-400">{config.unit}</span>
-                                </h3>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         {/* --- TAB 1: CAPACITY BOOKING MANAGER --- */}
                         {activeSubTab === 'bookings' && (
@@ -478,31 +602,25 @@ export default function DECalendar({ onOpenSidebar }) {
                                         <input
                                             type="date"
                                             value={analysisDate}
-                                            onChange={(e) => setAnalysisDate(e.target.value || todayStr)}
+                                            min={todayStr}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val && val < todayStr) {
+                                                    setAnalysisDate(todayStr);
+                                                } else {
+                                                    setAnalysisDate(val || todayStr);
+                                                }
+                                            }}
                                             className="bg-transparent border-0 outline-none text-xs font-extrabold text-slate-800 cursor-pointer w-full"
                                         />
                                     </div>
                                 </div>
 
                                 {warehouses.map((w) => {
-                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(
-                                        w,
-                                        analysisDate
-                                    );
+                                    const statsSqFt = getWarehouseSpaceStats(w, analysisDate, 'sqft');
+                                    const statsMT = getWarehouseSpaceStats(w, analysisDate, 'mt');
                                     const bookingsCount = w.bookings?.length || 0;
-                                    const occupancyPercent =
-                                        total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
                                     const isExpanded = expandedWarehouseId === w.id;
-
-                                    let barColor = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
-                                    let progressBg = 'bg-emerald-500/10';
-                                    if (occupancyPercent >= 90) {
-                                        barColor = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
-                                        progressBg = 'bg-rose-500/10';
-                                    } else if (occupancyPercent >= 70) {
-                                        barColor = 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]';
-                                        progressBg = 'bg-amber-500/10';
-                                    }
 
                                     return (
                                         <div
@@ -528,32 +646,26 @@ export default function DECalendar({ onOpenSidebar }) {
 
                                                 {/* Occupancy Indicator */}
                                                 <div className="flex-1 max-w-md bg-slate-50/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                                                    <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-2">
-                                                        <span>Space Occupancy ({occupancyPercent}%)</span>
-                                                        <span className="text-slate-400">
-                                                            Total: {total.toLocaleString()} {config.unit}
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden relative">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                                                            style={{ width: `${occupancyPercent}%` }}
-                                                        />
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-[10px] font-bold mt-2">
-                                                        <span className="text-rose-500">
-                                                            Booked: {booked.toLocaleString()} {config.unit}
-                                                        </span>
-                                                        <span className="text-emerald-500">
-                                                            Available: {left.toLocaleString()} {config.unit}
-                                                        </span>
-                                                    </div>
+                                                    {w.measurementUnit === 'both' ? (
+                                                        <div className="space-y-3">
+                                                            {renderOccupancyBar(statsSqFt, config.unit)}
+                                                            <div className="border-t border-slate-200/60 my-2" />
+                                                            {renderOccupancyBar(statsMT, 'MT')}
+                                                        </div>
+                                                    ) : w.measurementUnit === 'mt' ? (
+                                                        renderOccupancyBar(statsMT, 'MT')
+                                                    ) : (
+                                                        renderOccupancyBar(statsSqFt, config.unit)
+                                                    )}
                                                 </div>
 
                                                 {/* Actions */}
                                                 <div className="flex gap-3 shrink-0">
                                                     <button
-                                                        onClick={() => setSelectedWarehouseForBooking(w)}
+                                                        onClick={() => {
+                                                            setSelectedWarehouseForBooking(w);
+                                                            setBookingUnit(w.measurementUnit === 'mt' ? 'mt' : 'sqft');
+                                                        }}
                                                         className="px-5 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-1.5 border border-orange-400/50"
                                                     >
                                                         <Plus size={14} /> Book Space
@@ -645,7 +757,9 @@ export default function DECalendar({ onOpenSidebar }) {
                                                                                             {Number(
                                                                                                 b.bookedSpace
                                                                                             ).toLocaleString()}{' '}
-                                                                                            {config.unit}
+                                                                                            {b.bookingUnit === 'mt'
+                                                                                                ? 'MT'
+                                                                                                : config.unit}
                                                                                         </td>
                                                                                         <td className="px-6 py-4">
                                                                                             <span className="text-slate-600">
@@ -775,6 +889,7 @@ export default function DECalendar({ onOpenSidebar }) {
                                             const activeIndicators = dayStatuses.filter(
                                                 (ds) => ds.status !== 'available'
                                             );
+                                            const isPast = toDateStr(day) < todayStr;
 
                                             return (
                                                 <motion.div
@@ -783,7 +898,7 @@ export default function DECalendar({ onOpenSidebar }) {
                                                     onClick={() => openDayModal(day)}
                                                     className={`
                                 relative rounded-3xl p-3 sm:p-4 cursor-pointer flex flex-col justify-between overflow-hidden transition-all duration-300 group
-                                ${today ? 'bg-white shadow-[0_0_35px_rgba(249,115,22,0.15)] border-2 border-orange-300 hover:scale-[1.02]' : 'bg-white/90 border border-white shadow-sm hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-orange-200 hover:scale-[1.02]'}
+                                ${today ? 'bg-white shadow-[0_0_35px_rgba(249,115,22,0.15)] border-2 border-orange-300 hover:scale-[1.02]' : isPast ? 'bg-slate-50/60 border border-slate-100 opacity-75 hover:shadow-[0_5px_15px_rgba(0,0,0,0.03)]' : 'bg-white/90 border border-white shadow-sm hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-orange-200 hover:scale-[1.02]'}
                               `}
                                                 >
                                                     {/* Day Number */}
@@ -796,11 +911,13 @@ export default function DECalendar({ onOpenSidebar }) {
                                                         >
                                                             {day}
                                                         </span>
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <div className="w-7 h-7 bg-white rounded-full shadow-sm flex items-center justify-center text-orange-500 border border-orange-100 hover:bg-orange-50">
-                                                                <Plus className="w-4 h-4" />
+                                                        {!isPast && (
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <div className="w-7 h-7 bg-white rounded-full shadow-sm flex items-center justify-center text-orange-500 border border-orange-100 hover:bg-orange-50">
+                                                                    <Plus className="w-4 h-4" />
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Glowing Dynamic LED Status Bars */}
@@ -901,17 +1018,59 @@ export default function DECalendar({ onOpenSidebar }) {
                                     </div>
                                 </div>
 
+                                {selectedWarehouseForBooking.measurementUnit === 'both' && (
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                                            Booking Measurement Unit
+                                        </label>
+                                        <div className="flex gap-4 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+                                            <button
+                                                type="button"
+                                                onClick={() => setBookingUnit('sqft')}
+                                                className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                                                    bookingUnit === 'sqft'
+                                                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                                                        : 'text-slate-500 hover:text-slate-800'
+                                                }`}
+                                            >
+                                                Area ({config.unit})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBookingUnit('mt')}
+                                                className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                                                    bookingUnit === 'mt'
+                                                        ? 'bg-white text-orange-600 shadow-sm border border-slate-200'
+                                                        : 'text-slate-500 hover:text-slate-800'
+                                                }`}
+                                            >
+                                                Weight (Metric Tons)
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
-                                        Capacity to Reserve ({config.unit})
+                                        Capacity to Reserve ({bookingUnit === 'mt' ? 'MT' : config.unit})
                                     </label>
                                     <div className="relative">
                                         <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                                         <input
                                             type="number"
-                                            value={bookingSpace}
-                                            onChange={(e) => setBookingSpace(e.target.value)}
-                                            placeholder={`Available: ${getWarehouseSpaceStats(selectedWarehouseForBooking, bookingStartDate || todayStr).left.toLocaleString()} ${config.unit}`}
+                                            value={bookingUnit === 'mt' ? bookingSpaceMT : bookingSpaceSqFt}
+                                            onChange={(e) => {
+                                                if (bookingUnit === 'mt') {
+                                                    setBookingSpaceMT(e.target.value);
+                                                } else {
+                                                    setBookingSpaceSqFt(e.target.value);
+                                                }
+                                            }}
+                                            placeholder={`Available: ${getWarehouseSpaceStats(
+                                                selectedWarehouseForBooking,
+                                                bookingStartDate || todayStr,
+                                                bookingUnit
+                                            ).left.toLocaleString()} ${bookingUnit === 'mt' ? 'MT' : config.unit}`}
                                             className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-2xl outline-none transition-all font-bold text-slate-800"
                                         />
                                     </div>
@@ -1026,25 +1185,34 @@ export default function DECalendar({ onOpenSidebar }) {
                             {/* Date-specific Space Allocation Lists */}
                             <div className="p-6 sm:p-8 space-y-6 overflow-y-auto custom-scrollbar bg-slate-50/50 flex-1 relative z-10">
                                 {warehouses.map((w) => {
-                                    const { total, booked, left, activeBookings } = getWarehouseSpaceStats(
-                                        w,
-                                        modalDate
-                                    );
-                                    const occupancyPercent =
-                                        total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
-                                    let statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]';
-                                    let textStatus = 'Available';
-                                    let statusBg = 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+                                    const statsSqFt = getWarehouseSpaceStats(w, modalDate, 'sqft');
+                                    const statsMT = getWarehouseSpaceStats(w, modalDate, 'mt');
 
-                                    if (booked >= total && total > 0) {
-                                        statusColor = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]';
-                                        textStatus = 'Fully Booked';
-                                        statusBg = 'bg-rose-500/10 text-rose-700 border-rose-500/20';
-                                    } else if (booked > 0) {
-                                        statusColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]';
-                                        textStatus = 'Partially Booked';
-                                        statusBg = 'bg-amber-500/10 text-amber-700 border-amber-500/20';
-                                    }
+                                    const getStatusDetails = (stats) => {
+                                        const { total, booked } = stats;
+                                        const pct = total > 0 ? Math.min(100, Math.round((booked / total) * 100)) : 0;
+                                        let statusColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]';
+                                        let textStatus = 'Available';
+                                        let statusBg = 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+
+                                        if (booked >= total && total > 0) {
+                                            statusColor = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]';
+                                            textStatus = 'Fully Booked';
+                                            statusBg = 'bg-rose-500/10 text-rose-700 border-rose-500/20';
+                                        } else if (booked > 0) {
+                                            statusColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]';
+                                            textStatus = 'Partially Booked';
+                                            statusBg = 'bg-amber-500/10 text-amber-700 border-amber-500/20';
+                                        }
+                                        return { pct, statusColor, textStatus, statusBg };
+                                    };
+
+                                    const sq = getStatusDetails(statsSqFt);
+                                    const mt = getStatusDetails(statsMT);
+
+                                    const activeBookings =
+                                        w.bookings?.filter((b) => b.startDate <= modalDate && b.endDate >= modalDate) ||
+                                        [];
 
                                     return (
                                         <div
@@ -1060,40 +1228,61 @@ export default function DECalendar({ onOpenSidebar }) {
                                                         {w.city}
                                                     </p>
                                                 </div>
-                                                <div
-                                                    className={`px-3 py-1 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 ${statusBg}`}
-                                                >
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />{' '}
-                                                    {textStatus} ({occupancyPercent}%)
+                                                <div className="flex flex-wrap gap-2 justify-end">
+                                                    {w.measurementUnit === 'both' ? (
+                                                        <>
+                                                            <div
+                                                                className={`px-2.5 py-0.5 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1 ${sq.statusBg}`}
+                                                            >
+                                                                <div
+                                                                    className={`w-1 h-1 rounded-full ${sq.statusColor}`}
+                                                                />
+                                                                {config.unit.toUpperCase()}: {sq.textStatus} ({sq.pct}%)
+                                                            </div>
+                                                            <div
+                                                                className={`px-2.5 py-0.5 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1 ${mt.statusBg}`}
+                                                            >
+                                                                <div
+                                                                    className={`w-1 h-1 rounded-full ${mt.statusColor}`}
+                                                                />
+                                                                MT: {mt.textStatus} ({mt.pct}%)
+                                                            </div>
+                                                        </>
+                                                    ) : w.measurementUnit === 'mt' ? (
+                                                        <div
+                                                            className={`px-3 py-1 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 ${mt.statusBg}`}
+                                                        >
+                                                            <div
+                                                                className={`w-1.5 h-1.5 rounded-full ${mt.statusColor}`}
+                                                            />
+                                                            {mt.textStatus} ({mt.pct}%)
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            className={`px-3 py-1 border text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 ${sq.statusBg}`}
+                                                        >
+                                                            <div
+                                                                className={`w-1.5 h-1.5 rounded-full ${sq.statusColor}`}
+                                                            />
+                                                            {sq.textStatus} ({sq.pct}%)
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {/* Details */}
-                                            <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 text-center">
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
-                                                        Total Space
-                                                    </p>
-                                                    <p className="text-sm font-extrabold text-slate-800 mt-0.5">
-                                                        {total.toLocaleString()} {config.unit}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
-                                                        Booked
-                                                    </p>
-                                                    <p className="text-sm font-extrabold text-rose-500 mt-0.5">
-                                                        {booked.toLocaleString()} {config.unit}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
-                                                        Left Space
-                                                    </p>
-                                                    <p className="text-sm font-extrabold text-emerald-500 mt-0.5">
-                                                        {left.toLocaleString()} {config.unit}
-                                                    </p>
-                                                </div>
+                                            {/* Occupancy Indicator */}
+                                            <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                                                {w.measurementUnit === 'both' ? (
+                                                    <div className="space-y-3">
+                                                        {renderOccupancyBar(statsSqFt, config.unit)}
+                                                        <div className="border-t border-slate-200/60 my-2" />
+                                                        {renderOccupancyBar(statsMT, 'MT')}
+                                                    </div>
+                                                ) : w.measurementUnit === 'mt' ? (
+                                                    renderOccupancyBar(statsMT, 'MT')
+                                                ) : (
+                                                    renderOccupancyBar(statsSqFt, config.unit)
+                                                )}
                                             </div>
 
                                             {/* Bookings on this Day */}
@@ -1112,7 +1301,8 @@ export default function DECalendar({ onOpenSidebar }) {
                                                                     {b.clientName}
                                                                 </span>
                                                                 <span className="font-black text-slate-900 bg-white px-2 py-1 border border-slate-200 rounded-lg">
-                                                                    {b.bookedSpace.toLocaleString()} {config.unit}
+                                                                    {b.bookedSpace.toLocaleString()}{' '}
+                                                                    {b.bookingUnit === 'mt' ? 'MT' : config.unit}
                                                                 </span>
                                                             </div>
                                                         ))}
@@ -1121,19 +1311,26 @@ export default function DECalendar({ onOpenSidebar }) {
                                             )}
 
                                             {/* Quick Book Button */}
-                                            {left > 0 && (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedWarehouseForBooking(w);
-                                                        setBookingStartDate(modalDate);
-                                                        setBookingEndDate(modalDate);
-                                                        setModalDate(null);
-                                                    }}
-                                                    className="w-full py-3 rounded-2xl bg-orange-50 hover:bg-orange-500 hover:text-white text-orange-600 text-xs font-extrabold border border-orange-100 hover:border-orange-400 transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                                                >
-                                                    <Plus size={12} /> Register Booking for this Date
-                                                </button>
-                                            )}
+                                            {modalDate >= todayStr &&
+                                                ((w.measurementUnit === 'both' &&
+                                                    (statsSqFt.left > 0 || statsMT.left > 0)) ||
+                                                    (w.measurementUnit === 'mt' && statsMT.left > 0) ||
+                                                    (w.measurementUnit !== 'both' &&
+                                                        w.measurementUnit !== 'mt' &&
+                                                        statsSqFt.left > 0)) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedWarehouseForBooking(w);
+                                                            setBookingUnit(w.measurementUnit === 'mt' ? 'mt' : 'sqft');
+                                                            setBookingStartDate(modalDate);
+                                                            setBookingEndDate(modalDate);
+                                                            setModalDate(null);
+                                                        }}
+                                                        className="w-full py-3 rounded-2xl bg-orange-50 hover:bg-orange-500 hover:text-white text-orange-600 text-xs font-extrabold border border-orange-100 hover:border-orange-400 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                                                    >
+                                                        <Plus size={12} /> Register Booking for this Date
+                                                    </button>
+                                                )}
                                         </div>
                                     );
                                 })}

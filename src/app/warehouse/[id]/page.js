@@ -254,7 +254,10 @@ export default function WarehouseDetailPage({ params }) {
                                                             )
                                                     )}
 
-                                                    <div className="absolute top-6 left-6 flex flex-col gap-2" style={{ zIndex: 2 }}>
+                                                    <div
+                                                        className="absolute top-6 left-6 flex flex-col gap-2"
+                                                        style={{ zIndex: 2 }}
+                                                    >
                                                         <motion.div
                                                             initial={{ x: -20, opacity: 0 }}
                                                             animate={{ x: 0, opacity: 1 }}
@@ -340,16 +343,28 @@ export default function WarehouseDetailPage({ params }) {
                                         <span className="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-2xl text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest border border-slate-200/60 shadow-sm">
                                             <Clock className="w-3.5 h-3.5 text-slate-400" />{' '}
                                             {(() => {
-                                                const isUpdated = warehouse.updatedAt && warehouse.createdAt && (warehouse.updatedAt.seconds !== warehouse.createdAt.seconds);
-                                                const ts = isUpdated ? warehouse.updatedAt : (warehouse.createdAt || warehouse.updatedAt);
+                                                const isUpdated =
+                                                    warehouse.updatedAt &&
+                                                    warehouse.createdAt &&
+                                                    warehouse.updatedAt.seconds !== warehouse.createdAt.seconds;
+                                                const ts = isUpdated
+                                                    ? warehouse.updatedAt
+                                                    : warehouse.createdAt || warehouse.updatedAt;
                                                 const label = isUpdated ? 'Updated: ' : 'Published: ';
                                                 if (!ts) return 'N/A';
-                                                const date = ts.seconds ? new Date(ts.seconds * 1000) : (ts.toDate ? ts.toDate() : new Date(ts));
-                                                return label + date.toLocaleDateString('en-IN', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                });
+                                                const date = ts.seconds
+                                                    ? new Date(ts.seconds * 1000)
+                                                    : ts.toDate
+                                                      ? ts.toDate()
+                                                      : new Date(ts);
+                                                return (
+                                                    label +
+                                                    date.toLocaleDateString('en-IN', {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                    })
+                                                );
                                             })()}
                                         </span>
                                     </div>

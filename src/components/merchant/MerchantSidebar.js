@@ -1,13 +1,22 @@
 'use client';
 
-import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles, FileText } from 'lucide-react';
+import { Building2, MessageSquare, Star, LogOut, Settings, Sparkles, FileText, ClipboardList } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
-export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onSendEnquiry, isDrawer = false, quotationsCount = 0 }) {
+export default function MerchantSidebar({
+    activeTab,
+    setActiveTab,
+    onLogout,
+    onSendEnquiry,
+    isDrawer = false,
+    quotationsCount = 0,
+    inquiriesCount = 0,
+}) {
     const menuItems = [
         { id: 'browse', label: 'Browse Directory', icon: Building2 },
         { id: 'chats', label: 'Active Chats', icon: MessageSquare },
         { id: 'quotations', label: 'Quotations', icon: FileText, badge: quotationsCount || null },
+        { id: 'inquiries', label: 'My Enquiries', icon: ClipboardList, badge: inquiriesCount || null },
         { id: 'saved', label: 'Saved Properties', icon: Star },
     ];
 
@@ -68,7 +77,9 @@ export default function MerchantSidebar({ activeTab, setActiveTab, onLogout, onS
                                 {item.label}
                             </span>
                             {item.badge ? (
-                                <span className={`ml-auto bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center relative z-10 ${containerClasses}`}>
+                                <span
+                                    className={`ml-auto bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center relative z-10 ${containerClasses}`}
+                                >
                                     {item.badge}
                                 </span>
                             ) : null}

@@ -43,7 +43,14 @@ import {
 } from 'lucide-react';
 import SidebarCountrySelector from '@/components/common/SidebarCountrySelector';
 
-export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDrawer = false, inquiriesCount = 0, globalLeadsCount = 0 }) {
+export default function OwnerSidebar({
+    activeTab,
+    setActiveTab,
+    onLogout,
+    isDrawer = false,
+    inquiriesCount = 0,
+    globalLeadsCount = 0,
+}) {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'my-warehouses', label: 'Manage Properties', icon: Building2 },
@@ -97,7 +104,9 @@ export default function OwnerSidebar({ activeTab, setActiveTab, onLogout, isDraw
                             {item.label}
                         </span>
                         {item.badge ? (
-                            <span className={`ml-auto bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${containerClasses}`}>
+                            <span
+                                className={`ml-auto bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center ${containerClasses}`}
+                            >
                                 {item.badge}
                             </span>
                         ) : null}
