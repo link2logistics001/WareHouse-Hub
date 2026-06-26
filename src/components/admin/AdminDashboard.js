@@ -55,6 +55,8 @@ import {
 import { db } from '@/lib/firebase';
 import { formatPrice } from '@/lib/locale';
 import { logoutUser } from '@/lib/auth';
+import { encodeWarehouseId } from '@/lib/warehouseId';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
@@ -1432,9 +1434,11 @@ function BlockPeopleView({ users, warehouses, loading, handleBlockUser, onViewWa
                                                             >
                                                                 <div className="min-w-0 flex-1">
                                                                     <div className="flex items-center gap-2">
-                                                                        <h4 className="text-sm font-bold text-slate-950 truncate">
-                                                                            {wh.warehouseName || 'Unnamed Warehouse'}
-                                                                        </h4>
+                                                                        <Link href={`/warehouse/${encodeWarehouseId(wh.id)}`}>
+                                                                            <h4 className="text-sm font-bold text-slate-950 truncate hover:text-orange-600 transition-colors underline decoration-transparent hover:decoration-orange-600 underline-offset-2 cursor-pointer">
+                                                                                {wh.warehouseName || 'Unnamed Warehouse'}
+                                                                            </h4>
+                                                                        </Link>
                                                                         <span
                                                                             className={`px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider ${
                                                                                 wh.status === 'approved'

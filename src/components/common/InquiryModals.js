@@ -156,6 +156,17 @@ export const QuickInquiryModal = React.memo(({ isOpen, onClose, user }) => {
         try {
             await submitInquiry('quick', formData, user?.uid);
             setSuccess(true);
+            setFormData({
+                companyName: '',
+                contactPerson: '',
+                email: '',
+                phone: '',
+                storageType: '',
+                capacityNeeded: '',
+                duration: '',
+                startDate: '',
+                requirements: '',
+            });
             setTimeout(() => {
                 setSuccess(false);
                 onClose();
@@ -456,6 +467,28 @@ export const DetailedInquiryModal = React.memo(({ isOpen, onClose, user }) => {
         try {
             await submitInquiry('detailed', formData, user?.uid);
             setSuccess(true);
+            setFormData({
+                companyName: '',
+                contactPerson: '',
+                email: '',
+                phone: '',
+                address: '',
+                gstNumber: '',
+                product1: { description: '', weight: '', dimensions: '', stacking: '', handling: '' },
+                product2: { description: '', weight: '', dimensions: '', stacking: '', handling: '' },
+                storageType: 'Ambient',
+                temperatureReq: '',
+                contractDuration: '',
+                paymentTerms: 'Advance',
+                inboundVehicles: '',
+                inboundVehicleType: 'FTL',
+                inboundProcesses: [],
+                outboundOrders: '',
+                outboundVehicleType: 'FTL',
+                orderTrigger: 'Email',
+                specialServices: [],
+                otherRequirements: '',
+            });
             setTimeout(() => {
                 setSuccess(false);
                 onClose();
